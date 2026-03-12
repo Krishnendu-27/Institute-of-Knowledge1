@@ -87,6 +87,32 @@ const useAuthStore = create(
           });
         }
       },
+
+      verifyCredentails: async (email) => {
+        try {
+          const response = await api.post("/auth/sendotp", email);
+          set({
+            isValidEmail: response.data.isValidEmail,
+          });
+        } catch (error) {
+          set({
+            error: err.response?.data?.message || "Email is not verified",
+          });
+        }
+      },
+
+      verifyOtp: async (userCredentails) => {
+        try {
+          const response = await api.post("/auth/verifyotp", userCredentails);
+          set({
+            isOtpAuthenticated: true,
+          });
+        } catch (error) {
+          set({
+            error: err.response?.data?.message || "Otp is not valid",
+          });
+        }
+      },
     }),
     {
       name: "session-token",

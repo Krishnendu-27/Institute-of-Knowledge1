@@ -1,6 +1,5 @@
 import axios from "axios";
-import { useAuthStore } from "../stores/useAuthStore";
-useAuthStore;
+import useAuthStore from "../stores/useAuthStore";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -8,7 +7,6 @@ export const api = axios.create({
 });
 
 // interceptors for validate authorization
-
 
 // Request interceptor
 
@@ -29,9 +27,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if ((error?.response?.status = 401)) {
-      useAuthStore.getState().logout();
-    }
+    // if ((error?.response?.status = 401)) {
+    //   useAuthStore.getState().logout();
+    // }
     return Promise.reject(error);
   },
 );
