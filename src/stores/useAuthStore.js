@@ -27,29 +27,46 @@ const useAuthStore = create(
       otpLoading: false,
       userLoading: false,
 
-      login: async (userCredentails) => {
+      clearError: () => set({ error: null }),
+
+      sendOtp: async (email) => {
+        try {
+          const response = await api.post("/auth/sendotp", { email });
+          set({
+            isValidEmail: response?.data?.success,
+          });
+        } catch (error) {
+          set({
+            error: error.response?.data?.message || "Email is not verified",
+          });
+        }
+      },
+
+      verifyOtp: async (userCredentails) => {
         set({
           loginLoding: false,
           error: null,
         });
 
         try {
-          const response = await api.post("/auth/login", userCredentails);
+          const response = await api.post("/auth/verifyotp", userCredentails);
           const { user, token, role } = response.data;
           set({
             user: user,
-            token: extractBearerToken(token),
+            // token: extractBearerToken(token),
+            token: token,
             userRole: role,
             isAuthenticated: true,
             loginLoding: false,
           });
         } catch (error) {
           set({
-            error: err.response?.data?.message || "Login failed",
+            error: error.response?.data?.message || "Login failed",
             loginLoding: false,
           });
         }
       },
+
       logout: () => {
         localStorage.removeItem("token");
         set({
@@ -84,32 +101,6 @@ const useAuthStore = create(
         } finally {
           set({
             userLoading: false,
-          });
-        }
-      },
-
-      verifyCredentails: async (email) => {
-        try {
-          const response = await api.post("/auth/sendotp", email);
-          set({
-            isValidEmail: response.data.isValidEmail,
-          });
-        } catch (error) {
-          set({
-            error: err.response?.data?.message || "Email is not verified",
-          });
-        }
-      },
-
-      verifyOtp: async (userCredentails) => {
-        try {
-          const response = await api.post("/auth/verifyotp", userCredentails);
-          set({
-            isOtpAuthenticated: true,
-          });
-        } catch (error) {
-          set({
-            error: err.response?.data?.message || "Otp is not valid",
           });
         }
       },

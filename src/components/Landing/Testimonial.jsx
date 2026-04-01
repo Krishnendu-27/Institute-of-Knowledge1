@@ -8,15 +8,14 @@ export const Testimonial = ({ text, author, isRight }) => (
     className={`relative mb-8 max-w-lg ${isRight ? "ml-auto" : "mr-auto"}`}
   >
     <div
-      className={`p-6 rounded-2xl border-2 border-[#D1D9E0] bg-[#F1F4F8] text-gray-700 text-sm leading-relaxed shadow-sm
+      className={`p-6 rounded-2xl border-2 border-border bg-card text-foreground/80 text-sm leading-relaxed shadow-sm
       ${isRight ? "rounded-br-none" : "rounded-bl-none"}`}
     >
       <p className="font-medium italic">"{text}"</p>
-      <p className="mt-3 font-bold text-gray-900">- {author}</p>
+      <p className="mt-3 font-bold text-foreground">- {author}</p>
     </div>
-    {/* Speech Bubble Tail */}
     <div
-      className={`absolute bottom-[-12px] w-6 h-6 bg-[#F1F4F8] border-r-2 border-b-2 border-[#D1D9E0] rotate-45 
+      className={`absolute bottom-[-12px] w-6 h-6 bg-card border-r-2 border-b-2 border-border rotate-45 
       ${isRight ? "right-6" : "left-6"}`}
     />
   </motion.div>
