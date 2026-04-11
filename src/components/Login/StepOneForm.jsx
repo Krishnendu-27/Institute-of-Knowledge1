@@ -53,7 +53,6 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   };
 
-  // Run captcha generation on mount
   useEffect(() => {
     const timer = setTimeout(() => generateCaptcha(), 50);
     inputRef.current.focus();
@@ -121,6 +120,7 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
         <input
           type="email"
           required
+          disabled={isLoading}
           placeholder="Email Address"
           ref={inputRef}
           value={email}
@@ -152,6 +152,7 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
           <input
             type="text"
             // required
+            disabled={isLoading}
             placeholder="Enter Captcha"
             value={captchaInput}
             onChange={(e) => setCaptchaInput(e.target.value)}

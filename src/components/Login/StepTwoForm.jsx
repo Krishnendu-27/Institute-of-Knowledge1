@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../../stores/useAuthStore";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import CountdownTimer from "./CountdownTimer";
 import { Button } from "../UI/Button";
@@ -87,6 +87,7 @@ export const StepTwoForm = ({ email, onBack, onSuccess }) => {
           throw new Error(currentAuthError);
         }
         toast.success("Login successful");
+        navigate("/");
         if (onSuccess) onSuccess();
       } catch (err) {
         toast.error(err?.response?.message || "Invalid OTP");
@@ -165,10 +166,10 @@ export const StepTwoForm = ({ email, onBack, onSuccess }) => {
                   className={`w-9 h-11 sm:w-10 sm:h-12 md:w-12 md:h-14 text-center text-lg md:text-xl font-bold rounded-xl border bg-card transition-all duration-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed shrink-0
                     ${
                       isOtpComplete
-                        ? "border-green-500 text-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
+                        ? "border-green-500 text-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
                         : digit !== ""
-                          ? "border-primary/50 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-[0_0_10px_rgba(var(--primary),0.2)]"
-                          : "border-border text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          ? "border-primary/20 text-foreground focus:border-primary focus:ring-2 focus:ring-primary shadow-[0_0_10px_rgba(var(--primary),0.2)]"
+                          : "border-border text-foreground focus:border-primary focus:ring-2 focus:ring-primary"
                     }
                   `}
                 />

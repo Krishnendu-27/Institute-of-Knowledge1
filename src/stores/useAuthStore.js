@@ -1,19 +1,17 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { api } from "../api/api.js";
-import { extractBearerToken } from "../util/bearerToken";
 
 const useAuthStore = create(
   persist(
     (set, get) => ({
       // User informations
-
+      id: null,
       user: null,
       token: null,
       userRole: null,
 
-      // Authenciated states
-
+      // Authenticated states
       isAuthenticated: false,
       isOtpAuthenticated: false,
       isValidEmail: false,
@@ -22,7 +20,6 @@ const useAuthStore = create(
       error: null,
 
       // Loaders States
-
       loginLoding: false,
       otpLoading: false,
       userLoading: false,
@@ -33,7 +30,7 @@ const useAuthStore = create(
         try {
           const response = await api.post("/auth/sendotp", { email });
           set({
-            isValidEmail: response?.data?.success,
+            isValidEmail: response?.data?.success ?? false,
           });
         } catch (error) {
           set({
@@ -44,18 +41,20 @@ const useAuthStore = create(
 
       verifyOtp: async (userCredentails) => {
         set({
-          loginLoding: false,
+          loginLoding: true,
           error: null,
         });
 
         try {
           const response = await api.post("/auth/verifyotp", userCredentails);
-          const { user, token, role } = response.data;
+
+          const responseData = response.data.data;
+
           set({
-            user: user,
-            // token: extractBearerToken(token),
-            token: token,
-            userRole: role,
+            user: responseData.user ?? null,
+            id: responseData.user?._id ?? null,
+            token: responseData.token ?? null,
+            userRole: responseData.user?.role ?? null,
             isAuthenticated: true,
             loginLoding: false,
           });
@@ -64,40 +63,51 @@ const useAuthStore = create(
             error: error.response?.data?.message || "Login failed",
             loginLoding: false,
           });
+          console.error("Login Error:", error);
         }
       },
 
       logout: () => {
-        localStorage.removeItem("token");
         set({
+          id: null,
           user: null,
           userRole: null,
           token: null,
           isAuthenticated: false,
           loginLoding: false,
+          isOtpAuthenticated: false,
+          isValidEmail: false,
         });
         return true;
       },
 
       loadUser: async () => {
-        if (!get().token && !get.isAuthenticated) return;
+        const { id, token, isAuthenticated, logout } = get();
+
+        if (!id || !token || !isAuthenticated) {
+          logout();
+          return;
+        }
+
         set({
           userLoading: true,
           error: null,
         });
-        try {
-          const response = await api.get(`/user/me`);
 
-          const { data } = response.data;
+        try {
+          const response = await api.get(`/user/details/${id}`);
+          const userData = response.data.data;
 
           set({
-            user: data,
-            userRole: data.role,
+            user: userData ?? null,
+            id: userData?._id ?? id,
+            userRole: userData?.role ?? null,
             userLoading: false,
             isAuthenticated: true,
           });
         } catch (error) {
-          get().logout();
+          console.error("Load User Error:", error);
+          logout();
         } finally {
           set({
             userLoading: false,
@@ -106,12 +116,14 @@ const useAuthStore = create(
       },
     }),
     {
-      name: "session-token",
+      name: "session",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        token: state.token,
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        id: state?.id ?? null,
+        token: state?.token ?? null,
+        user: state?.user ?? null,
+        userRole: state?.userRole ?? null,
+        isAuthenticated: state?.isAuthenticated ?? false,
       }),
     },
   ),
