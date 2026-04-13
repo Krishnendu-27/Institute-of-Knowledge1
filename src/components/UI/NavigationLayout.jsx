@@ -140,7 +140,7 @@ export const NavigationLayout = () => {
       <main className="flex-1 p-6 md:p-10 pb-32 md:pb-10 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           {/* Dynamic Page Header based on URL */}
-          <h2 className="text-3xl font-bold mb-6 capitalize">
+          <h2 className="text-xl font-bold mb-6 capitalize">
             {location.pathname === "/"
               ? "Dashboard"
               : location.pathname.split("/").pop()}
