@@ -21,6 +21,7 @@ import Loading from "./pages/Loading";
 import { NavigationLayout } from "./components/UI/NavigationLayout";
 import ProfilePage from "./pages/ProfilePage";
 import CreateUser from "./pages/CreateUser";
+import CreateClass from "./pages/CreateClass";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -91,6 +92,8 @@ const App = () => {
               <Route path="/teachers" element={<AllTeachers />} />
               <Route path="/students" element={<AllStudents />} />
               <Route path="/createuser" element={<CreateUser />} />
+              <Route path="/createuser" element={<CreateUser />} />
+              <Route path="/createclass" element={<CreateClass />} />
             </Route>
 
             {/* <Route
