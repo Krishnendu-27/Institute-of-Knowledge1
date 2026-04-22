@@ -9,11 +9,7 @@ const useUserStore = create((set) => ({
   addUser: async (formData) => {
     set({ isLoading: true, error: null, success: false });
     try {
-      const response = await api.post("/user/add", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await api.post("/user/add", formData);
       set({ isLoading: false, success: true });
       console.log(response.data);
       return response.data;
