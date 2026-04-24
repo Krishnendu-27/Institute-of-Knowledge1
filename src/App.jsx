@@ -93,14 +93,24 @@ const App = () => {
               <Route path="/students" element={<AllStudents />} />
               <Route path="/createuser" element={<CreateUser />} />
               <Route path="/createuser" element={<CreateUser />} />
+            </Route>
+
+            {/* Admin only */}
+            <Route
+              element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
+            >
               <Route path="/createclass" element={<CreateClass />} />
             </Route>
 
-            {/* <Route
-              element={<ProtectedRouteRoleBased allowedRoles={["Teacher"]} />}
+            {/* Student only */}
+            <Route
+              element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
             >
-              The Admin will provide power to the teachers
-            </Route> */}
+              <Route path="/idcard" />
+              <Route path="/course-certificate" />
+              <Route path="/admit-card" />
+              <Route path="/registration-form" />
+            </Route>
           </Route>
         </Route>
 

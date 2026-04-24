@@ -166,7 +166,7 @@ const CreateClass = () => {
         className="max-w-6xl mx-auto"
       >
         {/* Header */}
-        <motion.div variants={itemVariants} className="mb-8">
+        {/* <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2.5 bg-primary/10 rounded-xl">
               <BookOpen className="text-primary" size={24} />
@@ -180,7 +180,7 @@ const CreateClass = () => {
               </p>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Class Information */}

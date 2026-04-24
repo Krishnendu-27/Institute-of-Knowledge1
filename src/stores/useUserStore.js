@@ -10,7 +10,7 @@ const useUserStore = create((set) => ({
     set({ isLoading: true, error: null, success: false });
     try {
       const response = await api.post("/user/add", formData);
-      set({ isLoading: false, success: true });
+      set({ isLoading: false, success: true }); 
       console.log(response.data);
       return response.data;
     } catch (err) {

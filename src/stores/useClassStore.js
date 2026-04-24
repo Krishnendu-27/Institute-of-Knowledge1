@@ -16,6 +16,7 @@ const useClassStore = create((set) => ({
         teachers: response.data.teachers || [],
         isLoading: false,
       });
+      // console.log(response.data);
       return response.data;
     } catch (err) {
       const errorMessage =
@@ -36,7 +37,7 @@ const useClassStore = create((set) => ({
       const response = await api.post("/class/add", classData);
       set({ isLoading: false, success: true });
       setTimeout(() => set({ success: false }), 3000);
-      console.log(response.data);
+      // console.log(response.data);
       return response.data;
     } catch (err) {
       const errorMessage =
