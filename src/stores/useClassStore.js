@@ -5,36 +5,76 @@ const useClassStore = create((set) => ({
   isLoading: false,
   error: null,
   success: false,
-  teachers: [],
+  // teachers: [],
 
   // Get all teachers for the dropdown
-  getTeachers: async () => {
+  // getTeachers: async () => {
+  //   set({ isLoading: true, error: null });
+  //   try {
+  //     const response = await api.get("/user/teachers");
+  //     set({
+  //       teachers: response.data.teachers || [],
+  //       isLoading: false,
+  //     });
+  //     // console.log(response.data);
+  //     return response.data;
+  //   } catch (err) {
+  //     const errorMessage =
+  //       err.response?.data?.message || "Failed to fetch teachers";
+  //     set({
+  //       isLoading: false,
+  //       error: errorMessage,
+  //     });
+  //     console.error("Get Teachers Error:", err);
+  //     throw err;
+  //   }
+  // },
+
+  // Get all classes
+  getClasses: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get("/user/teachers");
-      set({
-        teachers: response.data.teachers || [],
-        isLoading: false,
-      });
-      // console.log(response.data);
+      const response = await api.get("/mainclass");
+      set({ isLoading: false });
       return response.data;
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Failed to fetch teachers";
+        err.response?.data?.message || "Failed to fetch classes";
       set({
         isLoading: false,
         error: errorMessage,
       });
-      console.error("Get Teachers Error:", err);
+      console.error("Get Classes Error:", err);
+      throw err;
+    }
+  },
+
+  createClass: async (classData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.post("/mainclass/create", classData);
+      set({ isLoading: false });
+      return response.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch classes";
+      set({
+        isLoading: false,
+        error: errorMessage,
+      });
+      console.error("Get Classes Error:", err);
       throw err;
     }
   },
 
   // Add new class with features
-  addClass: async (classData) => {
+  addStudentInClass: async (studentClassData) => {
     set({ isLoading: true, error: null, success: false });
     try {
-      const response = await api.post("/class/add", classData);
+      const response = await api.post(
+        "/mainclass/add-student",
+        studentClassData,
+      );
       set({ isLoading: false, success: true });
       setTimeout(() => set({ success: false }), 3000);
       // console.log(response.data);
@@ -52,21 +92,26 @@ const useClassStore = create((set) => ({
     }
   },
 
-  // Get all classes
-  getClasses: async () => {
-    set({ isLoading: true, error: null });
+  removeStudentInClass: async (studentClassData) => {
+    set({ isLoading: true, error: null, success: false });
     try {
-      const response = await api.get("/class/all");
-      set({ isLoading: false });
+      const response = await api.delete(
+        "/mainclass/remove-student",
+        studentClassData,
+      );
+      set({ isLoading: false, success: true });
+      setTimeout(() => set({ success: false }), 3000);
+      // console.log(response.data);
       return response.data;
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Failed to fetch classes";
+        err.response?.data?.message || "Something went wrong";
       set({
         isLoading: false,
         error: errorMessage,
       });
-      console.error("Get Classes Error:", err);
+      setTimeout(() => set({ error: null }), 4000);
+      console.error("Add Class Error:", err);
       throw err;
     }
   },
@@ -75,7 +120,7 @@ const useClassStore = create((set) => ({
   getClass: async (classId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get(`/class/${classId}`);
+      const response = await api.get(`/mainclass/show/${classId}`);
       set({ isLoading: false });
       return response.data;
     } catch (err) {

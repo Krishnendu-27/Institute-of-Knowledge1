@@ -5,12 +5,58 @@ const useUserStore = create((set) => ({
   isLoading: false,
   error: null,
   success: false,
+  students: [],
+  teachers: [],
+
+  getTeachers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.get("/user/students");
+      set({
+        teachers: response.data.students || [],
+        isLoading: false,
+      });
+      // console.log(response.data);
+      return response.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch teachers";
+      set({
+        isLoading: false,
+        error: errorMessage,
+      });
+      console.error("Get Students Error:", err);
+      throw err;
+    }
+  },
+
+  getTeachers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.get("/user/teachers");
+      set({
+        teachers: response.data.teachers || [],
+        isLoading: false,
+      });
+      // console.log(response.data);
+      return response.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch teachers";
+      set({
+        isLoading: false,
+        error: errorMessage,
+      });
+      console.error("Get Teachers Error:", err);
+      throw err;
+    }
+  },
 
   addUser: async (formData) => {
     set({ isLoading: true, error: null, success: false });
     try {
       const response = await api.post("/user/add", formData);
-      set({ isLoading: false, success: true }); 
+      set({ isLoading: false, success: true });
       console.log(response.data);
       return response.data;
     } catch (err) {

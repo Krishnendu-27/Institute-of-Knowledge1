@@ -22,6 +22,7 @@ import { NavigationLayout } from "./components/UI/NavigationLayout";
 import ProfilePage from "./pages/ProfilePage";
 import CreateUser from "./pages/CreateUser";
 import CreateClass from "./pages/CreateClass";
+import MainClass from "./pages/Admin/MainClass";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -99,6 +100,7 @@ const App = () => {
             <Route
               element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
             >
+              <Route path="/mainclass" element={<MainClass />} />
               <Route path="/createclass" element={<CreateClass />} />
             </Route>
 

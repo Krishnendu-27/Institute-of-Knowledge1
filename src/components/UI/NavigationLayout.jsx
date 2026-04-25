@@ -34,8 +34,8 @@ export const NavigationLayout = () => {
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
+      { path: "/mainclass", icon: BadgePlus, label: "Main Class" },
       { path: "/profile", icon: User, label: "Profile" },
-      { path: "/createclass", icon: BadgePlus, label: "Create Class" },
     ],
     teacher: [
       { path: "/", icon: Home, label: "Dashboard" },
@@ -68,15 +68,17 @@ export const NavigationLayout = () => {
     } catch (_) {}
   };
 
+  const getPageTitle = () => {
+    if (location.pathname === "/") return "Dashboard";
+    if (location.pathname === "/profile") return `${userRole} Profile`;
+    return location.pathname.split("/").pop().replaceAll("-", " ");
+  };
+
   return (
     <div className="flex min-h-screen bg-background text-foreground relative flex-col md:flex-row">
       <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
-            <img
-              src={Image.Logo}
-              alt="Logo"
-              className="w-8 h-8 object-contain"
-            />
+          <img src={Image.Logo} alt="Logo" className="w-8 h-8 object-contain" />
           <h1 className="font-bold text-sm leading-tight tracking-tight">
             Institute of Knowledge
           </h1>
@@ -224,11 +226,9 @@ export const NavigationLayout = () => {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-6 md:p-10 min-h-[calc(100vh-68px)] md:min-h-screen">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-xl font-bold mb-6 capitalize">
-            {location.pathname === "/"
-              ? "Dashboard"
-              : location.pathname.split("/").pop().replace("-", " ")}
-          </h2>
+          <h1 className="w-fit text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 capitalize">
+            {getPageTitle()}
+          </h1>
 
           <Outlet />
         </div>
