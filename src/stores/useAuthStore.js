@@ -121,8 +121,8 @@ const useAuthStore = create(
       partialize: (state) => ({
         id: state?.id ?? null,
         token: state?.token ?? null,
-        user: state?.user ?? null,
-        userRole: state?.userRole ?? null,
+        // user: state?.user ?? null,
+        // userRole: state?.userRole ?? null,
         isAuthenticated: state?.isAuthenticated ?? false,
       }),
     },

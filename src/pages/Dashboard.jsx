@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -8,31 +8,46 @@ import {
   Plus,
   Activity,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import useAuthStore from "../stores/useAuthStore";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const userData = useAuthStore((state) => state.user);
+  const loadUser = useAuthStore((state) => state.loadUser);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  if (!userData) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-primary/60 gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="font-medium">Loading your dashboard...</p>
+      </div>
+    );
+  }
 
   const stats = [
     {
       label: "Active Batches",
-      value: userData.batches.length,
+      value: userData.batches?.length || 0,
       icon: Layers,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
     },
     {
       label: "Main Classes",
-      value: userData.mainClasses.length,
+      value: userData.mainClasses?.length || 0,
       icon: BookOpen,
       color: "text-indigo-500",
       bg: "bg-indigo-500/10",
     },
     {
       label: "Total Documents",
-      value: userData.documents.length,
+      value: userData.documents?.length || 0,
       icon: FileText,
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
@@ -99,7 +114,6 @@ const Dashboard = () => {
           >
             <Plus size={18} />
             <span>Quick Add</span>
-            {/* <Link to="/createuser">Quick Add</Link> */}
           </Link>
         </div>
       </motion.div>
@@ -175,11 +189,13 @@ const Dashboard = () => {
                   Member Since
                 </p>
                 <p className="text-sm text-foreground font-medium">
-                  {new Date(userData.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {userData.createdAt
+                    ? new Date(userData.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "—"}
                 </p>
               </div>
             </div>

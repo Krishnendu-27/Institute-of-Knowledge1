@@ -20,6 +20,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
 import { Image } from "../../assets/Image";
 import toast from "react-hot-toast";
+import { Breadcrumbs } from "./Breadcrumbs";
 
 export const NavigationLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -34,7 +35,7 @@ export const NavigationLayout = () => {
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
-      { path: "/mainclass", icon: BadgePlus, label: "Main Class" },
+      { path: "/courses", icon: BadgePlus, label: "All Courses" },
       { path: "/profile", icon: User, label: "Profile" },
     ],
     teacher: [
@@ -73,6 +74,8 @@ export const NavigationLayout = () => {
     if (location.pathname === "/profile") return `${userRole} Profile`;
     return location.pathname.split("/").pop().replaceAll("-", " ");
   };
+
+  // Breadcrumb generation function
 
   return (
     <div className="flex min-h-screen bg-background text-foreground relative flex-col md:flex-row">
@@ -224,12 +227,14 @@ export const NavigationLayout = () => {
       </motion.aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 p-6 md:p-10 min-h-[calc(100vh-68px)] md:min-h-screen">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="w-fit text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 capitalize">
+      <main className="flex-1 px-6 pb-6 md:px-10 md:pb-10 min-h-[calc(100vh-68px)] md:min-h-screen">
+        <div className="sticky top-0 z-20 pt-6 md:pt-10 pb-4 bg-slate-50 max-w-6xl mx-auto">
+          {Breadcrumbs()}
+          <h1 className="w-fit text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 capitalize mt-2">
             {getPageTitle()}
           </h1>
-
+        </div>
+        <div className="max-w-6xl mx-auto mt-2">
           <Outlet />
         </div>
       </main>

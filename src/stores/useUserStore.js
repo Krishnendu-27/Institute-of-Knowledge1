@@ -8,26 +8,16 @@ const useUserStore = create((set) => ({
   students: [],
   teachers: [],
 
-  getTeachers: async () => {
+  getStudents: async () => {
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/user/students");
       set({
-        teachers: response.data.students || [],
+        students: response.data?.data || response.data || [],
         isLoading: false,
       });
-      // console.log(response.data);
       return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to fetch teachers";
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      console.error("Get Students Error:", err);
-      throw err;
-    }
+    } catch (err) {}
   },
 
   getTeachers: async () => {
@@ -35,21 +25,11 @@ const useUserStore = create((set) => ({
     try {
       const response = await api.get("/user/teachers");
       set({
-        teachers: response.data.teachers || [],
+        teachers: response.data?.data || response.data || [],
         isLoading: false,
       });
-      // console.log(response.data);
       return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to fetch teachers";
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      console.error("Get Teachers Error:", err);
-      throw err;
-    }
+    } catch (err) {}
   },
 
   addUser: async (formData) => {
