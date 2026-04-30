@@ -15,6 +15,7 @@ import {
   Form,
   Menu,
   X,
+  Calendar,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
@@ -32,6 +33,7 @@ export const NavigationLayout = () => {
   const roleMenus = {
     admin: [
       { path: "/", icon: Home, label: "Dashboard" },
+      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
@@ -40,6 +42,7 @@ export const NavigationLayout = () => {
     ],
     teacher: [
       { path: "/", icon: Home, label: "Dashboard" },
+      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
