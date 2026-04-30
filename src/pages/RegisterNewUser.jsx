@@ -16,7 +16,7 @@ import useUserStore from "../stores/useUserStore";
 import useClassStore from "../stores/useClassStore";
 import toast, { ErrorIcon } from "react-hot-toast";
 
-const CreateUser = () => {
+const RegisterNewUser = () => {
   const { addUser, isLoading: isAddingUser, error, success } = useUserStore();
   const {
     allClass = [],
@@ -258,7 +258,7 @@ const CreateUser = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-colors duration-200"
       >
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:bg-indigo-700 p-8 text-white flex justify-between items-center">
+        {/* <div className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:bg-indigo-700 p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold flex items-center gap-3">
               <UserPlus size={28} /> Register New User
@@ -267,7 +267,7 @@ const CreateUser = () => {
               Register a new student or teacher to the Institute
             </p>
           </div>
-        </div>
+        </div> */}
 
         <form onSubmit={handleSubmit} className="p-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -617,4 +617,4 @@ const CreateUser = () => {
   );
 };
 
-export default CreateUser;
+export default RegisterNewUser;
