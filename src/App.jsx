@@ -24,7 +24,7 @@ import CoursesPage from "./pages/Admin/CoursesPage";
 import CourseDetails from "./pages/Admin/CourseDetails";
 import CreateCourse from "./pages/Admin/CreateCourse";
 import AddNewStudent from "./pages/Admin/AddNewStudent";
-import Teacher from "./pages/Teacher";
+import AttendancePage from "./pages/AttendancePage";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -97,7 +97,7 @@ const App = () => {
               >
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/students" element={<AllStudents />} />
-                <Route path="/attendance" element={<Teacher />} />
+                <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/createuser" element={<CreateUser />} />
                 <Route path="/createuser" element={<CreateUser />} />
               </Route>

@@ -19,7 +19,7 @@ import useAuthStore from "../stores/useAuthStore";
 import useAttendanceStore from "../stores/useAttendanceStore";
 import toast from "react-hot-toast";
 
-const Teacher = () => {
+const AttendancePage = () => {
   const navigate = useNavigate();
 
   const userData = useAuthStore((state) => state.user);
@@ -545,4 +545,4 @@ const Teacher = () => {
   );
 };
 
-export default Teacher;
+export default AttendancePage;
