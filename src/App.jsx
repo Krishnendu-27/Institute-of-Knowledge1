@@ -19,12 +19,12 @@ import Batch from "./pages/Admin/Batch";
 import Loading from "./pages/Loading";
 import { NavigationLayout } from "./components/UI/NavigationLayout";
 import ProfilePage from "./pages/ProfilePage";
-import CreateUser from "./pages/CreateUser";
 import CoursesPage from "./pages/Admin/CoursesPage";
 import CourseDetails from "./pages/Admin/CourseDetails";
 import CreateCourse from "./pages/Admin/CreateCourse";
 import AddNewStudent from "./pages/Admin/AddNewStudent";
 import AttendancePage from "./pages/AttendancePage";
+import RegisterNewUser from "./pages/RegisterNewUser";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -98,8 +98,7 @@ const App = () => {
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
-                <Route path="/createuser" element={<CreateUser />} />
-                <Route path="/createuser" element={<CreateUser />} />
+                <Route path="/registeruser" element={<RegisterNewUser />} />
               </Route>
 
               {/* Admin only */}

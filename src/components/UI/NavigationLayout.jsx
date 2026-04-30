@@ -35,7 +35,7 @@ export const NavigationLayout = () => {
       { path: "/", icon: Home, label: "Dashboard" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
-      { path: "/createuser", icon: UserPlus, label: "Create User" },
+      { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/courses", icon: BadgePlus, label: "All Courses" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/profile", icon: User, label: "Profile" },
@@ -44,7 +44,7 @@ export const NavigationLayout = () => {
       { path: "/", icon: Home, label: "Dashboard" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
-      { path: "/createuser", icon: UserPlus, label: "Create User" },
+      { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/profile", icon: User, label: "Profile" },
     ],
@@ -75,6 +75,7 @@ export const NavigationLayout = () => {
   const getPageTitle = () => {
     if (location.pathname === "/") return "Dashboard";
     if (location.pathname === "/profile") return `${userRole} Profile`;
+    if (location.pathname === "/registeruser") return `Register New User`;
     return location.pathname.split("/").pop().replaceAll("-", " ");
   };
 
