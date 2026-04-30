@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, Outlet } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Plus,
@@ -16,14 +16,18 @@ import CourseDetailsPage from "./CourseDetails";
 
 const CoursesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
   const [selectedCourseId, setSelectedCourseId] = useState(null);
 
-  const { allClass, getClasses, isLoading, error } = useClassStore();
+  const allClass = useClassStore((state) => state.allClass);
+  const getClasses = useClassStore((state) => state.getClasses);
+  const isLoading = useClassStore((state) => state.isLoading);
+  const error = useClassStore((state) => state.error);
 
   useEffect(() => {
-    getClasses();
-  }, [getClasses]);
+    if (!selectedCourseId) {
+      getClasses();
+    }
+  }, [selectedCourseId, getClasses]);
 
   const filteredClasses = Array.isArray(allClass)
     ? allClass.filter(
@@ -156,15 +160,17 @@ const CoursesPage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredClasses.map((classItem) => {
+                if (!classItem) return null;
+
                 const status = getClassStatus(
-                  classItem.startDate,
-                  classItem.endDate,
-                  classItem.isActive,
+                  classItem?.startDate,
+                  classItem?.endDate,
+                  classItem?.isActive,
                 );
 
                 return (
                   <div
-                    key={classItem._id}
+                    key={classItem?._id || Math.random()}
                     onClick={() => setSelectedCourseId(classItem._id)}
                     className="group bg-white rounded-2xl border border-slate-200 p-6 cursor-pointer hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 relative overflow-hidden flex flex-col"
                   >
@@ -173,7 +179,7 @@ const CoursesPage = () => {
                       <div className="w-full">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                            {classItem.name}
+                            {classItem?.name || "Unknown Course"}
                           </h3>
                           <span
                             className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider border ${status.styles} whitespace-nowrap`}
@@ -182,7 +188,7 @@ const CoursesPage = () => {
                           </span>
                         </div>
                         <p className="text-sm font-medium text-slate-500">
-                          Instructor: {classItem.teacherName}
+                          Instructor: {classItem?.teacherName || "N/A"}
                         </p>
                       </div>
                     </div>
@@ -190,11 +196,11 @@ const CoursesPage = () => {
                     <div className="flex flex-wrap gap-2 mb-6 mt-2">
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 rounded-lg text-xs font-medium text-slate-600 border border-slate-100">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        {classItem.duration} Months
+                        {classItem?.duration || 0} Months
                       </div>
                       <div className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 rounded-lg text-xs font-medium text-slate-600 border border-slate-100">
                         <IndianRupee className="w-3.5 h-3.5 text-slate-400" />
-                        {classItem.fees}
+                        {classItem?.fees || 0}
                       </div>
                     </div>
 
@@ -203,7 +209,7 @@ const CoursesPage = () => {
                         <Users className="w-4 h-4 text-slate-400" />
                         <span>
                           <strong className="text-slate-900">
-                            {classItem.students?.length || 0}
+                            {classItem?.students?.length || 0}
                           </strong>{" "}
                           Enrolled
                         </span>

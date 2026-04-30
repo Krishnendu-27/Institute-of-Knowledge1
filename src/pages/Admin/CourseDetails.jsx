@@ -22,8 +22,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 const CourseDetails = ({ courseId, onBack }) => {
-  const { getClassById, isLoading, getStudentProgress, removeStudentInClass } =
-    useClassStore();
+  const getClassById = useClassStore((state) => state.getClassById);
+  const getStudentProgress = useClassStore((state) => state.getStudentProgress);
+  const removeStudentInClass = useClassStore(
+    (state) => state.removeStudentInClass,
+  );
+  const isLoading = useClassStore((state) => state.isLoading);
 
   const [courseData, setCourseData] = useState(null);
   const [localError, setLocalError] = useState(null);
@@ -72,7 +76,7 @@ const CourseDetails = ({ courseId, onBack }) => {
       toast.success("Status update successfully !!");
     } catch (error) {
       console.error("Failed to update status", error);
-      toast.error(error);
+      toast.error(error.message || "An error occurred");
     } finally {
       setLoadingKeys((prev) => {
         const newKeys = { ...prev };
@@ -94,12 +98,12 @@ const CourseDetails = ({ courseId, onBack }) => {
 
       setCourseData((prevData) => {
         const updatedProgress = prevData.studentsProgress.filter(
-          (record) => record.student._id !== studentToRemove.student._id,
+          (record) => record?.student?._id !== studentToRemove?.student?._id,
         );
 
         const updatedMainClassStudents =
-          prevData.mainClass.students?.filter(
-            (s) => s._id !== studentToRemove.student._id,
+          prevData.mainClass?.students?.filter(
+            (s) => s?._id !== studentToRemove?.student?._id,
           ) || [];
 
         return {
@@ -148,12 +152,14 @@ const CourseDetails = ({ courseId, onBack }) => {
 
   const { mainClass, studentsProgress } = courseData;
 
-  const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("en-GB", {
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
+  };
 
   const ToggleButton = ({ recordId, fieldName, status }) => {
     const isUpdating = !!loadingKeys[`${recordId}-${fieldName}`];
@@ -180,9 +186,9 @@ const CourseDetails = ({ courseId, onBack }) => {
     studentsProgress?.filter((record) => {
       const searchLower = studentSearchTerm.toLowerCase();
       return (
-        record.student.name.toLowerCase().includes(searchLower) ||
-        record.student.email.toLowerCase().includes(searchLower) ||
-        record.rollno.toString().includes(searchLower)
+        record?.student?.name?.toLowerCase().includes(searchLower) ||
+        record?.student?.email?.toLowerCase().includes(searchLower) ||
+        record?.rollno?.toString().includes(searchLower)
       );
     }) || [];
 
@@ -207,14 +213,14 @@ const CourseDetails = ({ courseId, onBack }) => {
             </button>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                {mainClass.name}
+                {mainClass?.name || "Course Details"}
               </h1>
               <p className="text-slate-500 flex items-center gap-2 mt-1">
                 <span
-                  className={`w-2 h-2 rounded-full ${mainClass.isActive ? "bg-emerald-500" : "bg-red-500"}`}
+                  className={`w-2 h-2 rounded-full ${mainClass?.isActive ? "bg-emerald-500" : "bg-red-500"}`}
                 ></span>
-                {mainClass.isActive ? "Active Course" : "Inactive Course"} •
-                Created on {formatDate(mainClass.createdAt)}
+                {mainClass?.isActive ? "Active Course" : "Inactive Course"} •
+                Created on {formatDate(mainClass?.createdAt)}
               </p>
             </div>
           </div>
@@ -230,7 +236,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                     <Calendar className="w-4 h-4" /> Start Date
                   </span>
                   <p className="font-medium text-slate-900">
-                    {formatDate(mainClass.startDate)}
+                    {formatDate(mainClass?.startDate)}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -238,7 +244,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                     <Calendar className="w-4 h-4" /> End Date
                   </span>
                   <p className="font-medium text-slate-900">
-                    {formatDate(mainClass.endDate)}
+                    {formatDate(mainClass?.endDate)}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -246,7 +252,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                     <Clock className="w-4 h-4" /> Duration
                   </span>
                   <p className="font-medium text-slate-900">
-                    {mainClass.duration} Months
+                    {mainClass?.duration || 0} Months
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -254,7 +260,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                     <IndianRupee className="w-4 h-4" /> Fees
                   </span>
                   <p className="font-medium text-slate-900 text-indigo-600">
-                    ₹{mainClass.fees}
+                    ₹{mainClass?.fees || 0}
                   </p>
                 </div>
               </div>
@@ -266,10 +272,11 @@ const CourseDetails = ({ courseId, onBack }) => {
                 <div className="flex items-center gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                   <div>
                     <p className="font-bold text-slate-900">
-                      {mainClass.teacherName}
+                      {mainClass?.teacherName || "Unassigned"}
                     </p>
                     <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
-                      <Mail className="w-3.5 h-3.5" /> {mainClass.teacherEmail}
+                      <Mail className="w-3.5 h-3.5" />{" "}
+                      {mainClass?.teacherEmail || "No Email Provided"}
                     </p>
                   </div>
                 </div>
@@ -284,7 +291,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                 <Users className="w-8 h-8 text-indigo-500 bg-white p-1.5 rounded-lg shadow-sm" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {mainClass.students?.length || 0}
+                    {mainClass?.students?.length || 0}
                   </p>
                   <p className="text-sm font-medium opacity-80">
                     Total Students Enrolled
@@ -297,16 +304,16 @@ const CourseDetails = ({ courseId, onBack }) => {
                   Assigned Batches
                 </h3>
                 <div className="space-y-2">
-                  {mainClass.batches?.map((batch) => (
+                  {mainClass?.batches?.map((batch) => (
                     <div
-                      key={batch._id}
+                      key={batch?._id || Math.random()}
                       className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-2"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                      {batch.name}
+                      {batch?.name}
                     </div>
                   ))}
-                  {(!mainClass.batches || mainClass.batches.length === 0) && (
+                  {(!mainClass?.batches || mainClass.batches.length === 0) && (
                     <p className="text-sm text-slate-400 italic">
                       No batches assigned yet.
                     </p>
@@ -386,57 +393,57 @@ const CourseDetails = ({ courseId, onBack }) => {
                   ) : (
                     filteredStudents.map((record) => (
                       <tr
-                        key={record._id}
+                        key={record?._id || Math.random()}
                         className="hover:bg-slate-50/50 transition-colors"
                       >
                         <td className="px-6 py-4">
                           <span className="font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
-                            #{record.rollno}
+                            #{record?.rollno || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <p className="font-bold text-slate-900">
-                            {record.student.name}
+                            {record?.student?.name || "Unknown Student"}
                           </p>
                           <div className="flex items-center gap-3 text-slate-500 text-xs mt-1">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3 h-3" />{" "}
-                              {record.student.email}
+                              {record?.student?.email || "No Email"}
                             </span>
                             <span className="flex items-center gap-1">
                               <Phone className="w-3 h-3" />{" "}
-                              {record.student.phone}
+                              {record?.student?.phone || "No Phone"}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-600">
-                          {formatDate(record.joinDate)}
+                          {formatDate(record?.joinDate)}
                         </td>
 
                         <td className="px-6 py-4 align-middle text-center">
                           <ToggleButton
-                            recordId={record._id}
+                            recordId={record?._id}
                             fieldName="batchcompletion"
-                            status={record.batchcompletion}
+                            status={record?.batchcompletion}
                           />
                         </td>
                         <td className="px-6 py-4 align-middle text-center">
                           <ToggleButton
-                            recordId={record._id}
+                            recordId={record?._id}
                             fieldName="examcompletion"
-                            status={record.examcompletion}
+                            status={record?.examcompletion}
                           />
                         </td>
                         <td className="px-6 py-4 align-middle text-center">
                           <ToggleButton
-                            recordId={record._id}
+                            recordId={record?._id}
                             fieldName="certificateIssued"
-                            status={record.certificateIssued}
+                            status={record?.certificateIssued}
                           />
                         </td>
 
                         <td className="px-6 py-4 align-middle text-center relative">
-                          {activeDropdown === record._id && (
+                          {activeDropdown === record?._id && (
                             <div
                               className="fixed inset-0 z-10"
                               onClick={() => setActiveDropdown(null)}
@@ -446,13 +453,13 @@ const CourseDetails = ({ courseId, onBack }) => {
                           <button
                             onClick={() =>
                               setActiveDropdown(
-                                activeDropdown === record._id
+                                activeDropdown === record?._id
                                   ? null
-                                  : record._id,
+                                  : record?._id,
                               )
                             }
                             className={`p-1.5 rounded-lg transition-colors relative z-20 ${
-                              activeDropdown === record._id
+                              activeDropdown === record?._id
                                 ? "bg-indigo-50 text-indigo-600"
                                 : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                             }`}
@@ -460,9 +467,8 @@ const CourseDetails = ({ courseId, onBack }) => {
                             <MoreVertical className="w-5 h-5" />
                           </button>
 
-                          {/* Dropdown Box */}
                           <AnimatePresence>
-                            {activeDropdown === record._id && (
+                            {activeDropdown === record?._id && (
                               <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -503,7 +509,6 @@ const CourseDetails = ({ courseId, onBack }) => {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
             >
-              {/* Close Icon */}
               <button
                 onClick={() => !isRemoving && setStudentToRemove(null)}
                 className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -521,7 +526,7 @@ const CourseDetails = ({ courseId, onBack }) => {
                 <p className="text-slate-500 mb-1">
                   Are you sure you want to remove{" "}
                   <strong className="text-slate-800">
-                    {studentToRemove.student.name}
+                    {studentToRemove?.student?.name || "this student"}
                   </strong>{" "}
                   from this course?
                 </p>
