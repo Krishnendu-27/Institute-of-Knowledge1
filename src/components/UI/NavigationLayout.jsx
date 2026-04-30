@@ -33,19 +33,19 @@ export const NavigationLayout = () => {
   const roleMenus = {
     admin: [
       { path: "/", icon: Home, label: "Dashboard" },
-      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
       { path: "/courses", icon: BadgePlus, label: "All Courses" },
+      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/profile", icon: User, label: "Profile" },
     ],
     teacher: [
       { path: "/", icon: Home, label: "Dashboard" },
-      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/createuser", icon: UserPlus, label: "Create User" },
+      { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/profile", icon: User, label: "Profile" },
     ],
     student: [
