@@ -9,12 +9,21 @@ import {
   Trash2,
   Image as ImageIcon,
   FileBadge,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import useUserStore from "../stores/useUserStore";
-import toast from "react-hot-toast";
+import useClassStore from "../stores/useClassStore";
+import toast, { ErrorIcon } from "react-hot-toast";
 
 const CreateUser = () => {
-  const { addUser, isLoading, error, success } = useUserStore();
+  const { addUser, isLoading: isAddingUser, error, success } = useUserStore();
+  const {
+    allClass = [],
+    getClasses,
+    isLoading: isClassesLoading,
+    resetStatus,
+  } = useClassStore();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -22,45 +31,105 @@ const CreateUser = () => {
     phone: "",
     role: "Student",
     adhar: "",
-    mainClasses: "",
+    mainClasses: [],
   });
 
   const [profilePic, setProfilePic] = useState(null);
   const [documents, setDocuments] = useState([]);
 
-  // Previews & Modals
   const [profilePreview, setProfilePreview] = useState(null);
-  const [viewingFile, setViewingFile] = useState(null); // { url, type, name }
-
-  // Handle toast notifications based on store state changes
+  const [viewingFile, setViewingFile] = useState(null);
+  
   useEffect(() => {
+    if (getClasses) {
+      getClasses();
+    }
+  }, [getClasses]);
+
+  useEffect(() => {
+    return () => {
+      resetStatus();
+      useUserStore.setState({ error: null, success: false });
+    };
+  }, [resetStatus]);
+
+  useEffect(() => {
+    let timer;
+
     if (success) {
       toast.success("User added successfully!");
-      // Reset form
       setFormData({
         name: "",
         email: "",
         phone: "",
         role: "Student",
         adhar: "",
-        mainClasses: "",
+        mainClasses: [],
       });
       setProfilePic(null);
       setProfilePreview(null);
       setDocuments([]);
     }
+
     if (error) {
-      toast.error(error);
+      if (error.startsWith("E11000")) {
+        toast.error("Aadhar already exists !!");
+      } else {
+        toast.error(error);
+      }
     }
+
+    if (error || success) {
+      timer = setTimeout(() => {
+        useUserStore.setState({ error: null, success: false });
+      }, 3000);
+    }
+
+    return () => clearTimeout(timer);
   }, [success, error]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setFormData({ ...formData, phone: value });
+  };
+
+  const handleAdharChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 12) value = value.slice(0, 12);
+
+    const formatted = value.replace(/(\d{4})(?=\d)/g, "$1 ");
+    setFormData({ ...formData, adhar: formatted });
+  };
+
+  const toggleClassSelection = (classId) => {
+    setFormData((prev) => {
+      const currentClasses = prev.mainClasses;
+      if (currentClasses.includes(classId)) {
+        return {
+          ...prev,
+          mainClasses: currentClasses.filter((id) => id !== classId),
+        };
+      } else {
+        return { ...prev, mainClasses: [...currentClasses, classId] };
+      }
+    });
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(
+          "Only image files (JPG, PNG) are allowed for the profile photo.",
+        );
+        return;
+      }
+
       setProfilePic(file);
       setProfilePreview(URL.createObjectURL(file));
     }
@@ -68,6 +137,13 @@ const CreateUser = () => {
 
   const handleDocChange = (e) => {
     const files = Array.from(e.target.files);
+
+    const hasNonImage = files.some((file) => !file.type.startsWith("image/"));
+    if (hasNonImage) {
+      toast.error("Only image files (JPG, PNG) are allowed.");
+      return;
+    }
+
     if (documents.length + files.length > 3) {
       toast.error("Maximum 3 documents allowed");
       return;
@@ -86,41 +162,53 @@ const CreateUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (formData.phone.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    const rawAdhar = formData.adhar.replace(/\s/g, ""); // Strip spaces for backend
+    if (formData.role === "Student" && rawAdhar.length !== 12) {
+      toast.error("Aadhar number must be exactly 12 digits.");
+      return;
+    }
+
+    if (formData.mainClasses.length === 0) {
+      toast.error(
+        `Please select at least one ${formData.role === "Student" ? "enrolled" : "assigned"} course.`,
+      );
+      return;
+    }
+
     const data = new FormData();
 
-    Object.keys(formData).forEach((key) => {
-      if (key === "mainClasses") {
-        if (formData[key]) {
-          const classArray = formData[key]
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
+    data.append("name", formData.name);
+    data.append("email", formData.email);
+    data.append("phone", formData.phone);
+    data.append("role", formData.role);
 
-          classArray.forEach((cls) => {
-            data.append("mainClasses", cls);
-          });
-        }
-      } else if (key === "adhar" && formData.role === "Teacher") {
-        return; // Don't send for Teacher
-      } else {
-        data.append(key, formData[key]);
-      }
+    if (formData.role === "Student") {
+      data.append("adhar", rawAdhar);
+    }
+
+    formData.mainClasses.forEach((clsId) => {
+      data.append("mainClasses", clsId);
     });
 
     if (profilePic) data.append("profilePic", profilePic);
     documents.forEach((doc) => data.append("documents", doc));
-
-    try {
-      await addUser(data);
-    } catch (err) {
-      toast.error(err.message || "An unexpected error occurred");
-      console.error(err);
-    }
+    await addUser(data);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 flex items-center justify-center transition-colors duration-200">
-      {/* File Preview Modal */}
       <AnimatePresence>
         {viewingFile && (
           <motion.div
@@ -153,12 +241,6 @@ const CreateUser = () => {
                     alt="Preview"
                     className="max-w-full max-h-full rounded-lg object-contain"
                   />
-                ) : viewingFile.type === "application/pdf" ? (
-                  <iframe
-                    src={viewingFile.url}
-                    className="w-full h-[60vh] rounded-lg bg-white"
-                    title="PDF Preview"
-                  />
                 ) : (
                   <div className="text-slate-500 dark:text-slate-400 flex flex-col items-center gap-3">
                     <FileBadge size={48} />
@@ -176,25 +258,20 @@ const CreateUser = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-colors duration-200"
       >
-        <div className="bg-indigo-600 dark:bg-indigo-700 p-8 text-white flex justify-between items-center">
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:bg-indigo-700 p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold flex items-center gap-3">
-              <UserPlus size={28} /> Add New User
+              <UserPlus size={28} /> Register New User
             </h2>
             <p className="text-indigo-100 mt-1">
-              Register a new student or teacher to the system
+              Register a new student or teacher to the Institute
             </p>
           </div>
-          {isLoading && (
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-indigo-400 border-t-white" />
-          )}
         </div>
 
         <form onSubmit={handleSubmit} className="p-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            {/* Left Column: Basic Info */}
             <div className="lg:col-span-7 space-y-6">
-              {/* Role Selection */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
                   Account Role
@@ -204,12 +281,20 @@ const CreateUser = () => {
                     <button
                       key={r}
                       type="button"
-                      onClick={() => setFormData({ ...formData, role: r })}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          role: r,
+                          mainClasses: [],
+                          adhar: "",
+                        })
+                      }
                       className={`flex-1 py-3 rounded-xl border-2 transition-all font-medium flex items-center justify-center gap-2 ${
                         formData.role === r
-                          ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-300"
+                          ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-300 shadow-sm"
                           : "border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
                       }`}
+                      disabled={isAddingUser}
                     >
                       {r}
                     </button>
@@ -217,7 +302,6 @@ const CreateUser = () => {
                 </div>
               </div>
 
-              {/* Form Inputs */}
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
@@ -231,6 +315,7 @@ const CreateUser = () => {
                     className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
                     placeholder="John Doe"
                     onChange={handleInputChange}
+                    disabled={isAddingUser}
                   />
                 </div>
 
@@ -247,36 +332,34 @@ const CreateUser = () => {
                       className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
                       placeholder="john@example.com"
                       onChange={handleInputChange}
+                      disabled={isAddingUser}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                      Phone *
+                      Phone (10 Digits) *
                     </label>
                     <input
-                      type="tel"
+                      type="text"
                       name="phone"
                       value={formData.phone}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
-                      placeholder="+91..."
-                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 rounded-xl border ${
+                        formData.phone.length > 0 && formData.phone.length < 10
+                          ? "border-amber-400 focus:ring-amber-400"
+                          : "border-slate-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                      } bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 outline-none transition-all`}
+                      placeholder="9876543210"
+                      onChange={handlePhoneChange}
+                      disabled={isAddingUser}
                     />
+                    {formData.phone.length > 0 &&
+                      formData.phone.length < 10 && (
+                        <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
+                          <AlertCircle size={14} /> Must be exactly 10 digits.
+                        </p>
+                      )}
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                    Classes (Comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    name="mainClasses"
-                    value={formData.mainClasses}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
-                    placeholder="Math, Science, English"
-                    onChange={handleInputChange}
-                  />
                 </div>
 
                 <AnimatePresence>
@@ -285,29 +368,84 @@ const CreateUser = () => {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
                     >
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 mt-2">
-                        ID Number *
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 mt-1">
+                        Aadhar Number (12 Digits) *
                       </label>
                       <input
                         type="text"
                         name="adhar"
                         value={formData.adhar}
                         required={formData.role === "Student"}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
-                        placeholder="XXXX-XXXX-XXXX"
-                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 rounded-xl border ${
+                          formData.adhar.replace(/\s/g, "").length > 0 &&
+                          formData.adhar.replace(/\s/g, "").length < 12
+                            ? "border-amber-400 focus:ring-amber-400"
+                            : "border-slate-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                        } bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 outline-none transition-all`}
+                        placeholder="XXXX XXXX XXXX"
+                        onChange={handleAdharChange}
+                        disabled={isAddingUser}
                       />
+                      {formData.adhar.replace(/\s/g, "").length > 0 &&
+                        formData.adhar.replace(/\s/g, "").length < 12 && (
+                          <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
+                            <AlertCircle size={14} /> Must be exactly 12 digits.
+                          </p>
+                        )}
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    {formData.role === "Student"
+                      ? "Enrolled Courses"
+                      : "Assigned Courses"}{" "}
+                    *
+                  </label>
+
+                  {isClassesLoading ? (
+                    <div className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-indigo-500 border-t-transparent mr-3" />
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        Loading courses...
+                      </span>
+                    </div>
+                  ) : allClass.length === 0 ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                      No courses available. Please create classes first.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 no-scrollbar">
+                      {allClass.map((cls) => {
+                        const isSelected = formData.mainClasses.includes(
+                          cls._id,
+                        );
+                        return (
+                          <button
+                            key={cls._id}
+                            type="button"
+                            onClick={() => toggleClassSelection(cls._id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                              isSelected
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none"
+                                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-400"
+                            }`}
+                            disabled={isAddingUser}
+                          >
+                            {isSelected && <CheckCircle2 size={16} />}
+                            {cls.name || cls.className || "Unnamed Class"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Right Column: Profile & Docs */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Profile Photo Upload */}
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">
                   Profile Photo
@@ -354,6 +492,7 @@ const CreateUser = () => {
                         className="hidden"
                         accept="image/*"
                         onChange={handleFileChange}
+                        disabled={isAddingUser}
                       />
                     </label>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
@@ -363,14 +502,13 @@ const CreateUser = () => {
                 </div>
               </div>
 
-              {/* Document Upload (Students Only) */}
               <AnimatePresence>
                 {formData.role === "Student" && (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-6"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 overflow-hidden"
                   >
                     <div className="flex justify-between items-end mb-4">
                       <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -390,14 +528,15 @@ const CreateUser = () => {
                         Click to upload files
                       </span>
                       <p className="text-xs text-slate-400 mt-1">
-                        PDF, JPG, PNG allowed
+                        JPG, PNG allowed
                       </p>
                       <input
                         type="file"
                         multiple
-                        accept=".pdf,image/*"
+                        accept="image/*"
                         className="hidden"
                         onChange={handleDocChange}
+                        disabled={isAddingUser}
                       />
                     </label>
 
@@ -453,10 +592,16 @@ const CreateUser = () => {
           <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={
+                isAddingUser ||
+                (formData.role === "Student" &&
+                  formData.adhar.replace(/\s/g, "").length !== 12 &&
+                  formData.adhar.length > 0) ||
+                (formData.phone.length !== 10 && formData.phone.length > 0)
+              }
               className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg flex justify-center items-center gap-2"
             >
-              {isLoading ? (
+              {isAddingUser ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
                   Creating Profile...

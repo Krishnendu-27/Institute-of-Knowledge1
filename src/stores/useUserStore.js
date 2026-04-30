@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "../api/api";
 
-const useUserStore = create((set) => ({
+const useUserStore = create((set, get) => ({
   isLoading: false,
   error: null,
   success: false,
@@ -37,14 +37,12 @@ const useUserStore = create((set) => ({
     try {
       const response = await api.post("/user/add", formData);
       set({ isLoading: false, success: true });
-      console.log(response.data);
       return response.data;
     } catch (err) {
       set({
         isLoading: false,
         error: err.response?.data?.message || "Something went wrong",
       });
-      console.log(err);
       throw err;
     }
   },
@@ -66,8 +64,6 @@ const useUserStore = create((set) => ({
       set({ isLoading: false, error: errorMessage });
 
       setTimeout(() => set({ error: null }), 4000);
-
-      console.error("Update User Error:", err);
       throw err;
     }
   },
