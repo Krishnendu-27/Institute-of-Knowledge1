@@ -2,29 +2,69 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  /* Base Colors */
   --background: #ffffff;
   --foreground: #0f172a;
   
+  /* Primary Brand (Indigo) */
   --primary: #4f46e5;
   --primary-foreground: #ffffff;
   
+  /* Cards & Surfaces */
   --card: #f8fafc;
   --card-foreground: #0f172a;
   
+  /* Borders */
   --border: #e2e8f0;
+  
+  /* Secondary/Muted styles (Slate) */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  
+  /* Accents & Hovers (Light Indigo) */
+  --accent: #e0e7ff;
+  --accent-foreground: #3730a3;
+  
+  /* Error/Destructive states (Red) */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Success states (Emerald) */
+  --success: #10b981;
+  --success-foreground: #ffffff;
 }
 
 .dark {
+  /* Base Colors */
   --background: #0f172a;
   --foreground: #f8fafc;
   
+  /* Primary Brand (Indigo) */
   --primary: #818cf8;
   --primary-foreground: #0f172a; 
   
+  /* Cards & Surfaces */
   --card: #1e293b;
   --card-foreground: #f8fafc;
   
+  /* Borders */
   --border: #334155;
+  
+  /* Secondary/Muted styles (Slate) */
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  
+  /* Accents & Hovers (Dark Indigo) */
+  --accent: #312e81;
+  --accent-foreground: #c7d2fe;
+  
+  /* Error/Destructive states (Red) */
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+
+  /* Success states (Emerald) */
+  --success: #34d399;
+  --success-foreground: #022c22;
 }
 
 @theme {
@@ -38,6 +78,19 @@
   --color-card-foreground: var(--card-foreground);
   
   --color-border: var(--border);
+
+  /* Mapping the new variables to Tailwind classes */
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
 }
 
 @layer base {
