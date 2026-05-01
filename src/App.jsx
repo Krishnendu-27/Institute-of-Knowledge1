@@ -25,6 +25,8 @@ import CreateCourse from "./pages/Admin/CreateCourse";
 import AddNewStudent from "./pages/Admin/AddNewStudent";
 import AttendancePage from "./pages/AttendancePage";
 import RegisterNewUser from "./pages/RegisterNewUser";
+import Tteacher from "./pages/Tteacher";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -127,7 +129,10 @@ const App = () => {
 
           <Route element={<PublicRoute />}>
             <Route path="/home" element={<LandingPage />} />
+            <Route path="/t" element={<Tteacher />} />
           </Route>
+
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
     </AnimatePresence>
