@@ -25,6 +25,7 @@ const AttendancePage = () => {
   const userData = useAuthStore((state) => state.user);
   const loadUser = useAuthStore((state) => state.loadUser);
   const userId = useAuthStore((state) => state.id);
+  const userRole = useAuthStore((state) => state.userRole);
 
   const {
     batches,
@@ -36,6 +37,7 @@ const AttendancePage = () => {
     error,
     success,
     getTeacherBatches,
+    getAllBatches,
     selectBatch,
     toggleAttendance,
     markAllPresent,
@@ -57,10 +59,14 @@ const AttendancePage = () => {
   }, [loadUser]);
 
   useEffect(() => {
-    if (userId) {
-      getTeacherBatches(userId);
+    if (userId && userRole) {
+      if (userRole === "Admin") {
+        getAllBatches();
+      } else {
+        getTeacherBatches(userId);
+      }
     }
-  }, [userId, getTeacherBatches]);
+  }, [userId, userRole, getTeacherBatches, getAllBatches]);
 
   const handleSelectBatch = async (batch) => {
     try {
