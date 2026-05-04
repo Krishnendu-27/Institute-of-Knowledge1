@@ -11,6 +11,30 @@ const useAttendanceStore = create((set, get) => ({
   attendance: {},
   attendanceDate: new Date().toISOString().split("T")[0],
 
+  // Fetch all batches (for admin)
+  getAllBatches: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.get("/batch");
+      const batchesData = response.data?.data || response.data || [];
+
+      set({
+        isLoading: false,
+        batches: batchesData,
+      });
+      return batchesData;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch batches";
+      set({
+        isLoading: false,
+        error: errorMessage,
+      });
+      console.error("Get All Batches Error:", err);
+      throw err;
+    }
+  },
+
   // Fetch teacher batches
   getTeacherBatches: async (userId) => {
     set({ isLoading: true, error: null });
