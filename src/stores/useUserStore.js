@@ -7,6 +7,7 @@ const useUserStore = create((set, get) => ({
   success: false,
   students: [],
   teachers: [],
+  studentProgress: {}, // Store progress data { studentId_mainClassId: { batchcompletion, examcompletion, certificateIssued } }
 
   getStudents: async () => {
     set({ isLoading: true, error: null });
@@ -30,6 +31,70 @@ const useUserStore = create((set, get) => ({
       });
       return response.data;
     } catch (err) {}
+  },
+
+  // Fetch progress data for a specific student from a mainClass
+  getStudentProgress: async (studentId, mainClassId) => {
+    try {
+      const response = await api.get(
+        `/attendance/summary/mainclass/${mainClassId}/student/${studentId}`,
+      );
+      const data = response.data?.data || {};
+
+      const key = `${studentId}_${mainClassId}`;
+      set((state) => ({
+        studentProgress: {
+          ...state.studentProgress,
+          [key]: {
+            batchcompletion: data.batchcompletion || false,
+            examcompletion: data.examcompletion || false,
+            certificateIssued: data.certificateIssued || false,
+          },
+        },
+      }));
+
+      return data;
+    } catch (err) {
+      console.error("Error fetching student progress:", err);
+      return null;
+    }
+  },
+
+  // Update progress for a student in a mainClass
+  updateStudentProgress: async (studentId, mainClassId, progressData) => {
+    try {
+      const response = await api.patch(
+        `/attendance/update-progress/${studentId}/${mainClassId}`,
+        progressData,
+      );
+
+      const key = `${studentId}_${mainClassId}`;
+      set((state) => ({
+        studentProgress: {
+          ...state.studentProgress,
+          [key]: {
+            batchcompletion:
+              progressData.batchcompletion !== undefined
+                ? progressData.batchcompletion
+                : state.studentProgress[key]?.batchcompletion || false,
+            examcompletion:
+              progressData.examcompletion !== undefined
+                ? progressData.examcompletion
+                : state.studentProgress[key]?.examcompletion || false,
+            certificateIssued:
+              progressData.certificateIssued !== undefined
+                ? progressData.certificateIssued
+                : state.studentProgress[key]?.certificateIssued || false,
+          },
+        },
+      }));
+
+      return response.data;
+    } catch (err) {
+      console.error("Error updating student progress:", err);
+      set({ error: err.response?.data?.message || "Error updating progress" });
+      return null;
+    }
   },
 
   addUser: async (formData) => {
