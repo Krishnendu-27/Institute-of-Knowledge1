@@ -27,6 +27,7 @@ import AttendancePage from "./pages/AttendancePage";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
+import StudentProfile from "./pages/StudentProfile";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -119,6 +120,7 @@ const App = () => {
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
               >
+                <Route path="/student-profile" element={<StudentProfile />} />
                 <Route path="/idcard" />
                 <Route path="/course-certificate" />
                 <Route path="/admit-card" />
