@@ -1,3 +1,150 @@
+// import { AnimatePresence } from "framer-motion";
+// import LoginModal from "./components/Login/LoginModal";
+// import LandingPage from "./pages/LandingPage";
+// import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+// import { Toaster } from "react-hot-toast";
+// import {
+//   ProtectedRoute,
+//   ProtectedRouteRoleBased,
+//   PublicRoute,
+// } from "./Routes/Route";
+// import Dashboard from "./pages/Dashboard";
+// import { useEffect, useState } from "react";
+// import useAuthStore from "./stores/useAuthStore";
+// import { useLoginStore } from "./stores/useLoginStore";
+// import useUiStateStore from "./stores/useUiStateStore";
+// import AllTeachers from "./pages/Admin/AllTeachers";
+// import AllStudents from "./pages/Admin/AllStudents";
+// import Batch from "./pages/Admin/Batch";
+// import Loading from "./pages/Loading";
+// import { NavigationLayout } from "./components/UI/NavigationLayout";
+// import ProfilePage from "./pages/ProfilePage";
+// import CoursesPage from "./pages/Admin/CoursesPage";
+// import CourseDetails from "./pages/Admin/CourseDetails";
+// import CreateCourse from "./pages/Admin/CreateCourse";
+// import AddNewStudent from "./pages/Admin/AddNewStudent";
+// import AttendancePage from "./pages/AttendancePage";
+// import RegisterNewUser from "./pages/RegisterNewUser";
+// import Tteacher from "./pages/Tteacher";
+// import NotFoundPage from "./pages/NotFoundPage";
+// import BatchPage from "./pages/BatchPage";
+
+// const App = () => {
+//   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+//   const openLoginModal = useLoginStore((state) => state.openModal);
+//   const isDarkMode = useUiStateStore((state) => state.isDarkMode);
+//   const loaduser = useAuthStore((state) => state.loadUser);
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   useEffect(() => {
+//     loaduser();
+
+//     const timer = setTimeout(() => {
+//       setIsLoading(false);
+//     }, 2000);
+
+//     return () => clearTimeout(timer);
+//   }, []);
+
+//   // THEME SWICTHER FOR DARK/LIGHT MODE
+//   useEffect(() => {
+//     const html = document.documentElement;
+//     if (isDarkMode) {
+//       html.classList.add("dark");
+//     } else {
+//       html.classList.remove("dark");
+//     }
+//   }, [isDarkMode]);
+
+//   // IF THE USER IS NOT AUTHENTICATED THE MODAL WILL SHOW AFTER 5 SECONDS
+//   useEffect(() => {
+//     if (!isAuthenticated) {
+//       const timeOut = setTimeout(openLoginModal, 5000);
+//       return () => clearTimeout(timeOut);
+//     }
+//   }, [isAuthenticated, openLoginModal]);
+
+//   useEffect(() => {});
+
+//   if (isLoading) {
+//     return <Loading />;
+//   }
+
+//   return (
+//     <AnimatePresence mode="Wait">
+//       <Router>
+//         <Toaster />
+//         <LoginModal />
+//         <Routes>
+//           <Route element={<ProtectedRoute />}>
+//             <Route element={<NavigationLayout />}>
+//               {/* Role for All users */}
+//               <Route
+//                 element={
+//                   <ProtectedRouteRoleBased
+//                     allowedRoles={["Admin", "Teacher", "Student"]}
+//                   />
+//                 }
+//               >
+//                 <Route path="/" element={<Dashboard />} />
+//                 <Route path="/profile" element={<ProfilePage />} />
+//                 {/* All Batches Can fetch by student / admin / teachers */}
+//                 {/* <Route path="/batch" element={<BatchPage />} /> */}
+//               </Route>
+
+//               {/* Routes for both Admins / Teachers */}
+//               <Route
+//                 element={
+//                   <ProtectedRouteRoleBased
+//                     allowedRoles={["Admin", "Teacher"]}
+//                   />
+//                 }
+//               >
+//                 <Route path="/teachers" element={<AllTeachers />} />
+//                 <Route path="/students" element={<AllStudents />} />
+//                 <Route path="/attendance" element={<AttendancePage />} />
+//                 <Route path="/registeruser" element={<RegisterNewUser />} />
+//               </Route>
+
+//               {/* Admin only */}
+//               <Route
+//                 element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
+//               >
+//                 <Route path="/courses">
+//                   <Route index element={<CoursesPage />} />
+//                   <Route path="createcourse" element={<CreateCourse />} />
+//                   <Route path="addnewstudent" element={<AddNewStudent />} />
+//                   {/* <Route path="details" element={<CourseDetails />} /> */}
+//                 </Route>
+
+//               </Route>
+
+//               {/* Student only */}
+//               <Route
+//                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
+//               >
+//                 <Route path="/idcard" />
+//                 <Route path="/course-certificate" />
+//                 <Route path="/admit-card" />
+//                 <Route path="/registration-form" />
+//               </Route>
+//             </Route>
+//           </Route>
+
+//           <Route element={<PublicRoute />}>
+//             <Route path="/home" element={<LandingPage />} />
+//             <Route path="/t" element={<Tteacher />} />
+//           </Route>
+
+//           <Route path="*" element={<NotFoundPage />} />
+//         </Routes>
+//       </Router>
+//     </AnimatePresence>
+//   );
+// };
+
+// export default App;
+
 import { AnimatePresence } from "framer-motion";
 import LoginModal from "./components/Login/LoginModal";
 import LandingPage from "./pages/LandingPage";
@@ -15,18 +162,22 @@ import { useLoginStore } from "./stores/useLoginStore";
 import useUiStateStore from "./stores/useUiStateStore";
 import AllTeachers from "./pages/Admin/AllTeachers";
 import AllStudents from "./pages/Admin/AllStudents";
-import Batch from "./pages/Admin/Batch";
 import Loading from "./pages/Loading";
 import { NavigationLayout } from "./components/UI/NavigationLayout";
 import ProfilePage from "./pages/ProfilePage";
 import CoursesPage from "./pages/Admin/CoursesPage";
-import CourseDetails from "./pages/Admin/CourseDetails";
 import CreateCourse from "./pages/Admin/CreateCourse";
 import AddNewStudent from "./pages/Admin/AddNewStudent";
 import AttendancePage from "./pages/AttendancePage";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
+
+// --- NEW BATCH COMPONENT IMPORTS (Create these files in your project) ---
+import BatchList from "./pages/Batch/BatchList";
+import BatchDetails from "./pages/Batch/BatchDetails";
+import CreateBatch from "./pages/Batch/CreateBatch";
+import EditBatch from "./pages/Batch/EditBatch";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -37,15 +188,12 @@ const App = () => {
 
   useEffect(() => {
     loaduser();
-
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
-
     return () => clearTimeout(timer);
   }, []);
 
-  // THEME SWICTHER FOR DARK/LIGHT MODE
   useEffect(() => {
     const html = document.documentElement;
     if (isDarkMode) {
@@ -55,15 +203,12 @@ const App = () => {
     }
   }, [isDarkMode]);
 
-  // IF THE USER IS NOT AUTHENTICATED THE MODAL WILL SHOW AFTER 5 SECONDS
   useEffect(() => {
     if (!isAuthenticated) {
       const timeOut = setTimeout(openLoginModal, 5000);
       return () => clearTimeout(timeOut);
     }
   }, [isAuthenticated, openLoginModal]);
-
-  useEffect(() => {});
 
   if (isLoading) {
     return <Loading />;
@@ -77,7 +222,9 @@ const App = () => {
         <Routes>
           <Route element={<ProtectedRoute />}>
             <Route element={<NavigationLayout />}>
-              {/* Role for All users */}
+              {/* ==========================================
+                  ROLE: ALL USERS (Admin, Teacher, Student)
+                  ========================================== */}
               <Route
                 element={
                   <ProtectedRouteRoleBased
@@ -87,9 +234,15 @@ const App = () => {
               >
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/profile" element={<ProfilePage />} />
+
+                {/* BATCH VIEWING ROUTES */}
+                <Route path="/batches" element={<BatchList />} />
+                <Route path="/batches/:id" element={<BatchDetails />} />
               </Route>
 
-              {/* Routes for both Admins / Teachers */}
+              {/* ==========================================
+                  ROLE: STAFF ONLY (Admin, Teacher)
+                  ========================================== */}
               <Route
                 element={
                   <ProtectedRouteRoleBased
@@ -101,9 +254,13 @@ const App = () => {
                 <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/registeruser" element={<RegisterNewUser />} />
+                {/* Note: Adding a student to a batch will happen INSIDE the BatchDetails page 
+                    so we don't necessarily need a dedicated route for it unless it's a separate full page */}
               </Route>
 
-              {/* Admin only */}
+              {/* ==========================================
+                  ROLE: ADMIN ONLY
+                  ========================================== */}
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
               >
@@ -111,11 +268,16 @@ const App = () => {
                   <Route index element={<CoursesPage />} />
                   <Route path="createcourse" element={<CreateCourse />} />
                   <Route path="addnewstudent" element={<AddNewStudent />} />
-                  {/* <Route path="details" element={<CourseDetails />} /> */}
                 </Route>
+
+                {/* BATCH MANAGEMENT ROUTES */}
+                <Route path="/batches/create" element={<CreateBatch />} />
+                <Route path="/batches/edit/:id" element={<EditBatch />} />
               </Route>
 
-              {/* Student only */}
+              {/* ==========================================
+                  ROLE: STUDENT ONLY
+                  ========================================== */}
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
               >
@@ -127,6 +289,7 @@ const App = () => {
             </Route>
           </Route>
 
+          {/* PUBLIC ROUTES */}
           <Route element={<PublicRoute />}>
             <Route path="/home" element={<LandingPage />} />
             <Route path="/t" element={<Tteacher />} />

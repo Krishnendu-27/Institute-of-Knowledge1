@@ -10,9 +10,9 @@ export const ProtectedRoute = () => {
 export const ProtectedRouteRoleBased = ({ allowedRoles }) => {
   
   const { userRole } = useAuthStore();
-  if (!userRole) {
-    return <Navigate to="/home" replace />;
-  }
+  // if (!userRole) {
+  //   return <Navigate to="/home" replace />;
+  // }
 
   if (!allowedRoles.includes(userRole)) {
     return <Navigate to="/home" replace />;

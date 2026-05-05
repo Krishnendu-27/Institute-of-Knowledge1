@@ -93,6 +93,36 @@
   --color-success-foreground: var(--success-foreground);
 }
 
+@layer utilities {
+  /* Thin custom scrollbar for when sidebar is open */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+
+  /* Completely hidden scrollbar for when sidebar is closed */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+  }
+}
+
 @layer base {
   body {
     background-color: var(--background);
