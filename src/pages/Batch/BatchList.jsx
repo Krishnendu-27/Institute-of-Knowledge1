@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
+import BatchDetails from "./BatchDetails";
 
 const BatchList = () => {
   const { batches, fetchBatches, isLoading } = useBatchStore();
@@ -13,8 +14,7 @@ const BatchList = () => {
   useEffect(() => {
     fetchBatches();
   }, [fetchBatches]);
-
-  // Filter batches based on search query (checks name, weekday, and teacher email)
+  
   const filteredBatches = batches.filter((batch) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -113,7 +113,11 @@ const BatchList = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link to={`/batches/${batch._id}`} className="block h-full">
+              <Link
+                to={`/batches/${encodeURIComponent(batch.name)}`}
+                state={{ batchId: batch._id }}
+                className="block h-full"
+              >
                 <div className="h-full p-6 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="flex justify-between items-start mb-4">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate pr-2">

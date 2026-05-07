@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import useBatchStore from "../../stores/useBatchStore";
 import Loading from "../Loading";
+import BackButton from "../../components/UI/Button";
 
 const EditBatch = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const id = location.state?.batchId;
+
   const { currentBatch, fetchBatchById, updateBatch, isLoading } =
     useBatchStore();
 
@@ -20,12 +24,14 @@ const EditBatch = () => {
     students: "",
   });
 
-  // Fetch the batch data when the component mounts
   useEffect(() => {
-    fetchBatchById(id);
-  }, [id, fetchBatchById]);
+    if (id) {
+      fetchBatchById(id);
+    } else {
+      navigate("/batches");
+    }
+  }, [id, fetchBatchById, navigate]);
 
-  // Pre-fill the form once the batch data is loaded
   useEffect(() => {
     if (currentBatch) {
       setFormData({
@@ -34,7 +40,6 @@ const EditBatch = () => {
         startTime: currentBatch.startTime || "",
         endTime: currentBatch.endTime || "",
         teacherEmail: currentBatch.teacherEmail || "",
-        // Assuming populated arrays from the backend, map them back to comma-separated strings for the MVP form
         mainClasses:
           currentBatch.mainClasses
             ?.map((c) => (typeof c === "object" ? c._id : c))
@@ -54,7 +59,6 @@ const EditBatch = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Formatting data to match the expected backend payload
     const payload = {
       ...formData,
       mainClasses: formData.mainClasses
@@ -70,7 +74,7 @@ const EditBatch = () => {
     await updateBatch(id, payload, navigate);
   };
 
-  if (isLoading && !currentBatch) return <Loading />;
+  if (!id || (isLoading && !currentBatch)) return <Loading />;
 
   return (
     <motion.div
@@ -79,6 +83,9 @@ const EditBatch = () => {
       className="container mx-auto px-4 py-8 max-w-2xl"
     >
       <div className="p-8 rounded-3xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl border border-gray-200 dark:border-gray-700 shadow-2xl">
+        <div className="pb-5">
+          <BackButton />
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
           Edit Batch
         </h1>
@@ -169,35 +176,6 @@ const EditBatch = () => {
               />
             </div>
           </div>
-
-          {/* Hidden or advanced fields for raw array editing if needed, 
-              though managing students is better done via the BatchDetails page */}
-          <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Advanced IDs (Comma Separated)
-            </h3>
-            <div>
-              <input
-                type="text"
-                name="mainClasses"
-                value={formData.mainClasses}
-                onChange={handleChange}
-                className="w-full px-4 py-2 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                placeholder="Main Class IDs..."
-              />
-            </div>
-            <div>
-              <input
-                type="text"
-                name="students"
-                value={formData.students}
-                onChange={handleChange}
-                className="w-full px-4 py-2 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                placeholder="Student IDs..."
-              />
-            </div>
-          </div>
-
           <div className="pt-6 flex gap-4">
             <button
               type="button"

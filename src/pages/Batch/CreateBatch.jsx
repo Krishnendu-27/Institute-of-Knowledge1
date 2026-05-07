@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -13,14 +13,18 @@ import {
   Users,
   GraduationCap,
   Briefcase,
+  ArrowLeft,
 } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
+import toast from "react-hot-toast";
+import BackButton from "../../components/UI/Button";
+import { getReadableError } from "../../util/Error/Error";
 
 const CreateBatch = () => {
   const navigate = useNavigate();
-  const { createBatch, isLoading } = useBatchStore();
+  const { createBatch, isLoading, error } = useBatchStore();
 
   // Store connections
   const { teachers, students, getTeachers, getStudents } = useUserStore();
@@ -84,7 +88,7 @@ const CreateBatch = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,13 +97,14 @@ const CreateBatch = () => {
       selectedClasses.length === 0 ||
       selectedStudents.length === 0
     ) {
-      alert(
+      toast.error(
         "Please select a teacher, at least one class, and at least one student.",
       );
       return;
     }
 
     const mainClassStudentPairs = [];
+
     selectedClasses.forEach((cls) => {
       selectedStudents.forEach((std) => {
         mainClassStudentPairs.push({
@@ -119,10 +124,9 @@ const CreateBatch = () => {
       students: selectedStudents.map((s) => s._id),
       mainClassStudentPairs,
     };
-    console.log(payload);
-    // await createBatch(payload, navigate);
-  };
 
+    await createBatch(payload, navigate);
+  };
 
   // --- Helper Components & Functions ---
 
@@ -171,16 +175,10 @@ const CreateBatch = () => {
       className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl"
     >
       <div className="p-5 sm:p-8 rounded-3xl bg-white/80 dark:bg-card/80 backdrop-blur-2xl border border-gray-200 dark:border-border shadow-2xl">
-        <div className="mb-6 sm:mb-8 border-b border-gray-200 dark:border-border pb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
-            Configure New Batch
-          </h1>
-          <p className="text-gray-500 dark:text-muted-foreground mt-2 text-sm">
-            Set up core details, schedule, and enroll members to provision a new
-            learning batch.
-          </p>
-        </div>
-
+        <BackButton
+          details={`Set up core details, schedule, and enroll members to provision a
+              new learning batch.`}
+        />
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
           {/* SECTION 1: Core Details */}
           <div className="bg-gray-50/50 dark:bg-muted/30 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-border/50 space-y-6">

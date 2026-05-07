@@ -61,9 +61,9 @@ const useBatchStore = create((set, get) => ({
         isLoading: false,
       }));
       toast.success("Batch created successfully!");
-      if (navigate) navigate("/batches");
+      if (navigate) navigate(-1);
     } catch (error) {
-      const message = error.response?.data?.message || "Failed to create batch";
+      const message = error.response?.data?.error || "Failed to create batch";
       set({ error: message, isLoading: false });
       toast.error(message);
     }
@@ -88,13 +88,11 @@ const useBatchStore = create((set, get) => ({
   updateBatch: async (id, updatedData, navigate) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.put(
-        `/batch/edit/${id}`,
-        updatedData,
-      );
+      const response = await api.put(`/batch/edit/${id}`, updatedData);
       toast.success("Batch updated successfully!");
       get().fetchBatchById(id); // Refresh current batch
-      if (navigate) navigate(`/batches/${id}`);
+      // if (navigate) navigate(`/batches`);
+      if (navigate) navigate(-1);
     } catch (error) {
       const message = error.response?.data?.message || "Failed to update batch";
       set({ error: message, isLoading: false });
@@ -112,7 +110,7 @@ const useBatchStore = create((set, get) => ({
         isLoading: false,
       }));
       toast.success("Batch deleted successfully!");
-      if (navigate) navigate("/batches");
+      if (navigate) navigate(-1);
     } catch (error) {
       const message = error.response?.data?.message || "Failed to delete batch";
       set({ error: message, isLoading: false });
