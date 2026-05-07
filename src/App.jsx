@@ -172,6 +172,7 @@ import AttendancePage from "./pages/AttendancePage";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
+import StudentProfile from "./pages/StudentProfile";
 
 // --- NEW BATCH COMPONENT IMPORTS (Create these files in your project) ---
 import BatchList from "./pages/Batch/BatchList";
@@ -281,6 +282,7 @@ const App = () => {
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
               >
+                <Route path="/student-profile" element={<StudentProfile />} />
                 <Route path="/idcard" />
                 <Route path="/course-certificate" />
                 <Route path="/admit-card" />

@@ -24,5 +24,5 @@ export const ProtectedRouteRoleBased = ({ allowedRoles }) => {
 export const PublicRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/"  />;
 };
