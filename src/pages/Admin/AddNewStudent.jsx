@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import useClassStore from "../../stores/useClassStore";
 import useUserStore from "../../stores/useUserStore";
 import toast from "react-hot-toast";
+import BackButton from "../../components/UI/Button";
 
 const AddNewStudent = () => {
   const navigate = useNavigate();
@@ -162,25 +163,7 @@ const AddNewStudent = () => {
         <div className="w-full max-w-xl">
           {/* Header */}
           <div className="mb-8">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-medium"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-                <UserPlus className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                  Enroll New Student
-                </h1>
-                <p className="text-slate-500 mt-1">
-                  Assign an existing student to a course.
-                </p>
-              </div>
-            </div>
+            <BackButton details={`Assign an existing student to a course.`} />
           </div>
 
           {/* Main Form Card */}

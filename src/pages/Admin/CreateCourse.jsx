@@ -14,6 +14,7 @@ import {
 import useClassStore from "../../stores/useClassStore";
 import useUserStore from "../../stores/useUserStore";
 import toast from "react-hot-toast";
+import BackButton from "../../components/UI/Button";
 
 const CreateCourse = () => {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ const CreateCourse = () => {
       navigate("/courses");
     } catch (err) {
       console.error("Failed to create class", err);
-      toast.error(err)
+      toast.error(err);
     }
   };
 
@@ -94,23 +95,7 @@ const CreateCourse = () => {
 
       <div className="min-h-screen bg-slate-50 p-6 md:p-8 flex justify-center items-start">
         <div className="max-w-3xl w-full space-y-6">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/courses"
-              className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                Create New Course
-              </h1>
-              <p className="text-sm text-slate-500">
-                Add a new course offering to the institute.
-              </p>
-            </div>
-          </div>
-
+          <BackButton details={`Add a new course offering to the institute.`} />
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm flex items-center gap-2">
               <span>⚠️</span> {error}

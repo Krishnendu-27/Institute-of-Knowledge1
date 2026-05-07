@@ -22,6 +22,7 @@ import { TextInput } from "../components/UI/RegisterNewUser/TextInput";
 import { SelectInput } from "../components/UI/RegisterNewUser/SelectInput";
 import { FilePreviewModal } from "../components/UI/RegisterNewUser/FilePreviewModal";
 import { SectionCard } from "../components/UI/RegisterNewUser/SectionCard";
+import BackButton from "../components/UI/Button";
 
 const RegisterNewUser = () => {
   const { addUser, isLoading: isAddingUser, error, success } = useUserStore();
@@ -238,13 +239,16 @@ const RegisterNewUser = () => {
         viewingFile={viewingFile}
         setViewingFile={setViewingFile}
       />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-6xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700"
       >
         <form onSubmit={handleSubmit} className="p-6 md:p-8">
+          <div className="mb-8 flex items-center justify-start">
+            <BackButton details={`RegisterNewUser to the system`} />
+          </div>
+
           {/* Role Selection */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
