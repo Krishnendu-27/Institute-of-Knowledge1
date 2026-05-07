@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../stores/useAuthStore";
 import useAttendanceStore from "../stores/useAttendanceStore";
 import toast from "react-hot-toast";
+import BackButton from "../components/UI/Button";
 
 const AttendancePage = () => {
   const navigate = useNavigate();
@@ -163,27 +164,7 @@ const AttendancePage = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-                <Users className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-                  Attendance Management
-                </h1>
-                <p className="text-slate-500 mt-1">
-                  Track and manage your batch attendance
-                </p>
-              </div>
-            </div>
-          </div>
+          <BackButton details={`Track and manage your batch attendance`} />
         </div>
 
         {/* Error Alert */}
