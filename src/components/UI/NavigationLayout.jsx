@@ -80,7 +80,7 @@ export const NavigationLayout = () => {
     if (location.pathname === "/") return "Dashboard";
     if (location.pathname === "/profile") return `${userRole} Profile`;
     if (location.pathname === "/registeruser") return `Register New User`;
-    if (location.pathname.startsWith("/batches")) return `Class Batches`;
+    if (location.pathname.startsWith("/batches")) return `Batches`;
     return location.pathname.split("/").pop().replaceAll("-", " ");
   };
 
