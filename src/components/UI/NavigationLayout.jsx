@@ -77,12 +77,18 @@ export const NavigationLayout = () => {
   };
 
   const getPageTitle = () => {
-    if (location.pathname === "/") return "Dashboard";
-    if (location.pathname === "/profile") return `${userRole} Profile`;
-    if (location.pathname === "/registeruser") return `Register New User`;
-    if (location.pathname.startsWith("/batches")) return `Batches`;
-    return location.pathname.split("/").pop().replaceAll("-", " ");
-  };
+  if (location.pathname === "/") return "Dashboard";
+  if (location.pathname === "/profile") return `${userRole} Profile`;
+  if (location.pathname === "/registeruser") return `Register New User`;
+  if (location.pathname.startsWith("/courses/createcourse"))
+    return `Publish New Course`;
+  // if (location.pathname.startsWith("/courses"))
+  //   return `Courses`;
+  if (location.pathname.startsWith("/batches/create"))
+    return `Configure New Batch`;
+  if (location.pathname.startsWith("/batches")) return `Batches`;
+  return location.pathname.split("/").pop().replaceAll("-", " ");
+};
 
   return (
     <div className="flex min-h-screen bg-background text-foreground relative flex-col md:flex-row">
