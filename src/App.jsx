@@ -31,6 +31,7 @@ import BatchList from "./pages/Batch/BatchList";
 import BatchDetails from "./pages/Batch/BatchDetails";
 import CreateBatch from "./pages/Batch/CreateBatch";
 import EditBatch from "./pages/Batch/EditBatch";
+import CourseDetails from "./pages/Admin/CourseDetails";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -117,6 +118,11 @@ const App = () => {
               >
                 <Route path="/courses">
                   <Route index element={<CoursesPage />} />
+                  <Route
+                    path="/courses/:courseName"
+                    element={<CourseDetails />}
+                  />
+
                   <Route path="createcourse" element={<CreateCourse />} />
                   <Route path="addnewstudent" element={<AddNewStudent />} />
                 </Route>
