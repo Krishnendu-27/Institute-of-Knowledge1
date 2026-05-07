@@ -325,7 +325,7 @@ const CourseDetails = () => {
               {mainClass?.name || displayCourseName}
               </h2> */}
 
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 Ca">
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 capitalize">
                 {mainClass?.name || displayCourseName}
               </h1>
 
