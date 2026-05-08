@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -19,10 +19,13 @@ import {
   X,
   Edit,
   Save,
+  ChevronDown,
 } from "lucide-react";
 import useClassStore from "../../stores/useClassStore";
+import useUserStore from "../../stores/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { generateSlug } from "../../util/generateSlug";
 
 const CourseDetails = () => {
   const location = useLocation();
@@ -32,13 +35,19 @@ const CourseDetails = () => {
   const courseId = location.state?.courseId;
   const displayCourseName = location.state?.courseName || "Course Details";
 
+  // Class Store
   const getClassById = useClassStore((state) => state.getClassById);
   const getStudentProgress = useClassStore((state) => state.getStudentProgress);
   const removeStudentInClass = useClassStore(
     (state) => state.removeStudentInClass,
   );
   const updateClass = useClassStore((state) => state.updateClass);
+  const deleteClass = useClassStore((state) => state.deleteClass);
   const isLoading = useClassStore((state) => state.isLoading);
+
+  // User Store (for Instructors)
+  const getTeachers = useUserStore((state) => state.getTeachers);
+  const teachers = useUserStore((state) => state.teachers) || [];
 
   const [courseData, setCourseData] = useState(null);
   const [localError, setLocalError] = useState(null);
@@ -49,8 +58,12 @@ const CourseDetails = () => {
   const [studentToRemove, setStudentToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
+  // Edit states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+  const teacherDropdownRef = useRef(null);
+
   const [editFormData, setEditFormData] = useState({
     name: "",
     startDate: "",
@@ -61,6 +74,10 @@ const CourseDetails = () => {
     teacherEmail: "",
     isActive: true,
   });
+
+  // Delete course states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingCourse, setIsDeletingCourse] = useState(false);
 
   const pageVariants = {
     initial: { opacity: 0, y: 20, scale: 0.98 },
@@ -82,7 +99,26 @@ const CourseDetails = () => {
       }
     };
     fetchCourseDetails();
-  }, [courseId, getClassById, navigate]);
+
+    // Fetch teachers for the edit dropdown if not already loaded
+    if (getTeachers && teachers.length === 0) {
+      getTeachers();
+    }
+  }, [courseId, getClassById, navigate, getTeachers]);
+
+  // Close teacher dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        teacherDropdownRef.current &&
+        !teacherDropdownRef.current.contains(event.target)
+      ) {
+        setIsTeacherDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -109,10 +145,28 @@ const CourseDetails = () => {
 
   const handleEditFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const newValue = type === "checkbox" ? checked : value;
+
+    setEditFormData((prev) => {
+      const updatedData = { ...prev, [name]: newValue };
+
+      // Recalculate endDate when startDate or duration changes
+      if (name === "startDate" || name === "duration") {
+        if (updatedData.startDate && updatedData.duration) {
+          const startDateObj = new Date(updatedData.startDate);
+          const durationMonths = parseInt(updatedData.duration, 10);
+
+          if (
+            !isNaN(durationMonths) &&
+            startDateObj.toString() !== "Invalid Date"
+          ) {
+            startDateObj.setMonth(startDateObj.getMonth() + durationMonths);
+            updatedData.endDate = startDateObj.toISOString().split("T")[0];
+          }
+        }
+      }
+      return updatedData;
+    });
   };
 
   const handleEditSubmit = async (e) => {
@@ -121,6 +175,7 @@ const CourseDetails = () => {
     try {
       await updateClass(courseData.mainClass._id, editFormData);
 
+      // Optimistically update the UI state
       setCourseData((prevData) => ({
         ...prevData,
         mainClass: {
@@ -138,6 +193,19 @@ const CourseDetails = () => {
       );
     } finally {
       setIsUpdatingCourse(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    setIsDeletingCourse(true);
+    try {
+      await deleteClass(courseData.mainClass._id);
+      toast.success("Course deleted successfully!");
+      navigate("/courses", { replace: true });
+    } catch (error) {
+      console.error("Failed to delete course", error);
+      toast.error(error.response?.data?.message || "Failed to delete course.");
+      setIsDeletingCourse(false);
     }
   };
 
@@ -296,9 +364,6 @@ const CourseDetails = () => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                {/* <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                  {mainClass?.name || displayCourseName}
-                </h1> */}
                 <p className="text-slate-500 flex items-center gap-2 mt-1">
                   <span
                     className={`w-2 h-2 rounded-full ${mainClass?.isActive ? "bg-emerald-500" : "bg-red-500"}`}
@@ -309,22 +374,27 @@ const CourseDetails = () => {
               </div>
             </div>
 
-            {/* Edit Course Button */}
-            <button
-              onClick={handleOpenEditModal}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm font-medium"
-            >
-              <Edit className="w-4 h-4" />
-              Edit Course
-            </button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors shadow-sm font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+              <button
+                onClick={handleOpenEditModal}
+                className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm font-medium"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Course
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 md:col-span-2 space-y-6">
-              {/* <h2 className="text-2xl font-semibold text-slate-800 border-b border-slate-100 pb-2 capitalize">
-              {mainClass?.name || displayCourseName}
-              </h2> */}
-
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 capitalize">
                 {mainClass?.name || displayCourseName}
               </h1>
@@ -406,7 +476,15 @@ const CourseDetails = () => {
                   {mainClass?.batches?.map((batch) => (
                     <div
                       key={batch?._id || Math.random()}
-                      className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-2"
+                      onClick={() =>
+                        navigate(`/batches/${generateSlug(batch?.name)}`, {
+                          state: {
+                            batchId: batch._id,
+                            batchName: batch.name,
+                          },
+                        })
+                      }
+                      className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                       {batch?.name}
@@ -599,6 +677,71 @@ const CourseDetails = () => {
         </div>
       </motion.div>
 
+      {/* Delete Course Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
+            >
+              <button
+                onClick={() => !isDeletingCourse && setIsDeleteModalOpen(false)}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-6">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  Delete Course?
+                </h3>
+                <p className="text-slate-500 mb-1">
+                  Are you sure you want to delete{" "}
+                  <strong className="text-slate-800">{mainClass?.name}</strong>?
+                </p>
+                <p className="text-sm text-red-500 font-medium">
+                  This action cannot be undone. All batches and student progress
+                  records linked to this course will be permanently removed.
+                </p>
+              </div>
+
+              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={isDeletingCourse}
+                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteCourse}
+                  disabled={isDeletingCourse}
+                  className="px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-red-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                >
+                  {isDeletingCourse ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Delete Course
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Remove Student Modal */}
       <AnimatePresence>
         {studentToRemove && (
@@ -726,20 +869,6 @@ const CourseDetails = () => {
 
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-slate-700">
-                        End Date
-                      </label>
-                      <input
-                        type="date"
-                        name="endDate"
-                        required
-                        value={editFormData.endDate}
-                        onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700">
                         Duration (Months)
                       </label>
                       <input
@@ -750,6 +879,23 @@ const CourseDetails = () => {
                         value={editFormData.duration}
                         onChange={handleEditFormChange}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-slate-700 flex justify-between items-center">
+                        <span>End Date</span>
+                        <span className="text-xs font-normal text-indigo-500">
+                          Auto-calculated
+                        </span>
+                      </label>
+                      <input
+                        type="date"
+                        name="endDate"
+                        required
+                        readOnly
+                        value={editFormData.endDate}
+                        className="w-full px-3 py-2 border border-slate-300 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed focus:outline-none focus:ring-0"
                       />
                     </div>
 
@@ -768,32 +914,109 @@ const CourseDetails = () => {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    {/* Custom Instructor Dropdown */}
+                    <div
+                      className="space-y-1.5 md:col-span-2 relative"
+                      ref={teacherDropdownRef}
+                    >
                       <label className="text-sm font-medium text-slate-700">
-                        Instructor Name
+                        Assign Instructor
                       </label>
-                      <input
-                        type="text"
-                        name="teacherName"
-                        required
-                        value={editFormData.teacherName}
-                        onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      />
-                    </div>
+                      <div
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg flex items-center justify-between cursor-pointer focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white hover:bg-slate-50 transition-colors"
+                        onClick={() =>
+                          setIsTeacherDropdownOpen(!isTeacherDropdownOpen)
+                        }
+                      >
+                        {editFormData.teacherName ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex flex-shrink-0 items-center justify-center text-xs font-bold text-indigo-600 overflow-hidden">
+                              {(() => {
+                                const selectedTeacher = teachers?.find(
+                                  (t) => t.email === editFormData.teacherEmail,
+                                );
+                                if (selectedTeacher?.profilePic) {
+                                  return (
+                                    <img
+                                      src={selectedTeacher?.profilePic}
+                                      alt={editFormData?.teacherName}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  );
+                                }
+                                return editFormData.teacherName
+                                  .charAt(0)
+                                  .toUpperCase();
+                              })()}
+                            </div>
+                            <span className="text-sm font-medium text-slate-900">
+                              {editFormData.teacherName}{" "}
+                              <span className="text-slate-500 font-normal">
+                                ({editFormData.teacherEmail})
+                              </span>
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-sm">
+                            Select an instructor...
+                          </span>
+                        )}
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700">
-                        Instructor Email
-                      </label>
-                      <input
-                        type="email"
-                        name="teacherEmail"
-                        required
-                        value={editFormData.teacherEmail}
-                        onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      />
+                      <AnimatePresence>
+                        {isTeacherDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto"
+                          >
+                            {teachers?.length > 0 ? (
+                              teachers.map((teacher) => (
+                                <div
+                                  key={teacher._id}
+                                  onClick={() => {
+                                    setEditFormData((prev) => ({
+                                      ...prev,
+                                      teacherName: teacher.name,
+                                      teacherEmail: teacher.email,
+                                    }));
+                                    setIsTeacherDropdownOpen(false);
+                                  }}
+                                  className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-slate-100"
+                                >
+                                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex flex-shrink-0 items-center justify-center text-sm font-bold text-indigo-600 overflow-hidden">
+                                    {teacher?.profilePic ? (
+                                      <img
+                                        src={teacher?.profilePic}
+                                        alt={teacher?.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      teacher.name?.charAt(0).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-900">
+                                      {teacher.name}
+                                    </span>
+                                    <span className="text-xs text-slate-500">
+                                      {teacher.email}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-6 text-sm text-slate-500 text-center flex flex-col items-center gap-2">
+                                <Users className="w-6 h-6 text-slate-300" />
+                                No instructors available.
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <div className="md:col-span-2 mt-2">
@@ -826,7 +1049,7 @@ const CourseDetails = () => {
                 <button
                   type="submit"
                   form="editCourseForm"
-                  disabled={isUpdatingCourse}
+                  disabled={isUpdatingCourse || !editFormData.teacherEmail}
                   className="px-5 py-2 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-indigo-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isUpdatingCourse ? (
