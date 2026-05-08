@@ -1,8 +1,4 @@
-import useAuthStore from "../stores/useAuthStore";
-
-export const getStudentId = () => {
-  const user = useAuthStore((state) => state.user);
-
+export const getStudentId = (user) => {
   if (!user._id) return "N/A";
 
   const year = new Date(user.createdAt || Date.now())

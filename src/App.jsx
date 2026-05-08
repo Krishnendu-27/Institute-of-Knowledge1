@@ -87,7 +87,7 @@ const App = () => {
                 }
               >
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/:username" element={<ProfilePage />} />
 
                 {/* BATCH VIEWING ROUTES */}
                 <Route path="/batches" element={<BatchList />} />
