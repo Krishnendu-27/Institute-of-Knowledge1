@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
-import BatchDetails from "./BatchDetails";
+import { generateSlug } from "../../util/generateSlug";
 
 const BatchList = () => {
   const { batches, fetchBatches, isLoading } = useBatchStore();
@@ -14,7 +14,7 @@ const BatchList = () => {
   useEffect(() => {
     fetchBatches();
   }, [fetchBatches]);
-  
+
   const filteredBatches = batches.filter((batch) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -23,6 +23,14 @@ const BatchList = () => {
       batch.teacherEmail?.toLowerCase().includes(query)
     );
   });
+
+  // const generateSlug = (name) => {
+  //   return (name || "batch")
+  //     .trim()
+  //     .toLowerCase()
+  //     .replace(/[^a-z0-9]+/g, "-")
+  //     .replace(/(^-|-$)+/g, "");
+  // };
 
   return (
     <motion.div
@@ -34,7 +42,8 @@ const BatchList = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <p className="text-slate-500 mt-1">
-          Overview of all active Batches, Assigned Course, fees, and student allocations.
+          Overview of all active Batches, Assigned Course, fees, and student
+          allocations.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
@@ -114,14 +123,17 @@ const BatchList = () => {
               transition={{ delay: index * 0.05 }}
             >
               <Link
-                to={`/batches/${encodeURIComponent(batch.name)}`}
-                state={{ batchId: batch._id }}
+                to={`/batches/${generateSlug(batch.name)}`}
+                state={{
+                  batchId: batch._id,
+                  batchName: batch.name?.trim(),
+                }}
                 className="block h-full"
               >
                 <div className="h-full p-6 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="flex justify-between items-start mb-4">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate pr-2">
-                      {batch.name}
+                      {batch.name?.trim()}
                     </h2>
                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 shrink-0">
                       {batch.weekday}

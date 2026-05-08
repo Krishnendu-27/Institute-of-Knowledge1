@@ -1,212 +1,3 @@
-// import { useEffect, useState } from "react";
-// import { useParams, useNavigate, useLocation } from "react-router-dom";
-// import { motion } from "framer-motion";
-// import useBatchStore from "../../stores/useBatchStore";
-// import useAuthStore from "../../stores/useAuthStore";
-// import { Loader2 } from "lucide-react";
-// import toast from "react-hot-toast";
-
-// const BatchDetails = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const { batchName } = useParams();
-//   const id = location.state?.batchId;
-
-//   const {
-//     currentBatch,
-//     fetchBatchById,
-//     addStudentToBatch,
-//     deleteBatch,
-//     isLoading,
-//   } = useBatchStore();
-//   const { user } = useAuthStore();
-
-//   const [studentEmail, setStudentEmail] = useState("");
-//   const [mainClassId, setMainClassId] = useState("");
-
-//   useEffect(() => {
-//     if (id) {
-//       fetchBatchById(id);
-//     } else {
-//       navigate("/batches");
-//     }
-//   }, [id, fetchBatchById, navigate]);
-
-//   const handleAddStudent = async (e) => {
-//     e.preventDefault();
-//     if (!studentEmail || !mainClassId) return;
-//     await addStudentToBatch(id, { studentEmail, mainClassId });
-//     setStudentEmail("");
-//   };
-
-//   const handleDelete = () => {
-//     if (window.confirm("Are you sure you want to delete this batch?")) {
-//       deleteBatch(id, navigate);
-//     }
-//   };
-
-//   if (!id || isLoading || !currentBatch) {
-//     return (
-//       <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 gap-4">
-//         <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-//         <p className="text-lg">Loading Batch Details...</p>
-//       </div>
-//     );
-//   }
-
-//   const isStaff = user?.role === "Admin" || user?.role === "Teacher";
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0 }}
-//       animate={{ opacity: 1 }}
-//       className="container mx-auto px-4 py-8 max-w-5xl"
-//     >
-//       {/* Header Card */}
-//       <div className="p-8 rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-gray-200 dark:border-gray-700 shadow-xl mb-8">
-//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-//           <div>
-//             <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
-//               {currentBatch.name}
-//             </h1>
-//             <p className="text-lg text-gray-600 dark:text-gray-300 font-medium">
-//               Instructor: {currentBatch.teacherEmail}
-//             </p>
-//           </div>
-
-//           {user?.role === "Admin" && (
-//             <div className="flex gap-3">
-//               <button
-//                 onClick={() => navigate(`/batches/edit/${id}`)}
-//                 className="px-5 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium transition-colors"
-//               >
-//                 Edit
-//               </button>
-//               <button
-//                 onClick={handleDelete}
-//                 className="px-5 py-2 rounded-lg bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-medium transition-colors"
-//               >
-//                 Delete
-//               </button>
-//             </div>
-//           )}
-//         </div>
-
-//         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
-//           <div>
-//             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Day</p>
-//             <p className="font-semibold text-gray-900 dark:text-white">
-//               {currentBatch.weekday}
-//             </p>
-//           </div>
-//           <div>
-//             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-//               Time
-//             </p>
-//             <p className="font-semibold text-gray-900 dark:text-white">
-//               {currentBatch.startTime} - {currentBatch.endTime}
-//             </p>
-//           </div>
-//           <div>
-//             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-//               Total Students
-//             </p>
-//             <p className="font-semibold text-gray-900 dark:text-white">
-//               {currentBatch.students?.length || 0}
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-//         {/* Enrolled Students List */}
-//         <div className="lg:col-span-2 space-y-6">
-//           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-//             Enrolled Students
-//           </h2>
-//           <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-//             {currentBatch.students?.length > 0 ? (
-//               <ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
-//                 {currentBatch.students.map((student) => (
-//                   <li
-//                     key={student._id}
-//                     className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
-//                   >
-//                     <div className="flex items-center gap-4">
-//                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white flex items-center justify-center font-bold">
-//                         {student.email?.charAt(0).toUpperCase()}
-//                       </div>
-//                       <div>
-//                         <p className="font-medium text-gray-900 dark:text-white">
-//                           {student.name || "Student"}
-//                         </p>
-//                         <p className="text-sm text-gray-500 dark:text-gray-400">
-//                           {student.email}
-//                         </p>
-//                       </div>
-//                     </div>
-//                   </li>
-//                 ))}
-//               </ul>
-//             ) : (
-//               <p className="p-6 text-gray-500 dark:text-gray-400 text-center">
-//                 No students enrolled yet.
-//               </p>
-//             )}
-//           </div>
-//         </div>
-
-//         {/* Admin/Teacher Control Panel */}
-//         {isStaff && (
-//           <div className="space-y-6">
-//             <div className="p-6 rounded-2xl bg-gradient-to-b from-indigo-50 to-white dark:from-gray-800 dark:to-gray-800/80 border border-indigo-100 dark:border-gray-700 shadow-lg">
-//               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-//                 Add Student
-//               </h3>
-//               <form onSubmit={handleAddStudent} className="space-y-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-//                     Student Email
-//                   </label>
-//                   <input
-//                     type="email"
-//                     required
-//                     value={studentEmail}
-//                     onChange={(e) => setStudentEmail(e.target.value)}
-//                     className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-//                     placeholder="student@example.com"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-//                     Main Class ID
-//                   </label>
-//                   <input
-//                     type="text"
-//                     required
-//                     value={mainClassId}
-//                     onChange={(e) => setMainClassId(e.target.value)}
-//                     className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-//                     placeholder="Enter Class ID..."
-//                   />
-//                 </div>
-//                 <button
-//                   type="submit"
-//                   className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md active:scale-95"
-//                 >
-//                   Enroll Student
-//                 </button>
-//               </form>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </motion.div>
-//   );
-// };
-
-// export default BatchDetails;
-
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -227,6 +18,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
+import { generateSlug } from "../../util/generateSlug";
 
 // --- Reusable Confirmation Modal ---
 const ConfirmModal = ({
@@ -293,7 +85,12 @@ const BatchDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { batchName } = useParams();
+
   const id = location.state?.batchId;
+  const fallbackName =
+    location.state?.batchName ||
+    (batchName ? batchName.replace(/-/g, " ") : "Batch Details");
+
   const [isAdding, setIsAdding] = useState(false);
 
   const {
@@ -312,12 +109,10 @@ const BatchDetails = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Fetch students when the page loads
   useEffect(() => {
     getStudents();
   }, [getStudents]);
 
-  // Handle clicking outside the dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -328,7 +123,6 @@ const BatchDetails = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter students based on search query
   const filteredStudents =
     students?.filter((student) => {
       const searchLower = searchQuery.toLowerCase();
@@ -388,24 +182,33 @@ const BatchDetails = () => {
     }
   };
 
-  if (!id || isLoading && !isAdding || !currentBatch) {
+  if (!id || (isLoading && !isAdding) || !currentBatch) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-        <p className="text-lg">Loading Batch Details...</p>
+        <p className="text-lg capitalize">Loading {fallbackName}...</p>
       </div>
     );
   }
 
   const isStaff = user?.role === "Admin" || user?.role === "Teacher";
 
-  // Helper to find which class a student is in
   const getStudentClassInfo = (studentId) => {
     const pair = currentBatch.mainClassStudentPairs?.find(
       (p) => p.student?._id === studentId,
     );
     return pair ? pair.mainClass.name : "Unassigned";
   };
+
+  // const generateSlug = (name) => {
+  //   return (name || "batch")
+  //     .trim()
+  //     .toLowerCase()
+  //     .replace(/[^a-z0-9]+/g, "-")
+  //     .replace(/(^-|-$)+/g, "");
+  // };
+
+  const displayBatchName = currentBatch?.name?.trim() || fallbackName;
 
   return (
     <motion.div
@@ -419,7 +222,7 @@ const BatchDetails = () => {
         onClose={() => setIsBatchModalOpen(false)}
         onConfirm={handleDeleteBatch}
         title="Delete Batch"
-        message={`Are you sure you want to delete "${currentBatch.name}"? This action cannot be undone and will remove all associated student records from this batch.`}
+        message={`Are you sure you want to delete "${displayBatchName}"? This action cannot be undone and will remove all associated student records from this batch.`}
       />
 
       {/* Student Remove Modal */}
@@ -438,8 +241,8 @@ const BatchDetails = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
-                {currentBatch.name}
+              <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white capitalize">
+                {displayBatchName}
               </h1>
             </div>
             <p className="text-lg text-gray-600 dark:text-gray-300 font-medium flex items-center gap-2">
@@ -514,10 +317,18 @@ const BatchDetails = () => {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Associated Courses
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 cursor-pointer">
               {currentBatch.mainClasses?.map((cls) => (
                 <div
                   key={cls._id}
+                  onClick={() =>
+                    navigate(`/courses/${generateSlug(cls.name)}`, {
+                      state: {
+                        courseId: cls._id,
+                        courseName: cls.name,
+                      },
+                    })
+                  }
                   className="p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -622,7 +433,7 @@ const BatchDetails = () => {
                         value={searchQuery}
                         onChange={(e) => {
                           setSearchQuery(e.target.value);
-                          setStudentEmail(""); // Clear selected email if user types manually
+                          setStudentEmail("");
                           setIsDropdownOpen(true);
                         }}
                         onFocus={() => setIsDropdownOpen(true)}
