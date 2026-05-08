@@ -33,6 +33,8 @@ import CreateBatch from "./pages/Batch/CreateBatch";
 import EditBatch from "./pages/Batch/EditBatch";
 import CourseDetails from "./pages/Admin/CourseDetails";
 
+import Fees from "./pages/Fees";
+
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useLoginStore((state) => state.openModal);
@@ -108,6 +110,7 @@ const App = () => {
                 <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/registeruser" element={<RegisterNewUser />} />
+                <Route path="/fees" element={<Fees />} />
               </Route>
 
               {/* ==========================================
