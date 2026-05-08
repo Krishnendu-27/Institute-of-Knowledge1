@@ -19,12 +19,13 @@ import {
   UserCheck,
   Clock,
   FileText,
-  ExternalLink,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../stores/useAuthStore";
 import useUserStore from "../stores/useUserStore";
 import BackButton from "../components/UI/Button";
+import DeleteConfirmModal from "../components/UI/DeleteConfirmModal";
 import { getStudentId } from "../util/getStudentId";
 
 const ProfilePage = () => {
@@ -33,30 +34,49 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   const targetUserId = location.state?.userId;
+  const targetUserData = location.state?.userData;
+
   const loggedInUser = useAuthStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
+  const deleteUser = useUserStore((state) => state.deleteUser);
   const isUpdating = useUserStore((state) => state.isLoading);
+  const getUserById = useUserStore((state) => state.getUserById);
 
+  const activeUserId = targetUserId || loggedInUser?._id;
+  const isSelf = activeUserId === loggedInUser?._id;
   const isAdmin = loggedInUser?.role === "Admin";
-  const isSelf = targetUserId === loggedInUser?._id;
+
+  // STRICT EDIT RULE: ONLY Admins can edit profiles
+  const canEdit = isAdmin;
 
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Modal States
   const [activeDocument, setActiveDocument] = useState(null);
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
   const [modalImageSrc, setModalImageSrc] = useState(null);
 
-  // Form State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [formData, setFormData] = useState({});
   const [newProfilePic, setNewProfilePic] = useState(null);
   const [newProfilePreview, setNewProfilePreview] = useState(null);
   const [newDocuments, setNewDocuments] = useState([]);
+  const [existingDocuments, setExistingDocuments] = useState([]);
+
+  // --- ROLE LOGIC FIXED ---
+  // Moved to the top so handleUpdate doesn't throw a ReferenceError
+  const targetRole = profileData?.role || "Student";
+  const isTargetAdmin = targetRole === "Admin";
+  const isTargetTeacher = targetRole === "Teacher";
+  const isTargetStudent = profileData
+    ? !isTargetAdmin && !isTargetTeacher
+    : false;
 
   useEffect(() => {
-    if (!targetUserId || location.pathname === "/profile") {
+    if (!activeUserId) {
       navigate("/");
       return;
     }
@@ -67,6 +87,13 @@ const ProfilePage = () => {
         if (isSelf) {
           setProfileData(loggedInUser);
           setFormData(loggedInUser);
+        } else if (targetUserData) {
+          setProfileData(targetUserData);
+          setFormData(targetUserData);
+        } else {
+          const fetchedData = await getUserById(activeUserId);
+          setProfileData(fetchedData);
+          setFormData(fetchedData);
         }
       } catch (error) {
         toast.error("Failed to load user profile");
@@ -77,11 +104,23 @@ const ProfilePage = () => {
     };
 
     fetchUserData();
-  }, [targetUserId, location.pathname, isSelf, loggedInUser, navigate]);
+  }, [
+    activeUserId,
+    targetUserData,
+    isSelf,
+    loggedInUser,
+    navigate,
+    getUserById,
+  ]);
 
   const cleanupPreviews = () => {
     if (newProfilePreview) URL.revokeObjectURL(newProfilePreview);
     newDocuments.forEach((doc) => URL.revokeObjectURL(doc.previewUrl));
+  };
+
+  const startEditing = () => {
+    setIsEditing(true);
+    setExistingDocuments(profileData.documents || []);
   };
 
   const handleInputChange = (e) => {
@@ -138,6 +177,10 @@ const ProfilePage = () => {
     });
   };
 
+  const removeExistingDocument = (urlToRemove) => {
+    setExistingDocuments((prev) => prev.filter((url) => url !== urlToRemove));
+  };
+
   const cancelEdit = () => {
     setIsEditing(false);
     setFormData(profileData);
@@ -145,6 +188,7 @@ const ProfilePage = () => {
     setNewProfilePic(null);
     setNewProfilePreview(null);
     setNewDocuments([]);
+    setExistingDocuments([]);
   };
 
   const validateForm = () => {
@@ -174,7 +218,12 @@ const ProfilePage = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!isAdmin) return toast.error("Access denied.");
+
+    if (!isAdmin) {
+      setIsEditing(false);
+      return toast.error("Access denied. Only Admins can edit profiles.");
+    }
+
     if (!profileData._id) return toast.error("User ID is missing.");
     if (!validateForm()) return;
 
@@ -192,13 +241,18 @@ const ProfilePage = () => {
 
     if (isTargetStudent) {
       newDocuments.forEach((doc) => submitData.append("documents", doc.file));
+      existingDocuments.forEach((url) =>
+        submitData.append("retainedDocuments", url),
+      );
     }
 
     try {
       const serverResponse = await updateUser(profileData._id, submitData);
-      const freshUserData = serverResponse?.data || serverResponse;
+      const freshUserData =
+        serverResponse?.data || serverResponse?.user || serverResponse;
 
       setProfileData(freshUserData);
+
       if (isSelf) useAuthStore.setState({ user: freshUserData });
 
       toast.success("Profile updated successfully!");
@@ -207,12 +261,29 @@ const ProfilePage = () => {
       setNewProfilePic(null);
       setNewProfilePreview(null);
       setNewDocuments([]);
+      setExistingDocuments([]);
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Failed to update profile";
       toast.error(errorMessage);
+    }
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!isAdmin || isSelf) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteUser(profileData._id);
+      toast.success("User deleted successfully.");
+      setShowDeleteModal(false);
+      navigate(-1);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -232,12 +303,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (
-    !targetUserId ||
-    location.pathname === "/profile" ||
-    isLoading ||
-    !profileData
-  ) {
+  if (isLoading || !profileData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B1120]">
         <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full drop-shadow-md"></div>
@@ -245,13 +311,6 @@ const ProfilePage = () => {
     );
   }
 
-  // --- ROLE BASED ACCESS LOGIC ---
-  const targetRole = profileData.role || "Student";
-  const isTargetAdmin = targetRole === "Admin";
-  const isTargetTeacher = targetRole === "Teacher";
-  const isTargetStudent = !isTargetAdmin && !isTargetTeacher;
-
-  // Reusable Info Row Component
   const InfoRow = ({ icon: Icon, label, value }) => (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-indigo-100 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ">
       <div className="flex items-center gap-3 w-full sm:w-1/3">
@@ -273,21 +332,36 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen relative px-4 sm:px-6 md:px-8 py-6 sm:py-8 bg-slate-50 dark:bg-[#0B1120] font-sans">
       <div className="max-w-4xl mx-auto relative z-10">
-        {/* Top Navigation */}
         <div className="flex justify-between items-center mb-6 sm:mb-8">
           <BackButton />
-          {isAdmin && !isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="group flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-95"
-            >
-              <Edit3
-                size={16}
-                className="sm:w-[18px] sm:h-[18px] group-hover:rotate-12 transition-transform"
-              />
-              Edit Profile
-            </button>
-          )}
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isAdmin && !isSelf && !isEditing && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="group flex items-center gap-2 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all border border-red-200 hover:border-red-500 shadow-sm active:scale-95"
+              >
+                <Trash2
+                  size={16}
+                  className="sm:w-[18px] sm:h-[18px] transition-transform"
+                />
+                <span className="hidden sm:inline">Delete User</span>
+              </button>
+            )}
+
+            {canEdit && !isEditing && (
+              <button
+                onClick={startEditing}
+                className="group flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-95"
+              >
+                <Edit3
+                  size={16}
+                  className="sm:w-[18px] sm:h-[18px] group-hover:rotate-12 transition-transform"
+                />
+                Edit Profile
+              </button>
+            )}
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
@@ -300,7 +374,6 @@ const ProfilePage = () => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4 sm:space-y-6"
             >
-              {/* Profile Header Card */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center shadow-sm relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
@@ -330,6 +403,7 @@ const ProfilePage = () => {
                       />
                     )}
                   </div>
+                  <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 border-4 border-white dark:border-slate-900 rounded-full z-20"></div>
                 </div>
 
                 <div className="flex-1 text-center sm:text-left z-10 w-full">
@@ -362,9 +436,7 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Data Information Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                {/* Contact Details Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden h-fit">
                   <div className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
                     <UserCheck
@@ -424,7 +496,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                {/* Academic & Identity Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden h-fit flex flex-col">
                   <div className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
                     <Shield
@@ -501,7 +572,6 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Uploaded Documents View */}
               {isTargetStudent && (
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-4 sm:p-6">
                   <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-slate-800 dark:text-white flex items-center gap-2">
@@ -569,7 +639,6 @@ const ProfilePage = () => {
                   </h2>
                 </div>
 
-                {/* Profile Pic Editor */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-xl border border-slate-100 dark:border-slate-700">
                   <div className="relative shrink-0 mx-auto sm:mx-0">
                     <div
@@ -613,7 +682,6 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  {/* Common Editable Fields */}
                   <div className="space-y-1 sm:space-y-2">
                     <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                       Full Name <span className="text-red-500">*</span>
@@ -675,46 +743,228 @@ const ProfilePage = () => {
                     </div>
                   </div>
 
-                  {/* Student-Only Editable Fields */}
                   {isTargetStudent && (
-                    <div className="space-y-1 sm:space-y-2">
-                      <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-                        Aadhar Number
-                      </label>
-                      <div className="relative">
-                        <Hash
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                          size={16}
-                        />
-                        <input
-                          type="text"
-                          name="adhar"
-                          value={formData.adhar || ""}
-                          onChange={handleInputChange}
-                          placeholder="12-digit number"
-                          className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
-                        />
+                    <>
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Date of Birth
+                        </label>
+                        <div className="relative">
+                          <Calendar
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="date"
+                            name="dob"
+                            value={
+                              formData.dob ? formData.dob.split("T")[0] : ""
+                            }
+                            onChange={handleInputChange}
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Gender
+                        </label>
+                        <div className="relative">
+                          <User
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <select
+                            name="gender"
+                            value={formData.gender || ""}
+                            onChange={handleInputChange}
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow appearance-none"
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Nationality
+                        </label>
+                        <div className="relative">
+                          <Flag
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="nationality"
+                            value={formData.nationality || ""}
+                            onChange={handleInputChange}
+                            placeholder="e.g., Indian"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Address
+                        </label>
+                        <div className="relative">
+                          <MapPin
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="address"
+                            value={formData.address || ""}
+                            onChange={handleInputChange}
+                            placeholder="Full Address"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Stream
+                        </label>
+                        <div className="relative">
+                          <BookOpen
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="stream"
+                            value={formData.stream || ""}
+                            onChange={handleInputChange}
+                            placeholder="e.g., Science, Arts"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Grade
+                        </label>
+                        <div className="relative">
+                          <GraduationCap
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="grade"
+                            value={formData.grade || ""}
+                            onChange={handleInputChange}
+                            placeholder="e.g., 10th, 12th"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Marks Obtained
+                        </label>
+                        <div className="relative">
+                          <FileText
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="number"
+                            name="marksObtained"
+                            value={formData.marksObtained || ""}
+                            onChange={handleInputChange}
+                            placeholder="e.g., 450"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                          Aadhar Number
+                        </label>
+                        <div className="relative">
+                          <Hash
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="adhar"
+                            value={formData.adhar || ""}
+                            onChange={handleInputChange}
+                            placeholder="12-digit number"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
-                  {/* Documents Upload - Only for Students */}
                   {isTargetStudent && (
                     <div className="col-span-1 md:col-span-2 mt-2">
                       <div className="p-4 sm:p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30">
                         <label className="text-xs sm:text-sm font-bold block mb-2 sm:mb-3 text-slate-800 dark:text-slate-200">
-                          Upload Additional Documents (JPG/PNG)
+                          Update Documents (JPG/PNG)
                         </label>
+
                         <input
                           type="file"
                           multiple
                           accept="image/png, image/jpeg, image/jpg"
                           onChange={handleDocChange}
-                          className="block w-full text-xs sm:text-sm text-slate-500 file:mr-3 file:py-2 sm:file:py-2.5 file:px-4 sm:file:px-6 file:rounded-xl file:border-0 file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 dark:file:bg-indigo-900/40 dark:file:text-indigo-300 cursor-pointer transition-colors"
+                          className="block w-full text-xs sm:text-sm text-slate-500 file:mr-3 file:py-2 sm:file:py-2.5 file:px-4 sm:file:px-6 file:rounded-xl file:border-0 file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 dark:file:bg-indigo-900/40 dark:file:text-indigo-300 cursor-pointer transition-colors mb-4"
                         />
 
-                        {newDocuments.length > 0 && (
+                        {(existingDocuments.length > 0 ||
+                          newDocuments.length > 0) && (
                           <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                            {existingDocuments.map((docUrl, idx) => (
+                              <div
+                                key={`existing-${idx}`}
+                                className="relative group rounded-xl overflow-hidden h-24 sm:h-28 border border-slate-300 dark:border-slate-600 shadow-sm"
+                              >
+                                <img
+                                  src={docUrl}
+                                  alt={`Saved Doc ${idx + 1}`}
+                                  className="w-full h-full object-cover cursor-pointer"
+                                  onClick={() =>
+                                    setActiveDocument({
+                                      url: docUrl,
+                                      name: `Saved Document ${idx + 1}`,
+                                    })
+                                  }
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                                  <ZoomIn
+                                    size={20}
+                                    className="text-white drop-shadow-md"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeExistingDocument(docUrl)}
+                                  className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
+                                  title="Remove Saved File"
+                                >
+                                  <X size={14} strokeWidth={3} />
+                                </button>
+                                <span className="absolute bottom-1 left-1 bg-slate-900/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                                  Saved
+                                </span>
+                              </div>
+                            ))}
+
                             {newDocuments.map((doc) => (
                               <div
                                 key={doc.id}
@@ -741,10 +991,13 @@ const ProfilePage = () => {
                                   type="button"
                                   onClick={() => removeNewDocument(doc.id)}
                                   className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
-                                  title="Remove File"
+                                  title="Remove New File"
                                 >
                                   <X size={14} strokeWidth={3} />
                                 </button>
+                                <span className="absolute bottom-1 left-1 bg-green-600/80 text-white text-[10px] px-1.5 py-0.5 rounded">
+                                  New
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -777,9 +1030,7 @@ const ProfilePage = () => {
         </AnimatePresence>
       </div>
 
-      {/* --- MODALS --- */}
       <AnimatePresence>
-        {/* Profile Picture Fullscreen Modal */}
         {showProfilePicModal && modalImageSrc && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -808,7 +1059,6 @@ const ProfilePage = () => {
           </motion.div>
         )}
 
-        {/* Enhanced Document Fullscreen Modal */}
         {activeDocument && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -825,7 +1075,6 @@ const ProfilePage = () => {
               className="w-full max-w-5xl flex flex-col items-center gap-4 sm:gap-6"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Floating Header */}
               <div className="w-full flex items-center justify-between drop-shadow-lg px-2 sm:px-0">
                 <div className="flex items-center gap-3">
                   <FileText
@@ -859,6 +1108,14 @@ const ProfilePage = () => {
             </motion.div>
           </motion.div>
         )}
+
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDeleteAction}
+          itemName={profileData?.name}
+          isLoading={isDeleting}
+        />
       </AnimatePresence>
     </div>
   );

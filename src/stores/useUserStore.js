@@ -116,9 +116,23 @@ const useUserStore = create((set, get) => ({
     set({ isLoading: true, error: null, success: false });
 
     try {
+      // FIX: Remove the explicit headers. Let Axios automatically detect
+      // the FormData and set the correct multipart boundaries.
       const response = await api.patch(`/user/edit/${userId}`, formData);
 
-      set({ isLoading: false, success: true });
+      const updatedUser = response.data?.user || response.data;
+
+      set((state) => ({
+        students: state.students?.map((s) =>
+          s._id === userId ? { ...s, ...updatedUser } : s,
+        ),
+        teachers: state.teachers?.map((t) =>
+          t._id === userId ? { ...t, ...updatedUser } : t,
+        ),
+        isLoading: false,
+        success: true,
+      }));
+
       setTimeout(() => set({ success: false }), 3000);
 
       return response.data;
@@ -126,8 +140,34 @@ const useUserStore = create((set, get) => ({
       const errorMessage =
         err.response?.data?.message ||
         "Something went wrong while updating the profile";
-      set({ isLoading: false, error: errorMessage });
 
+      set({ isLoading: false, error: errorMessage });
+      setTimeout(() => set({ error: null }), 4000);
+      throw err;
+    }
+  },
+
+  deleteUser: async (userId) => {
+    set({ isLoading: true, error: null, success: false });
+    try {
+      const response = await api.delete(`/user/delete/${userId}`);
+
+      // Update the local state to remove the user without needing a full refresh
+      set((state) => ({
+        isLoading: false,
+        success: true,
+        students: state.students.filter((s) => s._id !== userId),
+        teachers: state.teachers.filter((t) => t._id !== userId),
+      }));
+      setTimeout(() => set({ success: false }), 3000);
+
+      return response.data;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        "Something went wrong while deleting the user";
+
+      set({ isLoading: false, error: errorMessage });
       setTimeout(() => set({ error: null }), 4000);
       throw err;
     }
