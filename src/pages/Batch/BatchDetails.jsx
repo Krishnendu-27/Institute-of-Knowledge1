@@ -175,9 +175,24 @@ const BatchDetails = () => {
     await deleteBatch(id, navigate);
   };
 
+  // UPDATED handleRemoveStudent Function
   const handleRemoveStudent = async () => {
     if (studentToDelete) {
-      await removeStudentFromBatch(id, studentToDelete._id);
+      // Find the student's assigned mainClassId from the batch's relationships
+      const pair = currentBatch.mainClassStudentPairs?.find(
+        (p) => p.student?._id === studentToDelete._id,
+      );
+      const studentMainClassId = pair?.mainClass?._id;
+
+      if (!studentMainClassId) {
+        toast.error(
+          "Could not find the main class associated with this student.",
+        );
+        setStudentToDelete(null);
+        return;
+      }
+
+      await removeStudentFromBatch(id, studentToDelete._id, studentMainClassId);
       setStudentToDelete(null);
     }
   };
@@ -199,14 +214,6 @@ const BatchDetails = () => {
     );
     return pair ? pair.mainClass.name : "Unassigned";
   };
-
-  // const generateSlug = (name) => {
-  //   return (name || "batch")
-  //     .trim()
-  //     .toLowerCase()
-  //     .replace(/[^a-z0-9]+/g, "-")
-  //     .replace(/(^-|-$)+/g, "");
-  // };
 
   const displayBatchName = currentBatch?.name?.trim() || fallbackName;
 
@@ -382,7 +389,7 @@ const BatchDetails = () => {
                         </div>
                       </div>
 
-                      {/* {isStaff && (
+                      {isStaff && (
                         <button
                           onClick={() => setStudentToDelete(student)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
@@ -390,7 +397,7 @@ const BatchDetails = () => {
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
-                      )} */}
+                      )}
                     </li>
                   ))}
                 </ul>

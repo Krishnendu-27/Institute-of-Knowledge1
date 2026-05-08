@@ -117,6 +117,27 @@ const useBatchStore = create((set, get) => ({
       toast.error(message);
     }
   },
+
+  // 8. Remove student from batch (Admin/Teacher)
+  removeStudentFromBatch: async (id, studentId, mainClassId) => {
+    set({ isLoading: true, error: null });
+    try {
+      await api.delete(`/batch/remove-student/${id}`, {
+        data: {
+          studentId: studentId,
+          mainClassId: mainClassId,
+        },
+      });
+      toast.success("Student removed successfully!");
+      // Refresh batch details to show the updated student list
+      get().fetchBatchById(id);
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Failed to remove student";
+      set({ error: message, isLoading: false });
+      toast.error(message);
+    }
+  },
 }));
 
 export default useBatchStore;
