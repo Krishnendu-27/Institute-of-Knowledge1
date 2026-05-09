@@ -86,21 +86,48 @@ const StudentRow = ({
 
     setIsProcessing(true);
     try {
+      // Get the correct student ID - could be either id or _id
+      const studentId = student.id || student._id;
+
+      // Validate IDs before sending
+      if (!mainClassId || !studentId) {
+        console.error(
+          "Missing IDs - mainClassId:",
+          mainClassId,
+          "studentId:",
+          studentId,
+        );
+        toast.error("Student or Class information is missing");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Format the payment date to ISO string
+      const paymentDateTime = new Date(paymentDate);
+      const isoDateTime = paymentDateTime.toISOString();
+
+      // Create month string in "Month Year" format
+      const monthString = paymentDateTime.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+
       const paymentData = {
-        month: new Date(paymentDate).toLocaleString("default", {
-          month: "long",
-          year: "numeric",
-        }),
+        month: monthString,
         totalAmount: finalAmount,
-        paidAmount: parseFloat(paidAmount),
-        PaidAt: new Date(paymentDate),
+        PaidAt: isoDateTime,
       };
 
-      const result = await recordFeesPaid(
+      console.log(
+        "Payment Request - mainClassId:",
         mainClassId,
-        student._id,
+        "studentId:",
+        studentId,
+        "paymentData:",
         paymentData,
       );
+
+      const result = await recordFeesPaid(mainClassId, studentId, paymentData);
 
       if (result) {
         // Reset form
@@ -111,8 +138,11 @@ const StudentRow = ({
         setFineCalculated(false);
         setShowDiscount(false);
         onPaymentSuccess?.();
+      } else {
+        toast.error("Failed to record payment. Please try again.");
       }
     } catch (error) {
+      console.error("Payment error:", error);
       toast.error("Failed to process payment");
     } finally {
       setIsProcessing(false);
