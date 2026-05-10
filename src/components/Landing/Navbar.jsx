@@ -1,76 +1,10 @@
-// import { motion } from "framer-motion";
-// import { Image } from "../../assets/Image";
-// import { Navigate, NavLink, useNavigate } from "react-router-dom";
-// import { useLoginStore } from "../../stores/useLoginStore";
-// import useAuthStore from "../../stores/useAuthStore";
-// import { ArrowLeft, ArrowRight, Moon, Sun } from "lucide-react";
-// import useUiStateStore from "../../stores/useUiStateStore";
-
-// export const Navbar = () => {
-//   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-//   const openModal = useLoginStore((state) => state.openModal);
-//   const navigate = useNavigate();
-//   const isDarkMode = useUiStateStore((state) => state.isDarkMode);
-//   const themeSwitch = useUiStateStore((state) => state.toggleDarkmode);
-
-//   return (
-//     <nav className="flex items-center justify-between px-6 md:px-12 md:py-0 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border shadow-sm">
-//       <div className="flex gap-6 text-sm font-semibold text-foreground/80">
-//         <NavLink
-//           to="/"
-//           className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
-//         >
-//           Features
-//         </NavLink>
-//         <NavLink
-//           to="/"
-//           className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
-//         >
-//           Modules
-//         </NavLink>
-//       </div>
-
-//       <div className="flex flex-col items-center">
-//         <div className="md:w-25 w-15 rounded-lg flex items-center justify-center">
-//           <img src={Image.Logo} alt="Logo" />
-//         </div>
-//       </div>
-
-//       <div className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-foreground/10 transition-colors">
-//         <button onClick={themeSwitch}>{isDarkMode ? <Sun /> : <Moon />}</button>
-//       </div>
-
-//       <div className="flex items-center gap-4">
-//         {!isAuthenticated ? (
-//           <motion.button
-//             whileHover={{ scale: 1.05 }}
-//             whileTap={{ scale: 0.95 }}
-//             onClick={openModal}
-//             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black text-lg tracking-widest shadow-lg shadow-primary/30"
-//           >
-//             Login
-//           </motion.button>
-//         ) : (
-//           <motion.button
-//             whileHover={{ scale: 1.05 }}
-//             whileTap={{ scale: 0.95 }}
-//             onClick={() => navigate("/")}
-//             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black sm:text-xl text-sm tracking-widest shadow-lg shadow-primary/30"
-//           >
-//             <div>Start Now</div>
-//           </motion.button>
-//         )}
-//       </div>
-//     </nav>
-//   );
-// };
-
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image } from "../../assets/Image";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLoginStore } from "../../stores/useLoginStore";
 import useAuthStore from "../../stores/useAuthStore";
+import useUiStateStore from "../../stores/useUiStateStore";
 import { Moon, Sun, Monitor, Menu, X } from "lucide-react";
 
 export const Navbar = () => {
@@ -78,13 +12,13 @@ export const Navbar = () => {
   const openModal = useLoginStore((state) => state.openModal);
   const navigate = useNavigate();
 
-  // Local state for dropdowns
+  const theme = useUiStateStore((state) => state.theme);
+  const setTheme = useUiStateStore((state) => state.setTheme);
+
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "system");
   const dropdownRef = useRef(null);
 
-  // Handle click outside to close theme dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -95,7 +29,6 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close mobile menu automatically on desktop resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -106,24 +39,36 @@ export const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Apply theme to the document and save to localStorage
-  const handleThemeChange = (newTheme) => {
+  useEffect(() => {
+    const root = document.documentElement;
+    const systemThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const applyTheme = () => {
+      if (theme === "dark") {
+        root.classList.add("dark");
+      } else if (theme === "light") {
+        root.classList.remove("dark");
+      } else {
+        if (systemThemeMedia.matches) {
+          root.classList.add("dark");
+        } else {
+          root.classList.remove("dark");
+        }
+      }
+    };
+
+    applyTheme();
+
+    const handleSystemThemeChange = () => applyTheme();
+    systemThemeMedia.addEventListener("change", handleSystemThemeChange);
+
+    return () =>
+      systemThemeMedia.removeEventListener("change", handleSystemThemeChange);
+  }, [theme]);
+
+  const handleThemeSelect = (newTheme) => {
     setTheme(newTheme);
     setIsThemeDropdownOpen(false);
-
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      // System mode
-      localStorage.removeItem("theme");
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
   };
 
   return (
@@ -187,7 +132,7 @@ export const Navbar = () => {
                   className="absolute right-0 mt-2 w-36 bg-card border border-border rounded-xl shadow-lg overflow-hidden flex flex-col py-1 z-50"
                 >
                   <button
-                    onClick={() => handleThemeChange("light")}
+                    onClick={() => handleThemeSelect("light")}
                     className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
                       theme === "light"
                         ? "text-primary bg-primary/10"
@@ -197,7 +142,7 @@ export const Navbar = () => {
                     <Sun size={16} /> Light
                   </button>
                   <button
-                    onClick={() => handleThemeChange("dark")}
+                    onClick={() => handleThemeSelect("dark")}
                     className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
                       theme === "dark"
                         ? "text-primary bg-primary/10"
@@ -207,7 +152,7 @@ export const Navbar = () => {
                     <Moon size={16} /> Dark
                   </button>
                   <button
-                    onClick={() => handleThemeChange("system")}
+                    onClick={() => handleThemeSelect("system")}
                     className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
                       theme === "system"
                         ? "text-primary bg-primary/10"
