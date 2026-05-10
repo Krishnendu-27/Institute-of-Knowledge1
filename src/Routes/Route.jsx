@@ -8,14 +8,18 @@ export const ProtectedRoute = () => {
 };
 
 export const ProtectedRouteRoleBased = ({ allowedRoles }) => {
+  const userRole = useAuthStore((state)=>state.userRole);
   
-  const { userRole } = useAuthStore();
-  // if (!userRole) {
-  //   return <Navigate to="/home" replace />;
-  // }
-
   if (!allowedRoles.includes(userRole)) {
-    return <Navigate to="/home" replace />;
+    if (window.location.pathname === "/") {
+      return (
+        <div className="p-8 text-center text-red-500">
+          Unauthorized: Invalid User Role.
+        </div>
+      );
+    }
+
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
@@ -24,5 +28,5 @@ export const ProtectedRouteRoleBased = ({ allowedRoles }) => {
 export const PublicRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/"  />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/" />;
 };
