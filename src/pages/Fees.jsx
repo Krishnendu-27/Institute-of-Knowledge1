@@ -86,20 +86,20 @@ const Fees = () => {
     : "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 transition-colors duration-300">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+        <h1 className="text-4xl font-bold text-foreground mb-2">
           Fees Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Manage student fees, calculate fines, apply discounts, and process
           payments
         </p>
       </div>
 
       {/* Filter Panel */}
-      <div className="text-black [&_select]:text-black [&_option]:text-black [&_button]:text-black">
+      <div>
         <FilterPanel
           mainClasses={mainClasses}
           batches={filteredBatches}
@@ -113,55 +113,57 @@ const Fees = () => {
 
       {/* Students Table */}
       {selectedMainClass && selectedBatch && (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden transition-colors">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="ml-2 text-gray-600">Loading students...</span>
+              <Loader className="w-8 h-8 text-primary animate-spin" />
+              <span className="ml-2 text-muted-foreground font-medium">
+                Loading students...
+              </span>
             </div>
           ) : students && students.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-500 text-lg">
+              <p className="text-muted-foreground text-lg">
                 {selectedBatch
                   ? "No students found for this batch."
                   : "Please select both a class and batch to view students."}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                  <tr className="bg-muted/50 border-b border-border">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Photo
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Student Name
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Father Name
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Village
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Total Fees
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Fine Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
-                      Discountcourses/mern-devlopment
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
+                      Discount
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Final Amount
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="[&_td]:text-black [&_.text-gray-400]:!text-black [&_.text-gray-500]:!text-black [&_.text-gray-600]:!text-black [&_.text-gray-700]:!text-black [&_.text-gray-800]:!text-black [&_.text-gray-900]:!text-black">
+                <tbody className="divide-y divide-border/50">
                   {students.map((student) => (
                     <StudentRow
                       key={student._id}
@@ -179,15 +181,17 @@ const Fees = () => {
 
           {/* Table Summary */}
           {students && students.length > 0 && (
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
+            <div className="bg-muted/30 border-t border-border px-6 py-4">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-black font-medium">
+                <span className="text-foreground font-medium">
                   Total Students:{" "}
-                  <span className="font-bold text-lg">{students.length}</span>
+                  <span className="font-bold text-lg text-primary">
+                    {students.length}
+                  </span>
                 </span>
-                <span className="text-black font-medium">
+                <span className="text-foreground font-medium">
                   Class:{" "}
-                  <span className="font-bold">
+                  <span className="font-bold text-primary">
                     {
                       mainClasses.find((mc) => mc._id === selectedMainClass)
                         ?.name
@@ -195,9 +199,11 @@ const Fees = () => {
                   </span>
                 </span>
                 {selectedBatchObj && (
-                  <span className="text-black font-medium">
+                  <span className="text-foreground font-medium">
                     Batch:{" "}
-                    <span className="font-bold">{selectedBatchObj.name}</span>
+                    <span className="font-bold text-primary">
+                      {selectedBatchObj.name}
+                    </span>
                   </span>
                 )}
               </div>
@@ -208,29 +214,29 @@ const Fees = () => {
 
       {/* Info Box */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-5 shadow-sm">
+          <h3 className="font-semibold text-primary mb-2">
             📅 Fine Calculation
           </h3>
-          <p className="text-sm text-blue-700">
+          <p className="text-sm text-foreground/80">
             Select a payment date and click "Calculate Fine" to determine
             applicable fine amount based on late payment.
           </p>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h3 className="font-semibold text-green-900 mb-2">
+        <div className="bg-success/10 border border-success/20 rounded-xl p-5 shadow-sm">
+          <h3 className="font-semibold text-success mb-2">
             💰 Discount Option
           </h3>
-          <p className="text-sm text-green-700">
+          <p className="text-sm text-foreground/80">
             Click "Add Discount" to apply manual adjustments or institutional
             discounts to the fees.
           </p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <h3 className="font-semibold text-purple-900 mb-2">
+        <div className="bg-muted/50 border border-border rounded-xl p-5 shadow-sm">
+          <h3 className="font-semibold text-foreground mb-2">
             ✓ Payment Validation
           </h3>
-          <p className="text-sm text-purple-700">
+          <p className="text-sm text-muted-foreground">
             The Process button only enables when the paid amount exactly matches
             the calculated final amount.
           </p>
@@ -238,16 +244,16 @@ const Fees = () => {
       </div>
 
       {/* PDF Generation Placeholder */}
-      <div className="mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-yellow-900 mb-2">
+      <div className="mt-8 bg-warning/10 border border-warning/30 rounded-xl p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-warning mb-2">
           📄 PDF Bill Generation
         </h3>
-        <p className="text-yellow-800 mb-3">
+        <p className="text-warning/80 mb-3">
           PDF receipt generation is currently on hold pending backend support.
           Once payments are processed, bills will be automatically generated and
           can be downloaded.
         </p>
-        <div className="bg-yellow-100 border border-yellow-400 rounded p-3 text-sm text-yellow-900">
+        <div className="bg-warning/20 border border-warning/40 rounded-lg p-3 text-sm text-warning font-medium">
           <strong>Coming Soon:</strong> Automated PDF receipts with QR codes and
           payment details
         </div>

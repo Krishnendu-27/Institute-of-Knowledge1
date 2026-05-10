@@ -278,8 +278,8 @@ const CourseDetails = () => {
 
   if (isLoading || (!courseData && !localError)) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-400 gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="text-lg">Loading {displayCourseName}...</p>
       </div>
     );
@@ -288,11 +288,11 @@ const CourseDetails = () => {
   if (localError) {
     return (
       <div className="p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl max-w-2xl mx-auto text-center">
-          <p>{localError}</p>
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-2xl max-w-2xl mx-auto text-center">
+          <p className="font-medium">{localError}</p>
           <button
             onClick={handleBack}
-            className="mt-4 px-4 py-2 bg-red-100 rounded-lg hover:bg-red-200 transition font-medium"
+            className="mt-4 px-4 py-2 bg-destructive/20 rounded-lg hover:bg-destructive/30 transition font-medium"
           >
             Go Back
           </button>
@@ -319,15 +319,15 @@ const CourseDetails = () => {
       <button
         onClick={() => handleStatusToggle(recordId, fieldName, status)}
         disabled={isUpdating}
-        className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 group flex items-center justify-center mx-auto"
+        className="p-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50 group flex items-center justify-center mx-auto"
         title={`Toggle ${fieldName}`}
       >
         {isUpdating ? (
-          <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
         ) : status ? (
-          <CheckCircle2 className="w-5 h-5 text-emerald-500 group-hover:text-emerald-600 transition-colors" />
+          <CheckCircle2 className="w-5 h-5 text-success group-hover:opacity-80 transition-opacity" />
         ) : (
-          <Circle className="w-5 h-5 text-slate-300 group-hover:text-slate-400 transition-colors" />
+          <Circle className="w-5 h-5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
         )}
       </button>
     );
@@ -351,7 +351,7 @@ const CourseDetails = () => {
         exit="out"
         variants={pageVariants}
         transition={{ duration: 0.3 }}
-        className="min-h-screen bg-slate-50 p-6 md:p-8"
+        className="min-h-screen bg-background p-6 md:p-8 transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
@@ -359,14 +359,14 @@ const CourseDetails = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm"
+                className="p-2.5 bg-card border border-border rounded-xl hover:bg-muted hover:text-primary transition-colors shadow-sm"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-foreground" />
               </button>
               <div>
-                <p className="text-slate-500 flex items-center gap-2 mt-1">
+                <p className="text-muted-foreground flex items-center gap-2 mt-1">
                   <span
-                    className={`w-2 h-2 rounded-full ${mainClass?.isActive ? "bg-emerald-500" : "bg-red-500"}`}
+                    className={`w-2 h-2 rounded-full ${mainClass?.isActive ? "bg-success" : "bg-destructive"}`}
                   ></span>
                   {mainClass?.isActive ? "Active Course" : "Inactive Course"} •
                   Created on {formatDate(mainClass?.createdAt)}
@@ -378,14 +378,14 @@ const CourseDetails = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors shadow-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2.5 bg-card border border-destructive/30 text-destructive rounded-xl hover:bg-destructive/10 transition-colors shadow-sm font-medium"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
               </button>
               <button
                 onClick={handleOpenEditModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-opacity shadow-sm font-medium"
               >
                 <Edit className="w-4 h-4" />
                 Edit Course
@@ -394,56 +394,56 @@ const CourseDetails = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm col-span-1 md:col-span-2 space-y-6">
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 capitalize">
+            <div className="bg-card p-6 rounded-2xl border border-border shadow-sm col-span-1 md:col-span-2 space-y-6">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground capitalize">
                 {mainClass?.name || displayCourseName}
               </h1>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="space-y-1">
-                  <span className="text-slate-400 text-sm flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" /> Start Date
                   </span>
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-foreground">
                     {formatDate(mainClass?.startDate)}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-slate-400 text-sm flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" /> End Date
                   </span>
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-foreground">
                     {formatDate(mainClass?.endDate)}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-slate-400 text-sm flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                     <Clock className="w-4 h-4" /> Duration
                   </span>
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-foreground">
                     {mainClass?.duration || 0} Months
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-slate-400 text-sm flex items-center gap-1.5">
+                  <span className="text-muted-foreground text-sm flex items-center gap-1.5">
                     <IndianRupee className="w-4 h-4" /> Fees
                   </span>
-                  <p className="font-medium text-slate-900 text-indigo-600">
+                  <p className="font-medium text-primary">
                     ₹{mainClass?.fees || 0}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <h3 className="text-sm font-medium text-slate-500 mb-3">
+              <div className="pt-4 border-t border-border">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">
                   Instructor Details
                 </h3>
-                <div className="flex items-center gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-6 bg-muted/30 p-4 rounded-xl border border-border">
                   <div>
-                    <p className="font-bold text-slate-900">
+                    <p className="font-bold text-foreground">
                       {mainClass?.teacherName || "Unassigned"}
                     </p>
-                    <p className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                       <Mail className="w-3.5 h-3.5" />{" "}
                       {mainClass?.teacherEmail || "No Email Provided"}
                     </p>
@@ -452,12 +452,12 @@ const CourseDetails = () => {
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-              <h2 className="text-lg font-semibold text-slate-800 border-b border-slate-100 pb-2">
+            <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-6">
+              <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2">
                 Batches & Capacity
               </h2>
-              <div className="flex items-center gap-4 bg-indigo-50 border border-indigo-100 text-indigo-700 p-4 rounded-xl">
-                <Users className="w-8 h-8 text-indigo-500 bg-white p-1.5 rounded-lg shadow-sm" />
+              <div className="flex items-center gap-4 bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl">
+                <Users className="w-8 h-8 text-primary bg-card p-1.5 rounded-lg shadow-sm border border-primary/10" />
                 <div>
                   <p className="text-2xl font-bold">
                     {mainClass?.students?.length || 0}
@@ -469,7 +469,7 @@ const CourseDetails = () => {
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Assigned Batches
                 </h3>
                 <div className="space-y-2">
@@ -484,14 +484,14 @@ const CourseDetails = () => {
                           },
                         })
                       }
-                      className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                      className="px-3 py-2 text-sm bg-muted/30 border border-border rounded-lg text-foreground font-medium flex items-center gap-2 cursor-pointer hover:border-primary/50 transition-colors"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                       {batch?.name}
                     </div>
                   ))}
                   {(!mainClass?.batches || mainClass.batches.length === 0) && (
-                    <p className="text-sm text-slate-400 italic">
+                    <p className="text-sm text-muted-foreground italic">
                       No batches assigned yet.
                     </p>
                   )}
@@ -501,24 +501,24 @@ const CourseDetails = () => {
           </div>
 
           {/* Student Progress Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-visible">
-            <div className="p-6 border-b border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-t-2xl">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <GraduationCap className="text-indigo-500" />
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-visible">
+            <div className="p-6 border-b border-border bg-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-t-2xl">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <GraduationCap className="text-primary" />
                 Student Progress Tracker
               </h2>
 
               {studentsProgress?.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
+                    <Search className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <input
                     type="text"
                     placeholder="Search students..."
                     value={studentSearchTerm}
                     onChange={(e) => setStudentSearchTerm(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                    className="block w-full pl-10 pr-3 py-2 bg-background border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                   />
                 </div>
               )}
@@ -526,7 +526,7 @@ const CourseDetails = () => {
 
             <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                <thead className="bg-muted/50 text-muted-foreground border-b border-border">
                   <tr>
                     <th className="px-6 py-4 font-semibold w-16">Roll No</th>
                     <th className="px-6 py-4 font-semibold">Student Info</th>
@@ -545,12 +545,12 @@ const CourseDetails = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 pb-20">
+                <tbody className="divide-y divide-border/50 pb-20">
                   {studentsProgress?.length === 0 ? (
                     <tr>
                       <td
                         colSpan="7"
-                        className="px-6 py-12 text-center text-slate-400"
+                        className="px-6 py-12 text-center text-muted-foreground"
                       >
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Users className="w-8 h-8 opacity-50" />
@@ -562,7 +562,7 @@ const CourseDetails = () => {
                     <tr>
                       <td
                         colSpan="7"
-                        className="px-6 py-12 text-center text-slate-500"
+                        className="px-6 py-12 text-center text-muted-foreground"
                       >
                         <p>No students match your search term.</p>
                       </td>
@@ -571,18 +571,18 @@ const CourseDetails = () => {
                     filteredStudents.map((record) => (
                       <tr
                         key={record?._id || Math.random()}
-                        className="hover:bg-slate-50/50 transition-colors"
+                        className="hover:bg-muted/30 transition-colors"
                       >
                         <td className="px-6 py-4">
-                          <span className="font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
+                          <span className="font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">
                             #{record?.rollno || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-foreground">
                             {record?.student?.name || "Unknown Student"}
                           </p>
-                          <div className="flex items-center gap-3 text-slate-500 text-xs mt-1">
+                          <div className="flex items-center gap-3 text-muted-foreground text-xs mt-1">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3 h-3" />{" "}
                               {record?.student?.email || "No Email"}
@@ -593,7 +593,7 @@ const CourseDetails = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-slate-600">
+                        <td className="px-6 py-4 text-muted-foreground">
                           {formatDate(record?.joinDate)}
                         </td>
 
@@ -637,8 +637,8 @@ const CourseDetails = () => {
                             }
                             className={`p-1.5 rounded-lg transition-colors relative z-20 ${
                               activeDropdown === record?._id
-                                ? "bg-indigo-50 text-indigo-600"
-                                : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                           >
                             <MoreVertical className="w-5 h-5" />
@@ -651,14 +651,14 @@ const CourseDetails = () => {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute right-10 top-10 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden"
+                                className="absolute right-10 top-10 w-40 bg-card border border-border rounded-xl shadow-xl z-30 overflow-hidden"
                               >
                                 <button
                                   onClick={() => {
                                     setStudentToRemove(record);
                                     setActiveDropdown(null);
                                   }}
-                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                   Remove Student
@@ -680,49 +680,50 @@ const CourseDetails = () => {
       {/* Delete Course Modal */}
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
+              className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
             >
               <button
                 onClick={() => !isDeletingCourse && setIsDeleteModalOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                <h3 className="text-xl font-bold text-foreground mb-2">
                   Delete Course?
                 </h3>
-                <p className="text-slate-500 mb-1">
+                <p className="text-muted-foreground mb-1">
                   Are you sure you want to delete{" "}
-                  <strong className="text-slate-800">{mainClass?.name}</strong>?
+                  <strong className="text-foreground">{mainClass?.name}</strong>
+                  ?
                 </p>
-                <p className="text-sm text-red-500 font-medium">
+                <p className="text-sm text-destructive font-medium">
                   This action cannot be undone. All batches and student progress
                   records linked to this course will be permanently removed.
                 </p>
               </div>
 
-              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-3">
                 <button
                   onClick={() => setIsDeleteModalOpen(false)}
                   disabled={isDeletingCourse}
-                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="px-4 py-2 font-semibold text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteCourse}
                   disabled={isDeletingCourse}
-                  className="px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-red-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="px-4 py-2 font-semibold text-destructive-foreground bg-destructive hover:opacity-90 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-destructive/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isDeletingCourse ? (
                     <>
@@ -745,51 +746,51 @@ const CourseDetails = () => {
       {/* Remove Student Modal */}
       <AnimatePresence>
         {studentToRemove && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
+              className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
             >
               <button
                 onClick={() => !isRemoving && setStudentToRemove(null)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="absolute top-4 right-4 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                <h3 className="text-xl font-bold text-foreground mb-2">
                   Remove Student?
                 </h3>
-                <p className="text-slate-500 mb-1">
+                <p className="text-muted-foreground mb-1">
                   Are you sure you want to remove{" "}
-                  <strong className="text-slate-800">
+                  <strong className="text-foreground">
                     {studentToRemove?.student?.name || "this student"}
                   </strong>{" "}
                   from this course?
                 </p>
-                <p className="text-sm text-red-500 font-medium">
+                <p className="text-sm text-destructive font-medium">
                   This action cannot be undone. Progress tracking will be lost.
                 </p>
               </div>
 
-              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-3">
                 <button
                   onClick={() => setStudentToRemove(null)}
                   disabled={isRemoving}
-                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="px-4 py-2 font-semibold text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmRemove}
                   disabled={isRemoving}
-                  className="px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-red-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="px-4 py-2 font-semibold text-destructive-foreground bg-destructive hover:opacity-90 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-destructive/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isRemoving ? (
                     <>
@@ -812,21 +813,21 @@ const CourseDetails = () => {
       {/* Edit Course Modal */}
       <AnimatePresence>
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] flex flex-col"
+              className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] flex flex-col"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-indigo-600" />
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Edit className="w-5 h-5 text-primary" />
                   Edit Course Details
                 </h3>
                 <button
                   onClick={() => !isUpdatingCourse && setIsEditModalOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -840,7 +841,7 @@ const CourseDetails = () => {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         Course Name
                       </label>
                       <input
@@ -849,12 +850,12 @@ const CourseDetails = () => {
                         required
                         value={editFormData.name}
                         onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         Start Date
                       </label>
                       <input
@@ -863,12 +864,12 @@ const CourseDetails = () => {
                         required
                         value={editFormData.startDate}
                         onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         Duration (Months)
                       </label>
                       <input
@@ -878,14 +879,14 @@ const CourseDetails = () => {
                         min="1"
                         value={editFormData.duration}
                         onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700 flex justify-between items-center">
+                      <label className="text-sm font-medium text-foreground flex justify-between items-center">
                         <span>End Date</span>
-                        <span className="text-xs font-normal text-indigo-500">
+                        <span className="text-xs font-normal text-primary">
                           Auto-calculated
                         </span>
                       </label>
@@ -895,12 +896,12 @@ const CourseDetails = () => {
                         required
                         readOnly
                         value={editFormData.endDate}
-                        className="w-full px-3 py-2 border border-slate-300 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed focus:outline-none focus:ring-0"
+                        className="w-full px-3 py-2 border border-border bg-muted/50 text-muted-foreground rounded-lg cursor-not-allowed focus:outline-none focus:ring-0"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         Fees (₹)
                       </label>
                       <input
@@ -910,7 +911,7 @@ const CourseDetails = () => {
                         min="0"
                         value={editFormData.fees}
                         onChange={handleEditFormChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                     </div>
 
@@ -919,18 +920,18 @@ const CourseDetails = () => {
                       className="space-y-1.5 md:col-span-2 relative"
                       ref={teacherDropdownRef}
                     >
-                      <label className="text-sm font-medium text-slate-700">
+                      <label className="text-sm font-medium text-foreground">
                         Assign Instructor
                       </label>
                       <div
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg flex items-center justify-between cursor-pointer focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white hover:bg-slate-50 transition-colors"
+                        className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg flex items-center justify-between cursor-pointer focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted/50 transition-colors"
                         onClick={() =>
                           setIsTeacherDropdownOpen(!isTeacherDropdownOpen)
                         }
                       >
                         {editFormData.teacherName ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex flex-shrink-0 items-center justify-center text-xs font-bold text-indigo-600 overflow-hidden">
+                            <div className="w-6 h-6 rounded-full bg-primary/20 flex flex-shrink-0 items-center justify-center text-xs font-bold text-primary overflow-hidden">
                               {(() => {
                                 const selectedTeacher = teachers?.find(
                                   (t) => t.email === editFormData.teacherEmail,
@@ -949,19 +950,19 @@ const CourseDetails = () => {
                                   .toUpperCase();
                               })()}
                             </div>
-                            <span className="text-sm font-medium text-slate-900">
+                            <span className="text-sm font-medium text-foreground">
                               {editFormData.teacherName}{" "}
-                              <span className="text-slate-500 font-normal">
+                              <span className="text-muted-foreground font-normal">
                                 ({editFormData.teacherEmail})
                               </span>
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-sm">
+                          <span className="text-muted-foreground text-sm">
                             Select an instructor...
                           </span>
                         )}
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
                       </div>
 
                       <AnimatePresence>
@@ -971,7 +972,7 @@ const CourseDetails = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto"
+                            className="absolute z-50 top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl max-h-56 overflow-y-auto"
                           >
                             {teachers?.length > 0 ? (
                               teachers.map((teacher) => (
@@ -985,9 +986,9 @@ const CourseDetails = () => {
                                     }));
                                     setIsTeacherDropdownOpen(false);
                                   }}
-                                  className="px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-slate-100"
+                                  className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                                 >
-                                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex flex-shrink-0 items-center justify-center text-sm font-bold text-indigo-600 overflow-hidden">
+                                  <div className="w-8 h-8 rounded-full bg-primary/20 flex flex-shrink-0 items-center justify-center text-sm font-bold text-primary overflow-hidden">
                                     {teacher?.profilePic ? (
                                       <img
                                         src={teacher?.profilePic}
@@ -999,18 +1000,18 @@ const CourseDetails = () => {
                                     )}
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className="text-sm font-semibold text-slate-900">
+                                    <span className="text-sm font-semibold text-foreground">
                                       {teacher.name}
                                     </span>
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-muted-foreground">
                                       {teacher.email}
                                     </span>
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="px-4 py-6 text-sm text-slate-500 text-center flex flex-col items-center gap-2">
-                                <Users className="w-6 h-6 text-slate-300" />
+                              <div className="px-4 py-6 text-sm text-muted-foreground text-center flex flex-col items-center gap-2">
+                                <Users className="w-6 h-6 text-muted-foreground/50" />
                                 No instructors available.
                               </div>
                             )}
@@ -1026,9 +1027,9 @@ const CourseDetails = () => {
                           name="isActive"
                           checked={editFormData.isActive}
                           onChange={handleEditFormChange}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          className="w-4 h-4 text-primary rounded border-border focus:ring-primary bg-background"
                         />
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-foreground">
                           Course is Active
                         </span>
                       </label>
@@ -1037,12 +1038,12 @@ const CourseDetails = () => {
                 </form>
               </div>
 
-              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+              <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-3 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   disabled={isUpdatingCourse}
-                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="px-4 py-2 font-semibold text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1050,7 +1051,7 @@ const CourseDetails = () => {
                   type="submit"
                   form="editCourseForm"
                   disabled={isUpdatingCourse || !editFormData.teacherEmail}
-                  className="px-5 py-2 font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-indigo-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="px-5 py-2 font-semibold text-primary-foreground bg-primary hover:opacity-90 rounded-xl transition-colors flex items-center gap-2 shadow-sm shadow-primary/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isUpdatingCourse ? (
                     <>

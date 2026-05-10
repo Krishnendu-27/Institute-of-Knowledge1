@@ -26,30 +26,30 @@ const DeleteConfirmModal = ({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+            className="w-full max-w-md bg-background border border-border rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Icon */}
             <div className="relative p-6 text-center">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X size={20} />
               </button>
 
-              <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mb-4 border-4 border-red-50 dark:border-red-500/10">
-                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-500" />
+              <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4 border-4 border-destructive/20">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 {title}
               </h3>
 
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 {message}
                 {itemName && (
-                  <span className="block mt-2 font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="block mt-2 font-semibold text-foreground">
                     "{itemName}"
                   </span>
                 )}
@@ -57,12 +57,12 @@ const DeleteConfirmModal = ({
             </div>
 
             {/* Actions Container */}
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <div className="px-6 py-4 bg-muted/50 border-t border-border flex flex-col sm:flex-row gap-3 sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-700 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-sm text-foreground bg-card border border-border hover:bg-muted transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -71,7 +71,7 @@ const DeleteConfirmModal = ({
                 type="button"
                 onClick={onConfirm}
                 disabled={isLoading}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 dark:shadow-red-900/30 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm bg-destructive text-destructive-foreground shadow-lg shadow-destructive/20 hover:opacity-90 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

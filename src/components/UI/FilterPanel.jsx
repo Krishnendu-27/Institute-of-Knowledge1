@@ -11,13 +11,13 @@ const FilterPanel = ({
   isLoading,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Filters</h2>
+    <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+      <h2 className="text-xl font-bold text-foreground mb-4">Filters</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Main Class Filter */}
         <div className="flex flex-col">
-          <label className="text-sm font-semibold text-gray-700 mb-2">
+          <label className="text-sm font-semibold text-foreground/80 mb-2">
             Main Class
           </label>
           <div className="relative">
@@ -25,7 +25,7 @@ const FilterPanel = ({
               value={selectedMainClass || ""}
               onChange={(e) => onMainClassChange(e.target.value)}
               disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none bg-white cursor-pointer hover:border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+              className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">-- Select Main Class --</option>
               {mainClasses.map((mainClass) => (
@@ -34,13 +34,13 @@ const FilterPanel = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
           </div>
         </div>
 
         {/* Batch Filter */}
         <div className="flex flex-col">
-          <label className="text-sm font-semibold text-gray-700 mb-2">
+          <label className="text-sm font-semibold text-foreground/80 mb-2">
             Batch
           </label>
           <div className="relative">
@@ -48,9 +48,7 @@ const FilterPanel = ({
               value={selectedBatch || ""}
               onChange={(e) => onBatchChange(e.target.value)}
               disabled={isLoading || !selectedMainClass}
-              className={`w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none bg-white cursor-pointer hover:border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all ${
-                !selectedMainClass ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">-- Select Batch --</option>
               {batches.map((batch) => (
@@ -59,10 +57,10 @@ const FilterPanel = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
           </div>
           {!selectedMainClass && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Select a main class first
             </p>
           )}
@@ -70,8 +68,8 @@ const FilterPanel = ({
       </div>
 
       {selectedMainClass && selectedBatch && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 p-3 bg-success/10 border border-success/20 rounded-lg">
+          <p className="text-sm font-medium text-success flex items-center gap-2">
             ✓ Filters applied. Showing students for the selected class and
             batch.
           </p>

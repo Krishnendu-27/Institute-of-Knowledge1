@@ -13,8 +13,8 @@ export const TextInput = ({
   maxLength,
 }) => (
   <div className="w-full">
-    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label className="block text-sm font-medium text-foreground mb-1.5">
+      {label} {required && <span className="text-destructive">*</span>}
     </label>
     <input
       type={type}
@@ -25,14 +25,14 @@ export const TextInput = ({
       required={required}
       disabled={disabled}
       maxLength={maxLength}
-      className={`w-full px-4 py-3 rounded-xl border ${
+      className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground focus:ring-2 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
         error
-          ? "border-amber-400 focus:ring-amber-400"
-          : "border-slate-300 dark:border-slate-600 focus:ring-indigo-500 dark:focus:ring-indigo-400"
-      } bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 outline-none transition-all`}
+          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+          : "border-border focus:border-primary focus:ring-primary/20"
+      }`}
     />
     {error && (
-      <p className="text-amber-500 text-xs mt-2 flex items-center gap-1">
+      <p className="text-destructive text-xs mt-2 flex items-center gap-1 font-medium">
         <AlertCircle size={14} /> {error}
       </p>
     )}

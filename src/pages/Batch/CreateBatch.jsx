@@ -137,10 +137,11 @@ const CreateBatch = () => {
     src,
     name,
     icon: Icon = User,
-    bgColor = "from-indigo-500 to-purple-500",
+    bgColor = "bg-primary",
+    textColor = "text-primary-foreground",
   }) => (
     <div
-      className={`w-8 h-8 rounded-full bg-gradient-to-tr ${bgColor} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden shadow-inner`}
+      className={`w-8 h-8 rounded-full ${bgColor} ${textColor} flex items-center justify-center font-bold shrink-0 overflow-hidden shadow-inner`}
     >
       {src ? (
         <img src={src} alt={name} className="w-full h-full object-cover" />
@@ -174,23 +175,23 @@ const CreateBatch = () => {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl"
     >
-      <div className="p-5 sm:p-8 rounded-3xl bg-white/80 dark:bg-card/80 backdrop-blur-2xl border border-gray-200 dark:border-border shadow-2xl">
+      <div className="p-5 sm:p-8 rounded-3xl bg-card border border-border shadow-2xl transition-colors duration-300">
         <BackButton
           details={`Set up core details, schedule, and enroll members to provision a
               new learning batch.`}
         />
-        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 mt-6">
           {/* SECTION 1: Core Details */}
-          <div className="bg-gray-50/50 dark:bg-muted/30 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-border/50 space-y-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-card-foreground flex items-center gap-2 mb-4">
-              <Briefcase size={20} className="text-indigo-500" />
+          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
+              <Briefcase size={20} className="text-primary" />
               Core Information
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Batch Name */}
               <div className="md:col-span-1">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   Batch Name
                 </label>
                 <input
@@ -198,27 +199,27 @@ const CreateBatch = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-card-foreground focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:text-muted-foreground"
                   placeholder="e.g. Morning Physics A"
                 />
               </div>
 
               {/* Teacher Assignment */}
               <div className="md:col-span-1 relative" ref={teacherRef}>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   Assign Lead Teacher
                 </label>
                 <div
-                  className="relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card focus-within:ring-2 focus-within:ring-indigo-500 transition-all shadow-sm cursor-text"
+                  className="relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm cursor-text"
                   onClick={() => setActiveDropdown("teacher")}
                 >
                   {selectedTeacher ? (
-                    <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1.5 rounded-lg w-full">
+                    <div className="flex items-center gap-2 bg-primary/10 px-2 py-1.5 rounded-lg w-full">
                       <Avatar
                         src={selectedTeacher.profilePic}
                         name={selectedTeacher.name || selectedTeacher.email}
                       />
-                      <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200 truncate flex-1">
+                      <span className="text-sm font-medium text-primary truncate flex-1">
                         {selectedTeacher.name || "Selected Teacher"}
                       </span>
                       <button
@@ -227,7 +228,7 @@ const CreateBatch = () => {
                           e.stopPropagation();
                           setSelectedTeacher(null);
                         }}
-                        className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 ml-1 p-1"
+                        className="text-primary/70 hover:text-primary ml-1 p-1 transition-colors"
                       >
                         <X size={16} />
                       </button>
@@ -236,7 +237,7 @@ const CreateBatch = () => {
                     <>
                       <Search
                         size={18}
-                        className="text-gray-400 mr-2 shrink-0"
+                        className="text-muted-foreground mr-2 shrink-0"
                       />
                       <input
                         type="text"
@@ -245,13 +246,13 @@ const CreateBatch = () => {
                         onChange={(e) =>
                           handleSearchChange("teacher", e.target.value)
                         }
-                        className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-card-foreground text-sm w-full truncate"
+                        className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate"
                       />
                     </>
                   )}
                   {!selectedTeacher && (
                     <ChevronDown
-                      className="absolute right-4 text-gray-400 pointer-events-none"
+                      className="absolute right-4 text-muted-foreground pointer-events-none"
                       size={18}
                     />
                   )}
@@ -263,7 +264,7 @@ const CreateBatch = () => {
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -5 }}
-                      className="absolute z-50 w-full mt-2 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                      className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
                     >
                       {availableTeachers
                         ?.filter(
@@ -286,24 +287,24 @@ const CreateBatch = () => {
                               }));
                               setActiveDropdown(null);
                             }}
-                            className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-muted cursor-pointer flex items-center gap-3 transition-colors"
+                            className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                           >
                             <Avatar
                               src={teacher.profilePic}
                               name={teacher.name || teacher.email}
                             />
                             <div className="flex-1 overflow-hidden">
-                              <p className="text-sm font-medium text-gray-900 dark:text-card-foreground truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {teacher.name || "Unknown Name"}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
+                              <p className="text-xs text-muted-foreground truncate">
                                 {teacher.email}
                               </p>
                             </div>
                           </div>
                         ))}
                       {availableTeachers?.length === 0 && (
-                        <div className="px-4 py-3 text-sm text-gray-500 dark:text-muted-foreground text-center">
+                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">
                           No available teachers found.
                         </div>
                       )}
@@ -315,20 +316,20 @@ const CreateBatch = () => {
           </div>
 
           {/* SECTION 2: Enrollments */}
-          <div className="bg-gray-50/50 dark:bg-muted/30 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-border/50 space-y-8">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-card-foreground flex items-center gap-2 mb-2">
-              <Users size={20} className="text-blue-500" />
+          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-8">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-2">
+              <Users size={20} className="text-primary" />
               Courses and Students
             </h2>
 
             {/* MAIN CLASSES (Multi Select) */}
             <div className="relative" ref={classRef}>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Select Courses
               </label>
 
               <div
-                className="w-full min-h-[52px] p-2 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card focus-within:ring-2 focus-within:ring-indigo-500 transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
+                className="w-full min-h-[52px] p-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
                 onClick={() => setActiveDropdown("class")}
               >
                 <AnimatePresence>
@@ -339,7 +340,7 @@ const CreateBatch = () => {
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
                       key={cls._id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm font-medium"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium"
                     >
                       <BookOpen size={14} />
                       {cls.name}
@@ -351,7 +352,7 @@ const CreateBatch = () => {
                             prev.filter((i) => i._id !== cls._id),
                           );
                         }}
-                        className="hover:text-blue-900 dark:hover:text-blue-100 p-0.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        className="hover:text-primary p-0.5 rounded-full hover:bg-primary/20 transition-colors"
                       >
                         <X size={14} />
                       </button>
@@ -360,7 +361,10 @@ const CreateBatch = () => {
                 </AnimatePresence>
 
                 <div className="flex-1 min-w-[150px] flex items-center ml-2">
-                  <Search size={16} className="text-gray-400 mr-2 shrink-0" />
+                  <Search
+                    size={16}
+                    className="text-muted-foreground mr-2 shrink-0"
+                  />
                   <input
                     type="text"
                     placeholder={
@@ -372,7 +376,7 @@ const CreateBatch = () => {
                     onChange={(e) =>
                       handleSearchChange("class", e.target.value)
                     }
-                    className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-card-foreground text-sm truncate"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm truncate"
                   />
                 </div>
               </div>
@@ -383,7 +387,7 @@ const CreateBatch = () => {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="absolute z-50 w-full mt-2 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                    className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
                   >
                     {availableClasses
                       ?.filter((c) =>
@@ -402,24 +406,25 @@ const CreateBatch = () => {
                             }));
                             setActiveDropdown(null);
                           }}
-                          className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-muted cursor-pointer flex items-center gap-3 transition-colors"
+                          className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                         >
                           <Avatar
                             icon={BookOpen}
-                            bgColor="from-blue-400 to-cyan-500"
+                            bgColor="bg-primary/20"
+                            textColor="text-primary"
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-card-foreground">
+                            <p className="text-sm font-medium text-foreground">
                               {cls.name}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               {cls.code}
                             </p>
                           </div>
                         </div>
                       ))}
                     {availableClasses?.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-gray-500 dark:text-muted-foreground text-center">
+                      <div className="px-4 py-3 text-sm text-muted-foreground text-center">
                         All classes selected or none found.
                       </div>
                     )}
@@ -430,12 +435,12 @@ const CreateBatch = () => {
 
             {/* STUDENTS (Multi Select) */}
             <div className="relative" ref={studentRef}>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Select Enroll Students
               </label>
 
               <div
-                className="w-full min-h-[52px] p-2 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card focus-within:ring-2 focus-within:ring-indigo-500 transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
+                className="w-full min-h-[52px] p-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
                 onClick={() => setActiveDropdown("student")}
               >
                 <AnimatePresence>
@@ -446,7 +451,7 @@ const CreateBatch = () => {
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
                       key={std._id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 dark:bg-muted text-gray-800 dark:text-card-foreground text-sm font-medium border border-gray-200 dark:border-border shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-muted text-foreground text-sm font-medium border border-border shadow-sm"
                     >
                       <img
                         src={
@@ -465,7 +470,7 @@ const CreateBatch = () => {
                             prev.filter((i) => i._id !== std._id),
                           );
                         }}
-                        className="hover:text-red-500 ml-1 p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        className="hover:text-destructive ml-1 p-0.5 rounded-full hover:bg-destructive/10 transition-colors"
                       >
                         <X size={14} />
                       </button>
@@ -474,7 +479,10 @@ const CreateBatch = () => {
                 </AnimatePresence>
 
                 <div className="flex-1 min-w-[150px] flex items-center ml-2">
-                  <Search size={16} className="text-gray-400 mr-2 shrink-0" />
+                  <Search
+                    size={16}
+                    className="text-muted-foreground mr-2 shrink-0"
+                  />
                   <input
                     type="text"
                     placeholder={
@@ -486,7 +494,7 @@ const CreateBatch = () => {
                     onChange={(e) =>
                       handleSearchChange("student", e.target.value)
                     }
-                    className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-card-foreground text-sm truncate"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm truncate"
                   />
                 </div>
               </div>
@@ -497,7 +505,7 @@ const CreateBatch = () => {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
-                    className="absolute z-50 w-full mt-2 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                    className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
                   >
                     {availableStudents
                       ?.filter(
@@ -520,7 +528,7 @@ const CreateBatch = () => {
                             }));
                             setActiveDropdown(null);
                           }}
-                          className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-muted cursor-pointer flex items-center gap-3 transition-colors"
+                          className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                         >
                           <Avatar
                             src={student.profilePic}
@@ -528,17 +536,17 @@ const CreateBatch = () => {
                             icon={GraduationCap}
                           />
                           <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-medium text-gray-900 dark:text-card-foreground truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {student.name || "Unknown Student"}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {student.email}
                             </p>
                           </div>
                         </div>
                       ))}
                     {availableStudents?.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-gray-500 dark:text-muted-foreground text-center">
+                      <div className="px-4 py-3 text-sm text-muted-foreground text-center">
                         All students enrolled or none found.
                       </div>
                     )}
@@ -549,21 +557,21 @@ const CreateBatch = () => {
           </div>
 
           {/* SECTION 3: Schedule */}
-          <div className="bg-gray-50/50 dark:bg-muted/30 p-5 sm:p-6 rounded-2xl border border-gray-100 dark:border-border/50 space-y-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-card-foreground flex items-center gap-2 mb-4">
-              <Calendar size={20} className="text-purple-500" />
+          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
+              <Calendar size={20} className="text-primary" />
               Schedule Timing
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   Weekday
                 </label>
                 <div className="relative">
                   <select
                     value={weekday}
                     onChange={(e) => setWeekday(e.target.value)}
-                    className="w-full px-4 py-3 appearance-none rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-card-foreground focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                    className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                   >
                     {[
                       "Monday",
@@ -580,45 +588,46 @@ const CreateBatch = () => {
                     ))}
                   </select>
                   <ChevronDown
-                    className="absolute right-4 top-3.5 text-gray-400 pointer-events-none"
+                    className="absolute right-4 top-3.5 text-muted-foreground pointer-events-none"
                     size={18}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                  <Clock size={14} className="text-gray-400" /> Start Time
+                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Clock size={14} className="text-muted-foreground" /> Start
+                  Time
                 </label>
                 <input
                   type="time"
                   required
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-card-foreground focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                  <Clock size={14} className="text-gray-400" /> End Time
+                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Clock size={14} className="text-muted-foreground" /> End Time
                 </label>
                 <input
                   type="time"
                   required
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card text-gray-900 dark:text-card-foreground focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 sm:pt-6 border-t border-gray-200 dark:border-border">
+          <div className="pt-4 sm:pt-6 border-t border-border">
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-gradient-to-r from-primary to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-indigo-400 disabled:to-purple-400 text-white text-lg font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 active:scale-[0.99] flex justify-center items-center gap-2"
+              className="w-full py-4 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground text-lg font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-[0.99] flex justify-center items-center gap-2"
             >
               {isLoading ? (
                 "Provisioning Batch..."

@@ -32,39 +32,47 @@
   /* Success states (Emerald) */
   --success: #10b981;
   --success-foreground: #ffffff;
+
+  /* Warning states (Amber) - NEW */
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
 }
 
 .dark {
-  /* Base Colors */
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  /* Base Colors - Deep neutral charcoal */
+  --background: #131314;
+  --foreground: #e3e3e3;
   
-  /* Primary Brand (Indigo) */
-  --primary: #818cf8;
-  --primary-foreground: #0f172a; 
+  /* Primary Brand */
+  --primary: #e3e3e3;
+  --primary-foreground: #131314; 
   
   /* Cards & Surfaces */
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
+  --card: #1e1f20;
+  --card-foreground: #e3e3e3;
   
   /* Borders */
-  --border: #334155;
+  --border: #444746;
   
-  /* Secondary/Muted styles (Slate) */
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  /* Secondary/Muted styles */
+  --muted: #282a2c;
+  --muted-foreground: #8e918f;
   
-  /* Accents & Hovers (Dark Indigo) */
-  --accent: #312e81;
-  --accent-foreground: #c7d2fe;
+  /* Accents & Hovers */
+  --accent: #333538;
+  --accent-foreground: #ffffff;
   
-  /* Error/Destructive states (Red) */
-  --destructive: #f87171;
-  --destructive-foreground: #450a0a;
+  /* Error/Destructive states */
+  --destructive: #f28b82;
+  --destructive-foreground: #3c0603;
 
-  /* Success states (Emerald) */
-  --success: #34d399;
-  --success-foreground: #022c22;
+  /* Success states */
+  --success: #81c995;
+  --success-foreground: #0d381e;
+
+  /* Warning states (Amber/Yellow for dark mode) - NEW */
+  --warning: #fde293;
+  --warning-foreground: #5c3a21;
 }
 
 @theme {
@@ -79,7 +87,6 @@
   
   --color-border: var(--border);
 
-  /* Mapping the new variables to Tailwind classes */
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   
@@ -91,10 +98,13 @@
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+
+  /* Mapping the new warning variable */
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 }
 
 @layer utilities {
-  /* Thin custom scrollbar for when sidebar is open */
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
@@ -113,7 +123,6 @@
     background: rgba(156, 163, 175, 0.5);
   }
 
-  /* Completely hidden scrollbar for when sidebar is closed */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

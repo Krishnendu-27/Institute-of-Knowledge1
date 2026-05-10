@@ -144,10 +144,10 @@ const AddNewStudent = () => {
   return (
     <>
       {isStudentsLoading && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/10 backdrop-blur-sm transition-all duration-300">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
-          <p className="text-slate-600 font-medium animate-pulse">
-            Loading teachers...
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+          <p className="text-foreground font-medium animate-pulse">
+            Loading students...
           </p>
         </div>
       )}
@@ -158,7 +158,7 @@ const AddNewStudent = () => {
         exit="out"
         variants={pageVariants}
         transition={{ duration: 0.3 }}
-        className="min-h-screen bg-slate-50 p-6 md:p-8 flex flex-col items-center justify-center"
+        className="min-h-screen bg-background p-6 md:p-8 flex flex-col items-center justify-center"
       >
         <div className="w-full max-w-xl">
           {/* Header */}
@@ -167,13 +167,13 @@ const AddNewStudent = () => {
           </div>
 
           {/* Main Form Card */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
+          <div className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8">
             {feedback.message && (
               <div
                 className={`mb-6 p-4 rounded-xl flex items-start gap-3 border ${
                   feedback.type === "error"
-                    ? "bg-red-50 border-red-100 text-red-700"
-                    : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                    ? "bg-destructive/10 border-destructive/20 text-destructive"
+                    : "bg-success/10 border-success/20 text-success"
                 }`}
               >
                 {feedback.type === "error" ? (
@@ -190,13 +190,13 @@ const AddNewStudent = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="mainClassId"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-foreground"
                 >
-                  Select Course <span className="text-red-500">*</span>
+                  Select Course <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <BookOpen className="h-5 w-5 text-slate-400" />
+                    <BookOpen className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <select
                     id="mainClassId"
@@ -204,7 +204,7 @@ const AddNewStudent = () => {
                     value={formData.mainClassId}
                     onChange={handleChange}
                     disabled={isClassLoading}
-                    className="block w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm appearance-none cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="block w-full pl-11 pr-10 py-3 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="" disabled>
                       Choose a course...
@@ -216,15 +216,15 @@ const AddNewStudent = () => {
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
               </div>
 
               {/* Custom Student Select Dropdown */}
               <div className="space-y-2" ref={dropdownRef}>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Select Student <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-foreground">
+                  Select Student <span className="text-destructive">*</span>
                 </label>
 
                 <div className="relative">
@@ -233,11 +233,11 @@ const AddNewStudent = () => {
                     onClick={() =>
                       !isStudentsLoading && setIsDropdownOpen(!isDropdownOpen)
                     }
-                    className={`flex items-center justify-between w-full pl-3 pr-4 py-2.5 bg-white border rounded-xl transition-all shadow-sm ${
+                    className={`flex items-center justify-between w-full pl-3 pr-4 py-2.5 bg-background border rounded-xl transition-all shadow-sm ${
                       isDropdownOpen
-                        ? "border-indigo-500 ring-2 ring-indigo-500/20"
-                        : "border-slate-200 hover:border-indigo-300"
-                    } ${isStudentsLoading ? "bg-slate-50 cursor-wait" : "cursor-pointer"}`}
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border hover:border-primary/50"
+                    } ${isStudentsLoading ? "opacity-70 cursor-wait" : "cursor-pointer"}`}
                   >
                     {selectedStudent ? (
                       <div className="flex items-center gap-3">
@@ -247,19 +247,19 @@ const AddNewStudent = () => {
                             `https://ui-avatars.com/api/?name=${selectedStudent.name}&background=e0e7ff&color=4f46e5`
                           }
                           alt={selectedStudent.name}
-                          className="w-7 h-7 rounded-full object-cover border border-slate-200"
+                          className="w-7 h-7 rounded-full object-cover border border-border"
                         />
                         <div className="flex flex-col text-left">
-                          <span className="text-sm font-medium text-slate-900 leading-tight">
+                          <span className="text-sm font-medium text-foreground leading-tight">
                             {selectedStudent.name}
                           </span>
-                          <span className="text-xs text-slate-500 leading-tight">
+                          <span className="text-xs text-muted-foreground leading-tight">
                             {selectedStudent.email}
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-slate-400 py-1">
+                      <div className="flex items-center gap-2 text-muted-foreground py-1">
                         {isStudentsLoading ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
@@ -273,17 +273,17 @@ const AddNewStudent = () => {
                       </div>
                     )}
                     <ChevronDown
-                      className={`w-5 h-5 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-5 h-5 text-muted-foreground transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
                     />
                   </div>
 
                   {/* Dropdown Menu */}
                   {isDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden">
                       {/* Search Bar inside dropdown */}
-                      <div className="p-2 border-b border-slate-100 bg-slate-50">
+                      <div className="p-2 border-b border-border bg-muted/30">
                         <div className="relative">
-                          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                          <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
                           <input
                             type="text"
                             placeholder="Search by name or email..."
@@ -291,7 +291,7 @@ const AddNewStudent = () => {
                             onChange={(e) =>
                               setStudentSearchTerm(e.target.value)
                             }
-                            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                            className="w-full pl-9 pr-3 py-2 text-sm bg-background text-foreground border border-border rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
                             autoFocus
                           />
                         </div>
@@ -304,7 +304,7 @@ const AddNewStudent = () => {
                             <div
                               key={student._id}
                               onClick={() => handleStudentSelect(student)}
-                              className="flex items-center gap-3 p-3 hover:bg-indigo-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0"
+                              className="flex items-center gap-3 p-3 hover:bg-accent/50 cursor-pointer transition-colors border-b border-border/50 last:border-0"
                             >
                               <img
                                 src={
@@ -312,20 +312,20 @@ const AddNewStudent = () => {
                                   `https://ui-avatars.com/api/?name=${student.name}&background=e0e7ff&color=4f46e5`
                                 }
                                 alt={student.name}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                                className="w-9 h-9 rounded-full object-cover border border-border"
                               />
                               <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-slate-900">
+                                <span className="text-sm font-semibold text-foreground">
                                   {student.name}
                                 </span>
-                                <span className="text-xs text-slate-500">
+                                <span className="text-xs text-muted-foreground">
                                   {student.email}
                                 </span>
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="p-4 text-center text-sm text-slate-500">
+                          <div className="p-4 text-center text-sm text-muted-foreground">
                             No students found matching "{studentSearchTerm}"
                           </div>
                         )}
@@ -339,13 +339,13 @@ const AddNewStudent = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="admissionDate"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-foreground"
                 >
-                  Admission Date <span className="text-red-500">*</span>
+                  Admission Date <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-slate-400" />
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <input
                     type="date"
@@ -353,17 +353,17 @@ const AddNewStudent = () => {
                     name="admissionDate"
                     value={formData.admissionDate}
                     onChange={handleChange}
-                    className="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                    className="block w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-border">
                 <button
                   type="submit"
                   disabled={isSubmitting || isClassLoading || isStudentsLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-sm shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold transition-all shadow-sm shadow-primary/20 hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
                   {isSubmitting ? (
                     <>

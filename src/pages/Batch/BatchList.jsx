@@ -1,10 +1,68 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Trash2, AlertTriangle } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
 import { generateSlug } from "../../util/generateSlug";
+
+// --- Reusable Confirmation Modal ---
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Delete",
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-border"
+        >
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">{title}</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">{message}</p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-foreground hover:bg-muted transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onConfirm();
+                  onClose();
+                }}
+                className="px-4 py-2 rounded-xl bg-destructive hover:opacity-90 text-destructive-foreground transition-all font-medium flex items-center gap-2 shadow-sm shadow-destructive/20 hover:-translate-y-0.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                {confirmText}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 const BatchList = () => {
   const { batches, fetchBatches, isLoading } = useBatchStore();
@@ -24,24 +82,16 @@ const BatchList = () => {
     );
   });
 
-  // const generateSlug = (name) => {
-  //   return (name || "batch")
-  //     .trim()
-  //     .toLowerCase()
-  //     .replace(/[^a-z0-9]+/g, "-")
-  //     .replace(/(^-|-$)+/g, "");
-  // };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="container mx-auto px-4 py-8 max-w-7xl"
+      className="container mx-auto px-4 py-8 max-w-7xl transition-colors duration-300"
     >
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <p className="text-slate-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           Overview of all active Batches, Assigned Course, fees, and student
           allocations.
         </p>
@@ -50,14 +100,14 @@ const BatchList = () => {
           {/* Search Bar */}
           <div className="relative w-full sm:w-72">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               type="text"
               placeholder="Search batches..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background/60 backdrop-blur-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all shadow-sm"
             />
           </div>
 
@@ -65,7 +115,7 @@ const BatchList = () => {
           {user?.role === "Admin" && (
             <Link
               to="/batches/create"
-              className="whitespace-nowrap px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/30 active:scale-95 flex items-center justify-center"
+              className="whitespace-nowrap px-6 py-2.5 bg-primary hover:opacity-90 text-primary-foreground font-medium rounded-xl transition-all shadow-lg shadow-primary/30 active:scale-95 flex items-center justify-center"
             >
               + Create Batch
             </Link>
@@ -80,15 +130,15 @@ const BatchList = () => {
           {[1, 2, 3, 4, 5, 6].map((skeleton) => (
             <div
               key={skeleton}
-              className="h-32 p-6 rounded-2xl bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse"
+              className="h-32 p-6 rounded-2xl bg-card/40 backdrop-blur-xl border border-border shadow-sm animate-pulse"
             >
               <div className="flex justify-between items-start mb-4">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div>
+                <div className="h-6 bg-muted rounded w-1/2"></div>
+                <div className="h-6 bg-muted rounded-full w-20"></div>
               </div>
               <div className="space-y-3">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                <div className="h-4 bg-muted rounded w-1/3"></div>
+                <div className="h-4 bg-muted rounded w-2/3"></div>
               </div>
             </div>
           ))}
@@ -98,15 +148,15 @@ const BatchList = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-20 bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700"
+          className="text-center py-20 bg-card/40 backdrop-blur-sm rounded-2xl border border-dashed border-border"
         >
-          <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <Search className="h-8 w-8 text-gray-400" />
+          <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
+            <Search className="h-8 w-8 text-muted-foreground/50" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
+          <h3 className="text-lg font-medium text-foreground mb-1">
             No batches found
           </h3>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted-foreground">
             {searchQuery
               ? "Try adjusting your search terms."
               : "There are currently no batches available."}
@@ -130,20 +180,20 @@ const BatchList = () => {
                 }}
                 className="block h-full"
               >
-                <div className="h-full p-6 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-1">
+                <div className="h-full p-6 rounded-2xl bg-card/60 backdrop-blur-xl border border-border shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 group">
                   <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate pr-2">
+                    <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors truncate pr-2">
                       {batch.name?.trim()}
                     </h2>
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 shrink-0">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary shrink-0">
                       {batch.weekday}
                     </span>
                   </div>
 
-                  <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="space-y-3 text-sm text-muted-foreground">
                     <p className="flex items-center gap-2">
                       <svg
-                        className="w-4 h-4 shrink-0 text-gray-400"
+                        className="w-4 h-4 shrink-0 text-muted-foreground/70"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -159,7 +209,7 @@ const BatchList = () => {
                     </p>
                     <p className="flex items-center gap-2">
                       <svg
-                        className="w-4 h-4 shrink-0 text-gray-400"
+                        className="w-4 h-4 shrink-0 text-muted-foreground/70"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"

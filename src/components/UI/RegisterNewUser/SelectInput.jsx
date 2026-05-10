@@ -1,3 +1,5 @@
+import React from "react";
+
 export const SelectInput = ({
   label,
   name,
@@ -8,8 +10,8 @@ export const SelectInput = ({
   disabled,
 }) => (
   <div className="w-full">
-    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label className="block text-sm font-medium text-foreground mb-1.5">
+      {label} {required && <span className="text-destructive">*</span>}
     </label>
     <select
       name={name}
@@ -17,7 +19,7 @@ export const SelectInput = ({
       onChange={onChange}
       required={required}
       disabled={disabled}
-      className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 outline-none transition-all"
+      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <option value="" disabled>
         Select {label}

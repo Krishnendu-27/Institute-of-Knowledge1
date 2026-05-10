@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  ChevronRight,
-  Loader2,
-  Mail,
-  Phone,
-  BookOpen,
-  User,
-  ArrowLeft,
-  Calendar,
-} from "lucide-react";
+import { Search, ChevronRight, Loader2, Mail, Phone, User } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 import { generateSlug } from "../../util/generateSlug";
@@ -66,48 +56,48 @@ const AllTeachers = () => {
         exit="out"
         variants={pageVariants}
         transition={pageTransition}
-        className="min-h-screen bg-slate-50 p-6 md:p-8"
+        className="min-h-screen bg-background p-6 md:p-8 transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto space-y-8">
           <div>
-            <p className="text-slate-500 mt-1">
+            <p className="text-muted-foreground mt-1">
               Manage and view all teachers along with their assigned courses.
             </p>
           </div>
 
           <div className="relative group max-w-2xl">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             </div>
             <input
               type="text"
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm text-base"
+              className="block w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 flex items-center gap-2">
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-2 font-medium">
               <span>⚠️</span> {error}
             </div>
           )}
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-4" />
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
               <p>Loading Teachers...</p>
             </div>
           ) : filteredTeachers.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-8 h-8 text-slate-400" />
+            <div className="bg-card rounded-2xl border border-border border-dashed p-12 text-center">
+              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 No Teachers Found
               </h3>
-              <p className="text-slate-500">
+              <p className="text-muted-foreground">
                 {searchTerm
                   ? "Try adjusting your search criteria."
                   : "No teachers available at the moment."}
@@ -131,7 +121,7 @@ const AllTeachers = () => {
                         },
                       })
                     }
-                    className="group bg-white rounded-2xl border border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                    className="group bg-card rounded-2xl border border-border hover:border-primary hover:shadow-lg transition-all cursor-pointer overflow-hidden shadow-sm"
                   >
                     <div className="p-6 flex items-center justify-between">
                       <div className="flex-1">
@@ -140,25 +130,31 @@ const AllTeachers = () => {
                             <img
                               src={teacher.profilePic}
                               alt={teacher.name}
-                              className="w-14 h-14 rounded-full object-cover bg-slate-100"
+                              className="w-14 h-14 rounded-full object-cover bg-muted"
                             />
                           ) : (
-                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
                               {teacher.name.charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-slate-900">
+                            <h3 className="text-lg font-semibold text-foreground">
                               {teacher.name}
                             </h3>
-                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-600">
+                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
-                                <Mail size={16} className="text-slate-400" />
+                                <Mail
+                                  size={16}
+                                  className="text-muted-foreground/70"
+                                />
                                 {teacher.email}
                               </div>
                               {teacher.phone && (
                                 <div className="flex items-center gap-1">
-                                  <Phone size={16} className="text-slate-400" />
+                                  <Phone
+                                    size={16}
+                                    className="text-muted-foreground/70"
+                                  />
                                   {teacher.phone}
                                 </div>
                               )}
@@ -168,12 +164,14 @@ const AllTeachers = () => {
                       </div>
                       <div className="flex items-center gap-4 ml-4">
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-indigo-600">
+                          <p className="text-2xl font-bold text-primary">
                             {teacher.mainClasses?.length || 0}
                           </p>
-                          <p className="text-xs text-slate-500">Classes</p>
+                          <p className="text-xs text-muted-foreground">
+                            Classes
+                          </p>
                         </div>
-                        <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
                   </motion.div>

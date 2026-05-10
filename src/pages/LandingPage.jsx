@@ -56,18 +56,17 @@ export default function LandingPage() {
   return (
     <>
       {isLoginButtonclicked && <LoginOverlay />}
-      <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary font-sans">
+      <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary font-sans transition-colors duration-300">
         <Navbar />
 
         {/* ----- Hero Section -----  */}
-
         <section className="pt-16 pb-24 px-6 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight uppercase">
               Modernize Your Academy <br className="hidden md:block" />{" "}
               Effortlessly
             </h1>
-            <p className="mt-6 text-foreground/70 max-w-2xl mx-auto text-sm md:text-base font-medium">
+            <p className="mt-6 text-muted-foreground max-w-2xl mx-auto text-sm md:text-base font-medium">
               A comprehensive, cloud-based management system for{" "}
               <br className="hidden md:block" />
               modern institute of forward thinking academes.
@@ -78,7 +77,7 @@ export default function LandingPage() {
           <div className="mt-16 flex flex-wrap justify-center items-center gap-6 md:gap-12">
             <img
               src={Image.HeroPic}
-              className="md:w-5/6 w-full"
+              className="md:w-5/6 w-full drop-shadow-xl"
               alt="hero_image"
             />
           </div>
@@ -87,14 +86,14 @@ export default function LandingPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/")}
-            className="mt-16 bg-primary text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30"
+            className="mt-16 bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
           >
             Start Now
           </motion.button>
         </section>
 
         {/*------- Features Section -------  */}
-        <section className="bg-card py-24 px-6 border-y border-border">
+        <section className="bg-card py-24 px-6 border-y border-border transition-colors duration-300">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-black text-center mb-16 uppercase tracking-[0.2em]">
               Features
@@ -139,7 +138,7 @@ export default function LandingPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/")}
-              className="bg-primary text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30"
+              className="bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
             >
               Start Now
             </motion.button>

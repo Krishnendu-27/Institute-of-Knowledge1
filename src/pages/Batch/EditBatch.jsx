@@ -82,17 +82,15 @@ const EditBatch = () => {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto px-4 py-8 max-w-2xl"
     >
-      <div className="p-8 rounded-3xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl border border-gray-200 dark:border-gray-700 shadow-2xl">
+      <div className="p-8 rounded-3xl bg-card/60 backdrop-blur-2xl border border-border shadow-2xl">
         <div className="pb-5">
           <BackButton />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          Edit Batch
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground mb-8">Edit Batch</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Batch Name
             </label>
             <input
@@ -101,21 +99,21 @@ const EditBatch = () => {
               required
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground"
               placeholder="e.g. Morning Batch A"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Weekday
               </label>
               <select
                 name="weekday"
                 value={formData.weekday}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               >
                 {[
                   "Monday",
@@ -134,7 +132,7 @@ const EditBatch = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Teacher Email
               </label>
               <input
@@ -143,14 +141,14 @@ const EditBatch = () => {
                 required
                 value={formData.teacherEmail}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Start Time
               </label>
               <input
@@ -159,11 +157,11 @@ const EditBatch = () => {
                 required
                 value={formData.startTime}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 End Time
               </label>
               <input
@@ -172,7 +170,7 @@ const EditBatch = () => {
                 required
                 value={formData.endTime}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               />
             </div>
           </div>
@@ -180,14 +178,14 @@ const EditBatch = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="w-full py-3.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold rounded-xl transition-all"
+              className="w-full py-3.5 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/30 active:scale-[0.98]"
+              className="w-full py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground font-bold rounded-xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </button>

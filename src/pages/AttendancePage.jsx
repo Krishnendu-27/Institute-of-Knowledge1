@@ -145,8 +145,8 @@ const AttendancePage = () => {
 
   if (!userData) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-primary/60 gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="font-medium">Loading your dashboard...</p>
       </div>
     );
@@ -159,7 +159,7 @@ const AttendancePage = () => {
       exit="out"
       variants={pageVariants}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-linear-to-br from-slate-50 via-indigo-50 to-slate-100 p-6 md:p-8"
+      className="min-h-screen bg-background text-foreground p-6 md:p-8 transition-colors duration-300"
     >
       <div className="max-w-5xl mx-auto">
         {/* Header */}
@@ -173,14 +173,14 @@ const AttendancePage = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 rounded-xl flex items-start gap-3 border bg-red-50 border-red-100 text-red-700"
+            className="mb-6 p-4 rounded-xl flex items-start gap-3 border bg-destructive/10 border-destructive/20 text-destructive"
           >
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">{error}</p>
               <button
                 onClick={clearError}
-                className="text-xs mt-1 text-red-600 hover:text-red-800 underline"
+                className="text-xs mt-1 text-destructive hover:opacity-80 underline"
               >
                 Dismiss
               </button>
@@ -195,7 +195,7 @@ const AttendancePage = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 rounded-xl flex items-start gap-3 border bg-emerald-50 border-emerald-100 text-emerald-700"
+              className="mb-6 p-4 rounded-xl flex items-start gap-3 border bg-success/10 border-success/20 text-success"
             >
               <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="font-medium">Attendance submitted successfully!</p>
@@ -206,8 +206,8 @@ const AttendancePage = () => {
         {/* Main Content */}
         {isLoading && batches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mb-4" />
-            <p className="text-slate-600 font-medium">
+            <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground font-medium">
               Loading your batches...
             </p>
           </div>
@@ -216,13 +216,13 @@ const AttendancePage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center"
+            className="bg-card border border-border rounded-2xl shadow-sm p-8 text-center"
           >
-            <Layers className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">
+            <Layers className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">
               No Batches Assigned
             </h2>
-            <p className="text-slate-500">
+            <p className="text-muted-foreground">
               You don't have any batches assigned yet. Contact your admin to
               assign you a batch.
             </p>
@@ -237,10 +237,10 @@ const AttendancePage = () => {
             {/* Batch Selection Card */}
             <motion.div
               variants={itemVariants}
-              className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8"
+              className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8"
             >
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary" />
                 Select Your Batch
               </h2>
 
@@ -250,32 +250,32 @@ const AttendancePage = () => {
                   onClick={() => setIsBatchDropdownOpen(!isBatchDropdownOpen)}
                   className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                     isBatchDropdownOpen
-                      ? "border-indigo-500 bg-indigo-50"
-                      : "border-slate-200 bg-white hover:border-indigo-300"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:border-primary/50"
                   }`}
                 >
                   {selectedBatch ? (
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                      <div className="p-2 bg-primary/20 text-primary rounded-lg">
                         <Layers className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <p className="font-semibold text-slate-900">
+                        <p className="font-semibold text-foreground">
                           {selectedBatch.name}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {selectedBatch.weekday} • {selectedBatch.startTime} -{" "}
                           {selectedBatch.endTime}
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <span className="text-slate-500">
+                    <span className="text-muted-foreground">
                       Click to select a batch...
                     </span>
                   )}
                   <ChevronDown
-                    className={`w-5 h-5 text-slate-400 transition-transform ${
+                    className={`w-5 h-5 text-muted-foreground transition-transform ${
                       isBatchDropdownOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -288,22 +288,22 @@ const AttendancePage = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden"
+                      className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden"
                     >
                       {batches.map((batch) => (
                         <button
                           key={batch._id}
                           onClick={() => handleSelectBatch(batch)}
-                          className="w-full text-left p-4 border-b border-slate-100 hover:bg-indigo-50 transition-colors last:border-b-0"
+                          className="w-full text-left p-4 border-b border-border/50 hover:bg-muted/50 transition-colors last:border-b-0"
                         >
-                          <p className="font-semibold text-slate-900">
+                          <p className="font-semibold text-foreground">
                             {batch.name}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-muted-foreground">
                             {batch.weekday} • {batch.startTime} -{" "}
                             {batch.endTime}
                           </p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-muted-foreground/70 mt-1">
                             {batch.students?.length || 0} students
                           </p>
                         </button>
@@ -318,10 +318,10 @@ const AttendancePage = () => {
             {selectedBatch && students.length > 0 && (
               <motion.div
                 variants={itemVariants}
-                className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8"
+                className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8"
               >
-                <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
                   Mark Attendance
                 </h2>
 
@@ -330,16 +330,17 @@ const AttendancePage = () => {
                   <div className="space-y-2">
                     <label
                       htmlFor="attendanceDate"
-                      className="block text-sm font-semibold text-slate-700"
+                      className="block text-sm font-semibold text-foreground"
                     >
-                      Attendance Date <span className="text-red-500">*</span>
+                      Attendance Date{" "}
+                      <span className="text-destructive">*</span>
                     </label>
                     <input
                       type="date"
                       id="attendanceDate"
                       value={attendanceDate}
                       onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     />
                   </div>
 
@@ -347,7 +348,7 @@ const AttendancePage = () => {
                   <div className="space-y-2">
                     <label
                       htmlFor="searchStudents"
-                      className="block text-sm font-semibold text-slate-700"
+                      className="block text-sm font-semibold text-foreground"
                     >
                       Search Students
                     </label>
@@ -357,7 +358,7 @@ const AttendancePage = () => {
                       placeholder="Search by name or email..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     />
                   </div>
 
@@ -366,30 +367,30 @@ const AttendancePage = () => {
                     <button
                       type="button"
                       onClick={markAllPresent}
-                      className="flex-1 px-4 py-2.5 rounded-lg bg-emerald-100 text-emerald-700 font-medium hover:bg-emerald-200 transition-colors"
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-success/20 text-success font-medium hover:bg-success/30 transition-colors"
                     >
                       Mark All Present
                     </button>
                     <button
                       type="button"
                       onClick={markAllAbsent}
-                      className="flex-1 px-4 py-2.5 rounded-lg bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors"
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-destructive/20 text-destructive font-medium hover:bg-destructive/30 transition-colors"
                     >
                       Mark All Absent
                     </button>
                   </div>
 
                   {/* Students List */}
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                     {filteredStudents.length === 0 ? (
-                      <p className="text-center text-slate-500 py-8">
+                      <p className="text-center text-muted-foreground py-8">
                         No students found matching your search
                       </p>
                     ) : (
                       filteredStudents.map((student) => (
                         <motion.div
                           key={student._id}
-                          className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all cursor-pointer"
+                          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-muted/50 transition-all cursor-pointer"
                           onClick={() => toggleAttendance(student._id)}
                         >
                           <img
@@ -398,13 +399,13 @@ const AttendancePage = () => {
                               `https://ui-avatars.com/api/?name=${student.name}&background=e0e7ff&color=4f46e5`
                             }
                             alt={student.name}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                            className="w-10 h-10 rounded-full object-cover border border-border"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 truncate">
+                            <p className="font-semibold text-foreground truncate">
                               {student.name}
                             </p>
-                            <p className="text-sm text-slate-500 truncate">
+                            <p className="text-sm text-muted-foreground truncate">
                               {student.email}
                             </p>
                           </div>
@@ -414,8 +415,8 @@ const AttendancePage = () => {
                               whileTap={{ scale: 0.95 }}
                               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
                                 attendance[student._id]
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-slate-200 text-slate-400"
+                                  ? "bg-success text-success-foreground"
+                                  : "bg-muted text-muted-foreground"
                               }`}
                             >
                               {attendance[student._id] ? (
@@ -434,7 +435,7 @@ const AttendancePage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || students.length === 0}
-                    className="w-full py-3 px-6 bg-linear-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-3 px-6 bg-primary hover:opacity-90 text-primary-foreground font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm shadow-primary/20"
                   >
                     {isSubmitting ? (
                       <>
@@ -461,18 +462,18 @@ const AttendancePage = () => {
                 {/* Total Students */}
                 <motion.div
                   whileHover={{ y: -5 }}
-                  className="bg-linear-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6 shadow-sm"
+                  className="bg-primary/10 border border-primary/20 rounded-2xl p-6 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-600 mb-1">
+                      <p className="text-sm font-medium text-primary mb-1">
                         Total Students
                       </p>
-                      <p className="text-3xl font-bold text-blue-900">
+                      <p className="text-3xl font-bold text-foreground">
                         {totalStudents}
                       </p>
                     </div>
-                    <div className="p-3 bg-blue-200 text-blue-600 rounded-lg">
+                    <div className="p-3 bg-primary/20 text-primary rounded-lg">
                       <Users className="w-6 h-6" />
                     </div>
                   </div>
@@ -481,21 +482,21 @@ const AttendancePage = () => {
                 {/* Present */}
                 <motion.div
                   whileHover={{ y: -5 }}
-                  className="bg-linear-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-2xl p-6 shadow-sm"
+                  className="bg-success/10 border border-success/20 rounded-2xl p-6 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-emerald-600 mb-1">
+                      <p className="text-sm font-medium text-success mb-1">
                         Present
                       </p>
-                      <p className="text-3xl font-bold text-emerald-900">
+                      <p className="text-3xl font-bold text-foreground">
                         {presentCount}
                       </p>
-                      <p className="text-xs text-emerald-600 mt-1">
+                      <p className="text-xs text-success mt-1">
                         {((presentCount / totalStudents) * 100).toFixed(1)}%
                       </p>
                     </div>
-                    <div className="p-3 bg-emerald-200 text-emerald-600 rounded-lg">
+                    <div className="p-3 bg-success/20 text-success rounded-lg">
                       <Check className="w-6 h-6" />
                     </div>
                   </div>
@@ -504,21 +505,21 @@ const AttendancePage = () => {
                 {/* Absent */}
                 <motion.div
                   whileHover={{ y: -5 }}
-                  className="bg-linear-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl p-6 shadow-sm"
+                  className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-red-600 mb-1">
+                      <p className="text-sm font-medium text-destructive mb-1">
                         Absent
                       </p>
-                      <p className="text-3xl font-bold text-red-900">
+                      <p className="text-3xl font-bold text-foreground">
                         {absentCount}
                       </p>
-                      <p className="text-xs text-red-600 mt-1">
+                      <p className="text-xs text-destructive mt-1">
                         {((absentCount / totalStudents) * 100).toFixed(1)}%
                       </p>
                     </div>
-                    <div className="p-3 bg-red-200 text-red-600 rounded-lg">
+                    <div className="p-3 bg-destructive/20 text-destructive rounded-lg">
                       <X className="w-6 h-6" />
                     </div>
                   </div>

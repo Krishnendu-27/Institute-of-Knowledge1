@@ -15,7 +15,7 @@ export const Button = ({
       className="disabled:bg-primary/70 w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/30 hover:opacity-90 transition flex justify-center items-center"
     >
       {isLoading ? (
-        <span className="w-5 h-5 border-2 border-white border-b-transparent rounded-full inline-block animate-spin" />
+        <span className="w-5 h-5 border-2 border-primary-foreground border-b-transparent rounded-full inline-block animate-spin" />
       ) : (
         buttonName
       )}
@@ -29,15 +29,18 @@ export default function BackButton({ details }) {
     <div className="flex items-center gap-4">
       <div
         onClick={() => navigate(-1)}
-        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm"
+        className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all shadow-sm cursor-pointer"
       >
         <ArrowLeft size={20} />
       </div>
       <div>
-        <h1 className="text-slate-500 hover:text-indigo-600 transition-colors font-medium text-lg">
+        <h1
+          onClick={() => navigate(-1)}
+          className="text-foreground hover:text-primary transition-colors font-medium text-lg cursor-pointer"
+        >
           Back
         </h1>
-        <p className="text-sm text-slate-500">{details}</p>
+        <p className="text-sm text-muted-foreground">{details}</p>
       </div>
     </div>
   );

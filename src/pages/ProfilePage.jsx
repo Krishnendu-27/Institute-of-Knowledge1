@@ -302,27 +302,27 @@ const ProfilePage = () => {
       setShowProfilePicModal(true);
     }
   };
-
+  
   if (isLoading || !profileData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B1120]">
-        <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full drop-shadow-md"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full drop-shadow-md"></div>
       </div>
     );
   }
 
   const InfoRow = ({ icon: Icon, label, value }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-indigo-100 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 ">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0 ">
       <div className="flex items-center gap-3 w-full sm:w-1/3">
-        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+        <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
           {Icon && <Icon size={16} className="sm:w-5 sm:h-5" />}
         </div>
-        <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 capitalize tracking-wider">
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground capitalize tracking-wider">
           {label}
         </p>
       </div>
       <div className="sm:w-2/3 pl-11 sm:pl-0">
-        <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100">
+        <p className="text-sm sm:text-base font-semibold text-foreground">
           {value || "Not Provided"}
         </p>
       </div>
@@ -330,7 +330,7 @@ const ProfilePage = () => {
   );
 
   return (
-    <div className="min-h-screen relative px-4 sm:px-6 md:px-8 py-6 sm:py-8 bg-slate-50 dark:bg-[#0B1120] font-sans">
+    <div className="min-h-screen relative px-4 sm:px-6 md:px-8 py-6 sm:py-8 bg-background text-foreground font-sans transition-colors duration-300">
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex justify-between items-center mb-6 sm:mb-8">
           <BackButton />
@@ -339,7 +339,7 @@ const ProfilePage = () => {
             {isAdmin && !isSelf && !isEditing && (
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="group flex items-center gap-2 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all border border-red-200 hover:border-red-500 shadow-sm active:scale-95"
+                className="group flex items-center gap-2 bg-destructive/10 hover:bg-destructive text-destructive hover:text-destructive-foreground px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all border border-destructive/20 hover:border-destructive shadow-sm active:scale-95"
               >
                 <Trash2
                   size={16}
@@ -352,7 +352,7 @@ const ProfilePage = () => {
             {canEdit && !isEditing && (
               <button
                 onClick={startEditing}
-                className="group flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 active:scale-95"
+                className="group flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all shadow-lg shadow-primary/20 active:scale-95"
               >
                 <Edit3
                   size={16}
@@ -374,13 +374,13 @@ const ProfilePage = () => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4 sm:space-y-6"
             >
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center shadow-sm relative overflow-hidden">
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+              <div className="bg-card border border-border rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row gap-5 sm:gap-8 items-center shadow-sm relative overflow-hidden">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
                 <div className="relative shrink-0 z-10">
                   <div
                     onClick={() => openProfilePicModal(profileData.profilePic)}
-                    className={`w-28 h-28 sm:w-36 sm:h-36 border-[3px] sm:border-4 border-white dark:border-slate-800 shadow-xl bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative group ${profileData.profilePic ? "cursor-pointer" : ""}`}
+                    className={`w-28 h-28 sm:w-36 sm:h-36 border-[3px] sm:border-4 border-card shadow-xl bg-muted rounded-full overflow-hidden relative group ${profileData.profilePic ? "cursor-pointer" : ""}`}
                   >
                     {profileData.profilePic ? (
                       <>
@@ -399,36 +399,36 @@ const ProfilePage = () => {
                     ) : (
                       <User
                         size={48}
-                        className="text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        className="text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                       />
                     )}
                   </div>
-                  <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 border-4 border-white dark:border-slate-900 rounded-full z-20"></div>
+                  <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-success border-4 border-card rounded-full z-20"></div>
                 </div>
 
                 <div className="flex-1 text-center sm:text-left z-10 w-full">
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white capitalize tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground capitalize tracking-tight">
                     {profileData.name}
                   </h2>
 
                   <div className="mt-2 sm:mt-3 flex flex-wrap justify-center sm:justify-start gap-2">
                     {isTargetAdmin && (
-                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-100 dark:border-indigo-500/30 px-3 py-1.5 rounded-lg shadow-sm">
+                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-primary font-bold bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg shadow-sm">
                         <Shield size={14} /> System Administrator
                       </span>
                     )}
                     {isTargetTeacher && (
-                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-100 dark:border-emerald-500/30 px-3 py-1.5 rounded-lg shadow-sm">
+                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-success font-bold bg-success/10 border border-success/20 px-3 py-1.5 rounded-lg shadow-sm">
                         <BookOpen size={14} /> Faculty / Teacher
                       </span>
                     )}
                     {isTargetStudent && (
-                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-700 dark:text-blue-300 font-bold bg-blue-50 dark:bg-blue-500/20 border border-blue-100 dark:border-blue-500/30 px-3 py-1.5 rounded-lg shadow-sm">
+                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-accent-foreground font-bold bg-accent border border-border px-3 py-1.5 rounded-lg shadow-sm">
                         <GraduationCap size={14} /> Student
                       </span>
                     )}
                     {isTargetStudent && (
-                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-700 dark:text-blue-300 font-bold bg-blue-50 dark:bg-blue-500/20 border border-blue-100 dark:border-blue-500/30 px-3 py-1.5 rounded-lg shadow-sm">
+                      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-accent-foreground font-bold bg-accent border border-border px-3 py-1.5 rounded-lg shadow-sm">
                         {getStudentId(profileData)}
                       </span>
                     )}
@@ -437,17 +437,14 @@ const ProfilePage = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden h-fit">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
-                    <UserCheck
-                      className="text-indigo-600 dark:text-indigo-400"
-                      size={18}
-                    />
-                    <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base">
+                <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden h-fit">
+                  <div className="bg-muted/30 p-3 sm:p-4 border-b border-border flex items-center gap-2">
+                    <UserCheck className="text-primary" size={18} />
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">
                       Contact Details
                     </h3>
                   </div>
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <div className="divide-y divide-border/50">
                     <InfoRow
                       icon={Mail}
                       label="Email Address"
@@ -496,17 +493,14 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden h-fit flex flex-col">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
-                    <Shield
-                      className="text-indigo-600 dark:text-indigo-400"
-                      size={18}
-                    />
-                    <h3 className="font-bold text-slate-800 dark:text-white text-sm sm:text-base">
+                <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden h-fit flex flex-col">
+                  <div className="bg-muted/30 p-3 sm:p-4 border-b border-border flex items-center gap-2">
+                    <Shield className="text-primary" size={18} />
+                    <h3 className="font-bold text-foreground text-sm sm:text-base">
                       Academic & Status
                     </h3>
                   </div>
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 flex-1">
+                  <div className="divide-y divide-border/50 flex-1">
                     {isTargetStudent && (
                       <>
                         <InfoRow
@@ -573,9 +567,9 @@ const ProfilePage = () => {
               </div>
 
               {isTargetStudent && (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-4 sm:p-6">
-                  <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-slate-800 dark:text-white flex items-center gap-2">
-                    <BookOpen className="text-indigo-600" size={18} /> Student
+                <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-foreground flex items-center gap-2">
+                    <BookOpen className="text-primary" size={18} /> Student
                     Documents
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
@@ -590,14 +584,14 @@ const ProfilePage = () => {
                                 name: `Document ${idx + 1}`,
                               })
                             }
-                            className="cursor-pointer bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden h-28 sm:h-36 group relative shadow-sm"
+                            className="cursor-pointer bg-muted border border-border rounded-xl overflow-hidden h-28 sm:h-36 group relative shadow-sm"
                           >
                             <img
                               src={docUrl}
                               alt={`Doc ${idx + 1}`}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                               <ZoomIn className="text-white" size={20} />
                               <span className="text-white text-[10px] sm:text-xs font-semibold px-2 text-center">
                                 View
@@ -607,8 +601,11 @@ const ProfilePage = () => {
                         );
                       })
                     ) : (
-                      <div className="col-span-full py-10 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/30 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2 sm:gap-3">
-                        <FileText size={28} className="text-slate-400" />
+                      <div className="col-span-full py-10 text-center text-muted-foreground bg-muted/30 rounded-xl border-2 border-dashed border-border flex flex-col items-center gap-2 sm:gap-3">
+                        <FileText
+                          size={28}
+                          className="text-muted-foreground/60"
+                        />
                         <p className="text-sm">No documents available.</p>
                       </div>
                     )}
@@ -627,19 +624,16 @@ const ProfilePage = () => {
             >
               <form
                 onSubmit={handleUpdate}
-                className="bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-2xl shadow-xl border border-indigo-100 dark:border-slate-700"
+                className="bg-card p-4 sm:p-8 rounded-2xl shadow-xl border border-border"
               >
-                <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
-                  <Edit3
-                    className="text-indigo-600 dark:text-indigo-400"
-                    size={20}
-                  />
-                  <h2 className="text-lg sm:text-2xl font-bold text-slate-800 dark:text-white">
+                <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6 pb-4 border-b border-border">
+                  <Edit3 className="text-primary" size={20} />
+                  <h2 className="text-lg sm:text-2xl font-bold text-foreground">
                     Edit Profile Details
                   </h2>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-8 bg-muted/30 p-4 sm:p-6 rounded-xl border border-border/50">
                   <div className="relative shrink-0 mx-auto sm:mx-0">
                     <div
                       onClick={() =>
@@ -647,7 +641,7 @@ const ProfilePage = () => {
                           newProfilePreview || profileData.profilePic,
                         )
                       }
-                      className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-md border-4 border-white dark:border-slate-700 bg-slate-200 dark:bg-slate-900 overflow-hidden relative group ${newProfilePreview || profileData.profilePic ? "cursor-pointer" : ""}`}
+                      className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-md border-4 border-card bg-muted overflow-hidden relative group ${newProfilePreview || profileData.profilePic ? "cursor-pointer" : ""}`}
                     >
                       {newProfilePreview || profileData.profilePic ? (
                         <>
@@ -663,32 +657,32 @@ const ProfilePage = () => {
                       ) : (
                         <User
                           size={32}
-                          className="text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                          className="text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                         />
                       )}
                     </div>
                   </div>
                   <div className="flex-1 text-center sm:text-left">
-                    <label className="text-xs sm:text-sm font-bold block mb-2 text-slate-800 dark:text-slate-200">
+                    <label className="text-xs sm:text-sm font-bold block mb-2 text-foreground">
                       Update Profile Photo
                     </label>
                     <input
                       type="file"
                       accept="image/png, image/jpeg, image/jpg"
                       onChange={handleProfilePicChange}
-                      className="block w-full text-xs sm:text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 sm:file:px-6 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400 transition-colors cursor-pointer"
+                      className="block w-full text-xs sm:text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 sm:file:px-6 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors cursor-pointer"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-1 sm:space-y-2">
-                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-                      Full Name <span className="text-red-500">*</span>
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      Full Name <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
                       <User
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
                       />
                       <input
@@ -697,18 +691,18 @@ const ProfilePage = () => {
                         value={formData.name || ""}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1 sm:space-y-2">
-                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-                      Email Address <span className="text-red-500">*</span>
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      Email Address <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
                       <Mail
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
                       />
                       <input
@@ -717,18 +711,18 @@ const ProfilePage = () => {
                         value={formData.email || ""}
                         onChange={handleInputChange}
                         required
-                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1 sm:space-y-2">
-                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-                      Phone Number <span className="text-red-500">*</span>
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      Phone Number <span className="text-destructive">*</span>
                     </label>
                     <div className="relative">
                       <Phone
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                         size={16}
                       />
                       <input
@@ -738,7 +732,7 @@ const ProfilePage = () => {
                         onChange={handleInputChange}
                         required
                         placeholder="10-digit number"
-                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                        className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                       />
                     </div>
                   </div>
@@ -746,12 +740,12 @@ const ProfilePage = () => {
                   {isTargetStudent && (
                     <>
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Date of Birth
                         </label>
                         <div className="relative">
                           <Calendar
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -761,25 +755,25 @@ const ProfilePage = () => {
                               formData.dob ? formData.dob.split("T")[0] : ""
                             }
                             onChange={handleInputChange}
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Gender
                         </label>
                         <div className="relative">
                           <User
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <select
                             name="gender"
                             value={formData.gender || ""}
                             onChange={handleInputChange}
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow appearance-none"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow appearance-none"
                           >
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
@@ -790,12 +784,12 @@ const ProfilePage = () => {
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Nationality
                         </label>
                         <div className="relative">
                           <Flag
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -804,18 +798,18 @@ const ProfilePage = () => {
                             value={formData.nationality || ""}
                             onChange={handleInputChange}
                             placeholder="e.g., Indian"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Address
                         </label>
                         <div className="relative">
                           <MapPin
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -824,18 +818,18 @@ const ProfilePage = () => {
                             value={formData.address || ""}
                             onChange={handleInputChange}
                             placeholder="Full Address"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Stream
                         </label>
                         <div className="relative">
                           <BookOpen
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -844,18 +838,18 @@ const ProfilePage = () => {
                             value={formData.stream || ""}
                             onChange={handleInputChange}
                             placeholder="e.g., Science, Arts"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Grade
                         </label>
                         <div className="relative">
                           <GraduationCap
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -864,18 +858,18 @@ const ProfilePage = () => {
                             value={formData.grade || ""}
                             onChange={handleInputChange}
                             placeholder="e.g., 10th, 12th"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Marks Obtained
                         </label>
                         <div className="relative">
                           <FileText
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -884,18 +878,18 @@ const ProfilePage = () => {
                             value={formData.marksObtained || ""}
                             onChange={handleInputChange}
                             placeholder="e.g., 450"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
                           Aadhar Number
                         </label>
                         <div className="relative">
                           <Hash
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                             size={16}
                           />
                           <input
@@ -904,7 +898,7 @@ const ProfilePage = () => {
                             value={formData.adhar || ""}
                             onChange={handleInputChange}
                             placeholder="12-digit number"
-                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-slate-300 dark:border-slate-700 rounded-xl dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
                           />
                         </div>
                       </div>
@@ -913,8 +907,8 @@ const ProfilePage = () => {
 
                   {isTargetStudent && (
                     <div className="col-span-1 md:col-span-2 mt-2">
-                      <div className="p-4 sm:p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/30">
-                        <label className="text-xs sm:text-sm font-bold block mb-2 sm:mb-3 text-slate-800 dark:text-slate-200">
+                      <div className="p-4 sm:p-6 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                        <label className="text-xs sm:text-sm font-bold block mb-2 sm:mb-3 text-foreground">
                           Update Documents (JPG/PNG)
                         </label>
 
@@ -923,7 +917,7 @@ const ProfilePage = () => {
                           multiple
                           accept="image/png, image/jpeg, image/jpg"
                           onChange={handleDocChange}
-                          className="block w-full text-xs sm:text-sm text-slate-500 file:mr-3 file:py-2 sm:file:py-2.5 file:px-4 sm:file:px-6 file:rounded-xl file:border-0 file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 dark:file:bg-indigo-900/40 dark:file:text-indigo-300 cursor-pointer transition-colors mb-4"
+                          className="block w-full text-xs sm:text-sm text-muted-foreground file:mr-3 file:py-2 sm:file:py-2.5 file:px-4 sm:file:px-6 file:rounded-xl file:border-0 file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer transition-colors mb-4"
                         />
 
                         {(existingDocuments.length > 0 ||
@@ -932,7 +926,7 @@ const ProfilePage = () => {
                             {existingDocuments.map((docUrl, idx) => (
                               <div
                                 key={`existing-${idx}`}
-                                className="relative group rounded-xl overflow-hidden h-24 sm:h-28 border border-slate-300 dark:border-slate-600 shadow-sm"
+                                className="relative group rounded-xl overflow-hidden h-24 sm:h-28 border border-border shadow-sm"
                               >
                                 <img
                                   src={docUrl}
@@ -954,12 +948,12 @@ const ProfilePage = () => {
                                 <button
                                   type="button"
                                   onClick={() => removeExistingDocument(docUrl)}
-                                  className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
+                                  className="absolute top-1.5 right-1.5 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:opacity-90 hover:scale-110 transition-all z-10"
                                   title="Remove Saved File"
                                 >
                                   <X size={14} strokeWidth={3} />
                                 </button>
-                                <span className="absolute bottom-1 left-1 bg-slate-900/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                                <span className="absolute bottom-1 left-1 bg-foreground/70 text-background text-[10px] px-1.5 py-0.5 rounded">
                                   Saved
                                 </span>
                               </div>
@@ -968,7 +962,7 @@ const ProfilePage = () => {
                             {newDocuments.map((doc) => (
                               <div
                                 key={doc.id}
-                                className="relative group rounded-xl overflow-hidden h-24 sm:h-28 border border-slate-300 dark:border-slate-600 shadow-sm"
+                                className="relative group rounded-xl overflow-hidden h-24 sm:h-28 border border-border shadow-sm"
                               >
                                 <img
                                   src={doc.previewUrl}
@@ -990,12 +984,12 @@ const ProfilePage = () => {
                                 <button
                                   type="button"
                                   onClick={() => removeNewDocument(doc.id)}
-                                  className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
+                                  className="absolute top-1.5 right-1.5 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:opacity-90 hover:scale-110 transition-all z-10"
                                   title="Remove New File"
                                 >
                                   <X size={14} strokeWidth={3} />
                                 </button>
-                                <span className="absolute bottom-1 left-1 bg-green-600/80 text-white text-[10px] px-1.5 py-0.5 rounded">
+                                <span className="absolute bottom-1 left-1 bg-success/80 text-success-foreground text-[10px] px-1.5 py-0.5 rounded">
                                   New
                                 </span>
                               </div>
@@ -1007,18 +1001,18 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-10 pt-5 sm:pt-6 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-10 pt-5 sm:pt-6 border-t border-border">
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base text-foreground bg-muted hover:bg-muted/80 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isUpdating}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-sm sm:text-base bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
                   >
                     <Save size={16} className="sm:w-[18px] sm:h-[18px]" />{" "}
                     {isUpdating ? "Saving..." : "Save Changes"}
@@ -1036,12 +1030,12 @@ const ProfilePage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowProfilePicModal(false)}
           >
             <div className="relative max-w-3xl w-full flex justify-center">
               <button
-                className="absolute -top-12 right-0 sm:-right-8 text-white/70 hover:text-white bg-slate-800/80 hover:bg-slate-700 p-2 rounded-full transition-colors z-50"
+                className="absolute -top-12 right-0 sm:-right-8 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 p-2 rounded-full transition-colors z-50"
                 onClick={() => setShowProfilePicModal(false)}
               >
                 <X size={20} className="sm:w-6 sm:h-6" />
@@ -1064,7 +1058,7 @@ const ProfilePage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/60 backdrop-blur-sm"
             onClick={() => setActiveDocument(null)}
           >
             <motion.div

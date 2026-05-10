@@ -125,8 +125,8 @@ const StudentProfile = () => {
 
   if (loading || !studentData) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-        <div className="w-8 h-8 animate-spin text-indigo-600 mb-4 border-4 border-indigo-200 border-t-indigo-600 rounded-full"></div>
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <div className="w-8 h-8 animate-spin text-primary mb-4 border-4 border-primary/20 border-t-primary rounded-full"></div>
         <p>Loading your profile...</p>
       </div>
     );
@@ -139,19 +139,20 @@ const StudentProfile = () => {
       exit="out"
       variants={pageVariants}
       transition={pageTransition}
-      className="min-h-screen bg-slate-50 p-6 md:p-8"
+      className="min-h-screen bg-background p-6 md:p-8 transition-colors duration-300"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <button
           onClick={() => navigate("/")}
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+          className="inline-flex items-center gap-2 text-primary hover:opacity-80 font-medium transition-opacity"
         >
           <ArrowLeft size={20} />
           Back to Dashboard
         </button>
 
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
-          <div className="h-24 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm transition-colors">
+          {/* Header Banner */}
+          <div className="h-24 bg-primary/20"></div>
 
           <div className="px-6 md:px-8 pb-8">
             <div className="flex flex-col md:flex-row gap-6 -mt-12 mb-6">
@@ -159,26 +160,26 @@ const StudentProfile = () => {
                 <img
                   src={studentData.profilePic}
                   alt={studentData.name}
-                  className="w-24 h-24 rounded-2xl object-cover bg-slate-100 border-4 border-white shadow-lg"
+                  className="w-24 h-24 rounded-2xl object-cover bg-muted border-4 border-card shadow-lg"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl border-4 border-white shadow-lg">
+                <div className="w-24 h-24 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-3xl border-4 border-card shadow-lg">
                   {studentData.name.charAt(0).toUpperCase()}
                 </div>
               )}
 
               <div className="flex-1 pt-2">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                <h1 className="text-3xl font-bold text-foreground mb-2">
                   {studentData.name}
                 </h1>
-                <div className="flex flex-wrap gap-4 text-slate-600">
+                <div className="flex flex-wrap gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Mail size={18} className="text-slate-400" />
+                    <Mail size={18} className="text-muted-foreground/70" />
                     {studentData.email}
                   </div>
                   {studentData.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone size={18} className="text-slate-400" />
+                      <Phone size={18} className="text-muted-foreground/70" />
                       {studentData.phone}
                     </div>
                   )}
@@ -190,7 +191,7 @@ const StudentProfile = () => {
               {studentData.mainClasses &&
                 studentData.mainClasses.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 mb-4">
+                    <h2 className="text-xl font-bold text-foreground mb-4">
                       Your Enrolled Classes
                     </h2>
                     <div className="space-y-4">
@@ -200,16 +201,16 @@ const StudentProfile = () => {
                         return (
                           <div
                             key={mainClass._id}
-                            className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-indigo-300 transition-colors"
+                            className="bg-muted/30 rounded-xl p-4 border border-border hover:border-primary/50 transition-colors"
                           >
                             <div className="flex items-center justify-between mb-4">
                               <div>
-                                <h3 className="font-semibold text-slate-900">
+                                <h3 className="font-semibold text-foreground">
                                   {mainClass.name}
                                 </h3>
-                                <div className="flex flex-wrap gap-4 mt-1 text-sm text-slate-600">
+                                <div className="flex flex-wrap gap-4 mt-1 text-sm text-muted-foreground">
                                   <div>
-                                    Duration: {mainClass.duration} hours
+                                    Duration: {mainClass.duration} months
                                   </div>
                                   <div>
                                     Start:{" "}
@@ -225,7 +226,7 @@ const StudentProfile = () => {
                                   </div>
                                 </div>
                               </div>
-                              <span className="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                              <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                                 ₹ {mainClass.fees}
                               </span>
                             </div>
@@ -237,21 +238,21 @@ const StudentProfile = () => {
                                   field: "batchcompletion",
                                   icon: BookOpen,
                                   label: "Course Complete",
-                                  color: "indigo",
+                                  color: "primary",
                                 },
                                 {
                                   key: "examComplete",
                                   field: "examcompletion",
                                   icon: FileText,
                                   label: "Exam Complete",
-                                  color: "purple",
+                                  color: "accent",
                                 },
                                 {
                                   key: "certificateComplete",
                                   field: "certificateIssued",
                                   icon: Check,
                                   label: "Certificate Issued",
-                                  color: "emerald",
+                                  color: "success",
                                 },
                               ].map(
                                 ({
@@ -262,18 +263,28 @@ const StudentProfile = () => {
                                   color,
                                 }) => {
                                   const isComplete = progress[field];
+
+                                  // Map colors to theme variables
                                   const colorClass =
-                                    color === "indigo"
-                                      ? "from-indigo-50 to-indigo-100 border-indigo-200"
-                                      : color === "purple"
-                                        ? "from-purple-50 to-purple-100 border-purple-200"
-                                        : "from-emerald-50 to-emerald-100 border-emerald-200";
+                                    color === "primary"
+                                      ? "bg-primary/10 border-primary/30"
+                                      : color === "accent"
+                                        ? "bg-accent/50 border-accent-foreground/30"
+                                        : "bg-success/10 border-success/30";
+
                                   const textColorClass =
-                                    color === "indigo"
-                                      ? "text-indigo-600"
-                                      : color === "purple"
-                                        ? "text-purple-600"
-                                        : "text-emerald-600";
+                                    color === "primary"
+                                      ? "text-primary"
+                                      : color === "accent"
+                                        ? "text-accent-foreground"
+                                        : "text-success";
+
+                                  const iconBgClass =
+                                    color === "primary"
+                                      ? "bg-primary/20"
+                                      : color === "accent"
+                                        ? "bg-accent"
+                                        : "bg-success/20";
 
                                   return (
                                     <button
@@ -289,16 +300,16 @@ const StudentProfile = () => {
                                       }
                                       className={`relative rounded-xl p-4 border-2 transition-all disabled:opacity-50 ${
                                         isComplete
-                                          ? `bg-gradient-to-br ${colorClass} border-${color}-300`
-                                          : "bg-white border-slate-200 hover:border-slate-300"
+                                          ? `${colorClass}`
+                                          : "bg-card border-border hover:border-primary/50"
                                       }`}
                                     >
                                       <div className="flex items-center justify-between mb-2">
                                         <div
                                           className={`p-2.5 rounded-lg ${
                                             isComplete
-                                              ? `bg-${color}-100`
-                                              : "bg-slate-100"
+                                              ? iconBgClass
+                                              : "bg-muted"
                                           }`}
                                         >
                                           <Icon
@@ -306,13 +317,13 @@ const StudentProfile = () => {
                                             className={
                                               isComplete
                                                 ? textColorClass
-                                                : "text-slate-400"
+                                                : "text-muted-foreground"
                                             }
                                           />
                                         </div>
                                         {isComplete && (
-                                          <div className="bg-green-500 text-white rounded-full p-1">
-                                            <Check size={16} />
+                                          <div className="bg-success text-success-foreground rounded-full p-1">
+                                            <Check size={16} strokeWidth={3} />
                                           </div>
                                         )}
                                       </div>
@@ -320,13 +331,13 @@ const StudentProfile = () => {
                                         className={`font-semibold text-sm ${
                                           isComplete
                                             ? textColorClass
-                                            : "text-slate-600"
+                                            : "text-muted-foreground"
                                         }`}
                                       >
                                         {label}
                                       </p>
                                       {isComplete && (
-                                        <p className="text-xs text-slate-500 mt-1">
+                                        <p className="text-xs opacity-70 mt-1">
                                           Completed
                                         </p>
                                       )}
@@ -344,21 +355,21 @@ const StudentProfile = () => {
 
               {studentData.batches && studentData.batches.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-4">
+                  <h2 className="text-xl font-bold text-foreground mb-4">
                     Your Assigned Batches
                   </h2>
                   <div className="space-y-3">
                     {studentData.batches.map((batch) => (
                       <div
                         key={batch._id}
-                        className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-purple-300 transition-colors"
+                        className="bg-muted/30 rounded-xl p-4 border border-border hover:border-primary/50 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="font-semibold text-slate-900">
+                            <h3 className="font-semibold text-foreground">
                               {batch.name}
                             </h3>
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                               <Calendar size={14} className="inline mr-1" />
                               {batch.weekday} • {batch.startTime} -{" "}
                               {batch.endTime}
@@ -374,14 +385,14 @@ const StudentProfile = () => {
               {(!studentData.mainClasses ||
                 studentData.mainClasses.length === 0) &&
                 (!studentData.batches || studentData.batches.length === 0) && (
-                  <div className="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BookOpen className="w-8 h-8 text-slate-400" />
+                  <div className="bg-card rounded-2xl border border-border border-dashed p-12 text-center">
+                    <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="w-8 h-8 text-muted-foreground/60" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                       No Classes Enrolled
                     </h3>
-                    <p className="text-slate-500">
+                    <p className="text-muted-foreground">
                       You haven't enrolled in any classes yet. Check the courses
                       page to explore available options.
                     </p>

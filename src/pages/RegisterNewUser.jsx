@@ -14,6 +14,7 @@ import {
   MapPin,
   GraduationCap,
   Briefcase,
+  ZoomIn,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useUserStore from "../stores/useUserStore";
@@ -233,7 +234,7 @@ const RegisterNewUser = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-6 flex items-center justify-center transition-colors duration-200">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-6 flex items-center justify-center transition-colors duration-300">
       {/* File Preview Modal */}
       <FilePreviewModal
         viewingFile={viewingFile}
@@ -242,16 +243,16 @@ const RegisterNewUser = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+        className="max-w-6xl w-full bg-card rounded-2xl shadow-xl overflow-hidden border border-border"
       >
         <form onSubmit={handleSubmit} className="p-6 md:p-8">
           <div className="mb-8 flex items-center justify-start">
-            <BackButton details={`RegisterNewUser to the system`} />
+            <BackButton details={`Register New User to the system`} />
           </div>
 
           {/* Role Selection */}
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+            <label className="block text-sm font-semibold text-foreground mb-3">
               Account Role
             </label>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md">
@@ -263,8 +264,8 @@ const RegisterNewUser = () => {
                   onClick={() => setFormData({ ...initialFormState, role: r })}
                   className={`flex-1 py-3 rounded-xl border-2 transition-all font-medium flex items-center justify-center gap-2 ${
                     formData.role === r
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-300"
-                      : "border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-300"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
                   }`}
                 >
                   {r}
@@ -475,23 +476,23 @@ const RegisterNewUser = () => {
 
               {/* Shared Course Assignment */}
               <SectionCard title="Course Assignment" icon={Briefcase}>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-foreground mb-3">
                   {formData.role === "Student"
                     ? "Enrolled Courses"
                     : "Assigned Courses"}{" "}
-                  <span className="text-red-500">*</span>
+                  <span className="text-destructive">*</span>
                 </label>
                 {isClassesLoading ? (
-                  <div className="flex items-center text-slate-500">
-                    <div className="animate-spin h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full mr-3" />{" "}
+                  <div className="flex items-center text-muted-foreground">
+                    <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-3" />{" "}
                     Loading courses...
                   </div>
                 ) : allClass.length === 0 ? (
-                  <p className="text-sm italic text-slate-500">
+                  <p className="text-sm italic text-muted-foreground">
                     No courses available. Please create classes first.
                   </p>
                 ) : (
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                     {allClass.map((cls) => {
                       const isSelected = formData.mainClasses.includes(cls._id);
                       return (
@@ -502,8 +503,8 @@ const RegisterNewUser = () => {
                           onClick={() => toggleClassSelection(cls._id)}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
                             isSelected
-                              ? "bg-indigo-600 border-indigo-600 text-white shadow-md"
-                              : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-indigo-400"
+                              ? "bg-primary border-primary text-primary-foreground shadow-md"
+                              : "bg-background border-border text-muted-foreground hover:border-primary/50"
                           }`}
                         >
                           {isSelected && <CheckCircle2 size={16} />}{" "}
@@ -522,11 +523,11 @@ const RegisterNewUser = () => {
               <SectionCard title="Profile Photo">
                 <div className="flex flex-col items-center gap-4">
                   {profilePreview ? (
-                    <div className="relative">
+                    <div className="relative group">
                       <img
                         src={profilePreview}
                         alt="Profile"
-                        className="w-32 h-32 rounded-full object-cover border-4 border-slate-200 shadow-md cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-card shadow-md cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() =>
                           setViewingFile({
                             url: profilePreview,
@@ -535,23 +536,29 @@ const RegisterNewUser = () => {
                           })
                         }
                       />
+                      <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <ZoomIn
+                          className="text-white drop-shadow-md"
+                          size={24}
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
                           setProfilePreview(null);
                           setProfilePic(null);
                         }}
-                        className="absolute 0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg"
+                        className="absolute top-0 right-0 bg-destructive hover:opacity-90 text-destructive-foreground rounded-full p-1.5 shadow-lg transition-opacity"
                       >
                         <X size={14} />
                       </button>
                     </div>
                   ) : (
-                    <div className="w-32 h-32 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 bg-white dark:bg-slate-900">
+                    <div className="w-32 h-32 rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground bg-background">
                       <Upload size={28} />
                     </div>
                   )}
-                  <label className="cursor-pointer bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 font-medium py-2 px-4 rounded-lg text-sm hover:bg-indigo-100 transition-colors">
+                  <label className="cursor-pointer bg-primary/10 text-primary font-medium py-2 px-4 rounded-lg text-sm hover:bg-primary/20 transition-colors">
                     Browse Files
                     <input
                       type="file"
@@ -561,7 +568,7 @@ const RegisterNewUser = () => {
                       disabled={isAddingUser}
                     />
                   </label>
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     JPG, PNG up to {MAX_FILE_SIZE_MB}MB.
                   </p>
                 </div>
@@ -594,24 +601,24 @@ const RegisterNewUser = () => {
                           }
                         />
 
-                        <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-5">
+                        <div className="mt-6 border-t border-border pt-5">
                           <div className="flex justify-between items-center mb-3">
-                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            <label className="text-sm font-semibold text-foreground">
                               Supporting Documents
                             </label>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                            <span className="text-xs text-muted-foreground">
                               {documents.length} / 3
                             </span>
                           </div>
-                          <label className="block w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-900 text-center mb-4">
+                          <label className="block w-full py-4 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors bg-background text-center mb-4">
                             <FileText
                               size={24}
-                              className="mx-auto text-indigo-500 mb-1"
+                              className="mx-auto text-primary mb-1"
                             />
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <span className="text-sm font-medium text-foreground">
                               Click to upload files
                             </span>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               JPG, PNG allowed (Max {MAX_FILE_SIZE_MB}MB)
                             </p>
                             <input
@@ -628,21 +635,21 @@ const RegisterNewUser = () => {
                             {documents.map((doc, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm"
+                                className="flex items-center justify-between p-3 bg-background border border-border rounded-lg shadow-sm"
                               >
                                 <div className="flex items-center gap-3 overflow-hidden">
                                   {doc.type.startsWith("image/") ? (
                                     <ImageIcon
                                       size={18}
-                                      className="text-blue-500 flex-shrink-0"
+                                      className="text-primary flex-shrink-0"
                                     />
                                   ) : (
                                     <FileText
                                       size={18}
-                                      className="text-red-500 flex-shrink-0"
+                                      className="text-destructive flex-shrink-0"
                                     />
                                   )}
-                                  <span className="text-sm text-slate-700 dark:text-slate-300 truncate font-medium">
+                                  <span className="text-sm text-foreground truncate font-medium">
                                     {doc.name}
                                   </span>
                                 </div>
@@ -650,7 +657,7 @@ const RegisterNewUser = () => {
                                   <button
                                     type="button"
                                     onClick={() => openPreview(doc)}
-                                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
                                   >
                                     <Eye size={16} />
                                   </button>
@@ -661,7 +668,7 @@ const RegisterNewUser = () => {
                                         documents.filter((_, i) => i !== idx),
                                       )
                                     }
-                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                                   >
                                     <Trash2 size={16} />
                                   </button>
@@ -678,7 +685,7 @@ const RegisterNewUser = () => {
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="mt-10 pt-6 border-t border-border">
             <button
               type="submit"
               disabled={
@@ -688,11 +695,11 @@ const RegisterNewUser = () => {
                   formData.adhar.length > 0) ||
                 (formData.phone.length !== 10 && formData.phone.length > 0)
               }
-              className="w-full md:w-auto md:min-w-[300px] float-right bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg flex justify-center items-center gap-2"
+              className="w-full md:w-auto md:min-w-[300px] float-right bg-primary hover:opacity-90 text-primary-foreground font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-lg flex justify-center items-center gap-2"
             >
               {isAddingUser ? (
                 <>
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />{" "}
+                  <div className="animate-spin h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />{" "}
                   Processing...
                 </>
               ) : (

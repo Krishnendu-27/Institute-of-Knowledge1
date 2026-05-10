@@ -150,10 +150,10 @@ const StudentRow = ({
   };
 
   return (
-    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+    <tr className="border-b border-border hover:bg-muted/30 transition-colors">
       {/* Student Photo */}
       <td className="px-4 py-3">
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold overflow-hidden">
           {student.profilePic ? (
             <img
               src={student.profilePic}
@@ -167,16 +167,20 @@ const StudentRow = ({
       </td>
 
       {/* Student Name */}
-      <td className="px-4 py-3 font-medium">{student.name}</td>
+      <td className="px-4 py-3 font-medium text-foreground">{student.name}</td>
 
       {/* Father Name */}
-      <td className="px-4 py-3 text-gray-700">{student.fatherName || "-"}</td>
+      <td className="px-4 py-3 text-muted-foreground">
+        {student.fatherName || "-"}
+      </td>
 
       {/* Village Name */}
-      <td className="px-4 py-3 text-gray-700">{student.address || "-"}</td>
+      <td className="px-4 py-3 text-muted-foreground">
+        {student.address || "-"}
+      </td>
 
       {/* Total Fees */}
-      <td className="px-4 py-3 font-semibold text-gray-800">₹{classFees}</td>
+      <td className="px-4 py-3 font-semibold text-foreground">₹{classFees}</td>
 
       {/* Fine Amount Section */}
       <td className="px-4 py-3">
@@ -185,16 +189,16 @@ const StudentRow = ({
             type="date"
             value={paymentDate}
             onChange={handleDateChange}
-            className="px-2 py-1 border border-gray-300 rounded text-sm"
+            className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
           />
           <button
             onClick={handleCalculateFine}
             disabled={showFineLoading}
-            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50 transition-all"
           >
             {showFineLoading ? "Calculating..." : "Calculate Fine"}
           </button>
-          <div className="text-sm font-semibold text-red-600">
+          <div className="text-sm font-semibold text-destructive">
             ₹{fineAmount.toFixed(2)}
           </div>
         </div>
@@ -205,7 +209,7 @@ const StudentRow = ({
         {!showDiscount ? (
           <button
             onClick={() => setShowDiscount(true)}
-            className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            className="px-3 py-1 text-xs bg-muted text-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded transition-all"
           >
             Add Discount
           </button>
@@ -218,7 +222,7 @@ const StudentRow = ({
                 setDiscountAmount(parseFloat(e.target.value) || 0)
               }
               placeholder="Discount"
-              className="px-2 py-1 border border-gray-300 rounded text-sm w-24"
+              className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm w-24 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
               min="0"
             />
             <button
@@ -226,7 +230,7 @@ const StudentRow = ({
                 setShowDiscount(false);
                 setDiscountAmount(0);
               }}
-              className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              className="px-2 py-1 text-xs bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-all"
             >
               Clear
             </button>
@@ -236,7 +240,7 @@ const StudentRow = ({
 
       {/* Final Amount to Pay */}
       <td className="px-4 py-3">
-        <div className="text-lg font-bold text-green-600">
+        <div className="text-lg font-bold text-success">
           ₹{finalAmount.toFixed(2)}
         </div>
       </td>
@@ -249,7 +253,7 @@ const StudentRow = ({
             value={paidAmount}
             onChange={(e) => setPaidAmount(e.target.value)}
             placeholder="Enter amount"
-            className="px-2 py-1 border border-gray-300 rounded text-sm"
+            className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
             disabled={!fineCalculated}
             step="0.01"
             min="0"
@@ -257,16 +261,16 @@ const StudentRow = ({
           <button
             onClick={handleProcessPayment}
             disabled={!isProcessButtonEnabled || isProcessing}
-            className={`px-4 py-2 text-sm font-semibold rounded transition-colors ${
+            className={`px-4 py-2 text-sm font-semibold rounded transition-all ${
               isProcessButtonEnabled
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "bg-success text-success-foreground hover:opacity-90 shadow-md shadow-success/20"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}
           >
             {isProcessing ? "Processing..." : "Process"}
           </button>
           {!isProcessButtonEnabled && fineCalculated && (
-            <div className="text-xs text-red-500">
+            <div className="text-xs text-destructive">
               Amount must equal ₹{finalAmount.toFixed(2)}
             </div>
           )}

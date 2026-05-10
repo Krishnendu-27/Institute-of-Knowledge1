@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -18,9 +18,14 @@ import {
   Calendar,
   Layers,
   HandCoins,
+  Settings,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
+import useUiStateStore from "../../stores/useUiStateStore";
 import { Image } from "../../assets/Image";
 import toast from "react-hot-toast";
 import { Breadcrumbs } from "./Breadcrumbs";
@@ -29,12 +34,46 @@ import { generateSlug } from "../../util/generateSlug";
 export const NavigationLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState("general");
+
+  const theme = useUiStateStore((state) => state.theme);
+  const setTheme = useUiStateStore((state) => state.setTheme);
+
   const user = useAuthStore((state) => state.user);
   const userRole = useAuthStore((state) => state.userRole);
   const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
 
-  // Added `state: { userId: user?._id }` to the Profile objects
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      const root = window.document.documentElement;
+      root.classList.remove("light", "dark");
+      root.classList.add(mediaQuery.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [theme]);
+
   const roleMenus = {
     admin: [
       { path: "/", icon: Home, label: "Dashboard" },
@@ -44,7 +83,6 @@ export const NavigationLayout = () => {
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/courses", icon: BadgePlus, label: "All Courses" },
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },
-
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       {
         path: `/profile/${generateSlug(user?.name)}`,
@@ -112,6 +150,108 @@ export const NavigationLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground relative flex-col md:flex-row">
+      {/* SETTINGS MODAL */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
+            onClick={() => setIsSettingsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-3xl bg-background border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[500px]"
+            >
+              <div className="w-full md:w-56 bg-muted/30 border-b md:border-b-0 md:border-r border-border p-6">
+                <h2 className="text-xs font-bold text-muted-foreground mb-4 uppercase tracking-wider">
+                  Settings
+                </h2>
+                <nav className="space-y-2">
+                  <button
+                    onClick={() => setActiveSettingsTab("general")}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${
+                      activeSettingsTab === "general"
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        : "text-foreground/70 hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    <Settings size={20} className="shrink-0" />
+                    General
+                  </button>
+                </nav>
+              </div>
+
+              <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-2xl font-bold">General Settings</h3>
+                  <button
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {activeSettingsTab === "general" && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold mb-1">Appearance</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Customize how the application looks on your device.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => setTheme("system")}
+                        className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
+                          theme === "system"
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground bg-card"
+                        }`}
+                      >
+                        <Monitor className="mb-3" size={28} />
+                        <span className="font-medium">System</span>
+                      </button>
+
+                      <button
+                        onClick={() => setTheme("light")}
+                        className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
+                          theme === "light"
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground bg-card"
+                        }`}
+                      >
+                        <Sun className="mb-3" size={28} />
+                        <span className="font-medium">Light</span>
+                      </button>
+
+                      <button
+                        onClick={() => setTheme("dark")}
+                        className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
+                          theme === "dark"
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground bg-card"
+                        }`}
+                      >
+                        <Moon className="mb-3" size={28} />
+                        <span className="font-medium">Dark</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* MOBILE HEADER */}
       <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
@@ -149,10 +289,13 @@ export const NavigationLayout = () => {
                   <Link
                     key={item.label}
                     to={item.path}
-                    state={item.state} // PASSING STATE HERE
+                    state={item.state}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center p-4 rounded-xl transition-all
-                      ${isActive ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-foreground/70 hover:bg-primary/10 hover:text-primary"}`}
+                    className={`flex items-center p-4 rounded-xl transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        : "text-foreground/70 hover:bg-primary/10 hover:text-primary"
+                    }`}
                   >
                     <item.icon size={22} className="mr-4 shrink-0" />
                     <span className="font-medium text-base">{item.label}</span>
@@ -160,15 +303,27 @@ export const NavigationLayout = () => {
                 );
               })}
 
+              {/* Mobile Settings Button */}
+              <button
+                onClick={() => {
+                  setIsSettingsOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center p-4 rounded-xl text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors w-full text-left mt-2 border-t border-border"
+              >
+                <Settings className="mr-4 shrink-0" size={22} />
+                <span className="font-medium text-base">Settings</span>
+              </button>
+
               {/* Mobile Logout Button */}
               <button
                 onClick={() => {
                   handleLogout();
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center p-4 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors w-full text-left"
+                className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
               >
-                <LogOut size={22} className="mr-4 shrink-0" />
+                <LogOut className="mr-4 shrink-0" size={22} />
                 <span className="font-medium text-base">Logout</span>
               </button>
             </nav>
@@ -184,7 +339,7 @@ export const NavigationLayout = () => {
         onMouseLeave={() => setIsCollapsed(true)}
         className="hidden md:flex h-screen sticky top-0 left-0 bg-card border-r border-border flex-col p-4 z-40 overflow-hidden"
       >
-        <div className="flex items-center px-2 mb-10 h-12">
+        <div className="flex items-center px-2 mb-6 h-5">
           <img
             src={Image.Logo}
             alt="Logo"
@@ -207,7 +362,6 @@ export const NavigationLayout = () => {
           </AnimatePresence>
         </div>
 
-        {/* Navigation Links */}
         <nav
           className={`flex-1 space-y-2 overflow-y-auto overflow-x-hidden ${
             isCollapsed ? "no-scrollbar" : "custom-scrollbar"
@@ -223,9 +377,12 @@ export const NavigationLayout = () => {
               <Link
                 key={item.label}
                 to={item.path}
-                state={item.state} // PASSING STATE HERE
-                className={`w-full flex items-center p-3 rounded-xl transition-all group
-                  ${isActive ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-foreground/60 hover:bg-primary/10 hover:text-primary"}`}
+                state={item.state}
+                className={`w-full flex items-center p-3 rounded-xl transition-all group ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "text-foreground/60 hover:bg-primary/10 hover:text-primary"
+                }`}
               >
                 <item.icon size={22} className="shrink-0" />
                 {!isCollapsed && (
@@ -236,44 +393,39 @@ export const NavigationLayout = () => {
               </Link>
             );
           })}
-
-          {/* Desktop Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors group mt-2"
-            title="Logout"
-          >
-            <LogOut size={22} className="shrink-0" />
-            {!isCollapsed && (
-              <span className="ml-4 font-medium whitespace-nowrap">Logout</span>
-            )}
-          </button>
         </nav>
-
-        {/* Footer Toggle */}
-        <div className="mt-auto border-t border-border pt-4 flex flex-col gap-2">
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center justify-center rounded-lg hover:bg-primary/5 text-foreground/40 hover:text-primary transition-colors"
-          >
-            <motion.div
-              animate={{ rotate: isCollapsed ? 0 : 180 }}
-              transition={{ ease: "linear", duration: 0.2 }}
-            >
-              <ChevronRight size={20} />
-            </motion.div>
-          </button>
-        </div>
       </motion.aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 px-6 pb-6 md:px-10 md:pb-10 min-h-[calc(100vh-68px)] md:min-h-screen dark:bg-gray-900 transition-colors duration-300">
-        <div className="sticky top-0 z-20 pt-6 md:pt-10 pb-4 bg-slate-50 dark:bg-gray-900 transition-colors duration-300 max-w-6xl mx-auto">
-          <Breadcrumbs />
-          <h1 className="w-fit text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500 capitalize mt-2">
-            {getPageTitle()}
-          </h1>
+      <main className="flex-1 px-6 pb-6 md:px-10 md:pb-10 min-h-[calc(100vh-68px)] md:min-h-screen">
+        {/* DESKTOP NAVBAR & PAGE TITLE */}
+        <div className="sticky top-0 z-20 pt-6 md:pt-10 pb-4 bg-background max-w-6xl mx-auto flex items-end justify-between">
+          <div>
+            <Breadcrumbs />
+            <h1 className="w-fit text-3xl font-extrabold tracking-tight text-primary capitalize mt-2">
+              {getPageTitle()}
+            </h1>
+          </div>
+
+          {/* Desktop Top Navbar Actions (Hidden on Mobile) */}
+          <div className="hidden md:flex items-center gap-2 mb-1">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2.5 rounded-xl border border-border bg-card text-foreground/70 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
+              title="Settings"
+            >
+              <Settings size={20} />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl border border-border bg-card text-destructive hover:bg-destructive/10 hover:border-destructive/30 transition-all shadow-sm"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
+
         <div className="max-w-6xl mx-auto mt-2">
           <Outlet />
         </div>
