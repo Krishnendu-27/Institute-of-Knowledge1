@@ -15,11 +15,11 @@ export const Footer = () => (
         <div>
           <p className="font-bold text-foreground">Institute of Knowledge</p>
           <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
-            2001 Heritage Street
+            Bidhan sarani street
             <br />
-            New York, NY 10001
+            Kolkata, 7000001
             <br />
-            Knowledge 13-2023
+            Knowledge {new Date().getDate() + "-" + new Date().getFullYear()}
           </p>
         </div>
       </div>
@@ -28,7 +28,7 @@ export const Footer = () => (
         <p className="font-bold text-foreground mb-4">Contact Us</p>
         <div className="text-xs text-foreground/60 space-y-2">
           <p>+01 (0) 123 456 789</p>
-          <p>info@website.com</p>
+          <p>institute-of-knowledge.in</p>
         </div>
       </div>
 
