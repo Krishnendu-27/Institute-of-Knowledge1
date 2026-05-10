@@ -1,66 +1,315 @@
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
+// import { Image } from "../../assets/Image";
+// import { Navigate, NavLink, useNavigate } from "react-router-dom";
+// import { useLoginStore } from "../../stores/useLoginStore";
+// import useAuthStore from "../../stores/useAuthStore";
+// import { ArrowLeft, ArrowRight, Moon, Sun } from "lucide-react";
+// import useUiStateStore from "../../stores/useUiStateStore";
+
+// export const Navbar = () => {
+//   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+//   const openModal = useLoginStore((state) => state.openModal);
+//   const navigate = useNavigate();
+//   const isDarkMode = useUiStateStore((state) => state.isDarkMode);
+//   const themeSwitch = useUiStateStore((state) => state.toggleDarkmode);
+
+//   return (
+//     <nav className="flex items-center justify-between px-6 md:px-12 md:py-0 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border shadow-sm">
+//       <div className="flex gap-6 text-sm font-semibold text-foreground/80">
+//         <NavLink
+//           to="/"
+//           className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
+//         >
+//           Features
+//         </NavLink>
+//         <NavLink
+//           to="/"
+//           className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
+//         >
+//           Modules
+//         </NavLink>
+//       </div>
+
+//       <div className="flex flex-col items-center">
+//         <div className="md:w-25 w-15 rounded-lg flex items-center justify-center">
+//           <img src={Image.Logo} alt="Logo" />
+//         </div>
+//       </div>
+
+//       <div className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-foreground/10 transition-colors">
+//         <button onClick={themeSwitch}>{isDarkMode ? <Sun /> : <Moon />}</button>
+//       </div>
+
+//       <div className="flex items-center gap-4">
+//         {!isAuthenticated ? (
+//           <motion.button
+//             whileHover={{ scale: 1.05 }}
+//             whileTap={{ scale: 0.95 }}
+//             onClick={openModal}
+//             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black text-lg tracking-widest shadow-lg shadow-primary/30"
+//           >
+//             Login
+//           </motion.button>
+//         ) : (
+//           <motion.button
+//             whileHover={{ scale: 1.05 }}
+//             whileTap={{ scale: 0.95 }}
+//             onClick={() => navigate("/")}
+//             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black sm:text-xl text-sm tracking-widest shadow-lg shadow-primary/30"
+//           >
+//             <div>Start Now</div>
+//           </motion.button>
+//         )}
+//       </div>
+//     </nav>
+//   );
+// };
+
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Image } from "../../assets/Image";
-import { Navigate, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useLoginStore } from "../../stores/useLoginStore";
 import useAuthStore from "../../stores/useAuthStore";
-import { ArrowLeft, ArrowRight, Moon, Sun } from "lucide-react";
-import useUiStateStore from "../../stores/useUiStateStore";
+import { Moon, Sun, Monitor, Menu, X } from "lucide-react";
 
 export const Navbar = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openModal = useLoginStore((state) => state.openModal);
   const navigate = useNavigate();
-  const isDarkMode = useUiStateStore((state) => state.isDarkMode);
-  const themeSwitch = useUiStateStore((state) => state.toggleDarkmode);
+
+  // Local state for dropdowns
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "system");
+  const dropdownRef = useRef(null);
+
+  // Handle click outside to close theme dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsThemeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Close mobile menu automatically on desktop resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Apply theme to the document and save to localStorage
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    setIsThemeDropdownOpen(false);
+
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (newTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // System mode
+      localStorage.removeItem("theme");
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  };
 
   return (
-    <nav className="flex items-center justify-between px-6 md:px-12 md:py-0 py-4 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border shadow-sm">
-      <div className="flex gap-6 text-sm font-semibold text-foreground/80">
-        <NavLink
-          to="/"
-          className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
-        >
-          Features
-        </NavLink>
-        <NavLink
-          to="/"
-          className="hover:text-primary transition md:text-xl md:font-extrabold font-bold"
-        >
-          Modules
-        </NavLink>
-      </div>
+    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border shadow-sm transition-colors duration-300">
+      <div className="flex items-center justify-between px-4 md:px-12 py-3 md:py-4">
+        {/* DESKTOP LEFT: Navigation Links */}
+        <div className="hidden md:flex flex-1 items-center gap-6 text-sm font-semibold text-foreground/80">
+          <NavLink
+            to="/"
+            className="hover:text-primary transition text-lg lg:text-xl font-extrabold"
+          >
+            Features
+          </NavLink>
+          <NavLink
+            to="/"
+            className="hover:text-primary transition text-lg lg:text-xl font-extrabold"
+          >
+            Modules
+          </NavLink>
+        </div>
 
-      <div className="flex flex-col items-center">
-        <div className="md:w-25 w-15 rounded-lg flex items-center justify-center">
-          <img src={Image.Logo} alt="Logo" />
+        {/* CENTER/MOBILE LEFT: Logo */}
+        <div className="flex md:flex-1 justify-start md:justify-center">
+          <div
+            className="w-16 md:w-20 lg:w-25 rounded-lg flex items-center justify-center cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            <img
+              src={Image.Logo}
+              alt="Logo"
+              className="object-contain w-full h-full"
+            />
+          </div>
+        </div>
+
+        {/* RIGHT: Actions (Theme Dropdown & Auth Button) */}
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4 lg:gap-6">
+          {/* Theme Dropdown (Visible on all sizes) */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-muted text-foreground transition-colors border border-transparent hover:border-border"
+              aria-label="Toggle theme"
+            >
+              {theme === "light" ? (
+                <Sun size={20} />
+              ) : theme === "dark" ? (
+                <Moon size={20} />
+              ) : (
+                <Monitor size={20} />
+              )}
+            </button>
+
+            <AnimatePresence>
+              {isThemeDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-36 bg-card border border-border rounded-xl shadow-lg overflow-hidden flex flex-col py-1 z-50"
+                >
+                  <button
+                    onClick={() => handleThemeChange("light")}
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
+                      theme === "light"
+                        ? "text-primary bg-primary/10"
+                        : "text-foreground"
+                    }`}
+                  >
+                    <Sun size={16} /> Light
+                  </button>
+                  <button
+                    onClick={() => handleThemeChange("dark")}
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
+                      theme === "dark"
+                        ? "text-primary bg-primary/10"
+                        : "text-foreground"
+                    }`}
+                  >
+                    <Moon size={16} /> Dark
+                  </button>
+                  <button
+                    onClick={() => handleThemeChange("system")}
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted ${
+                      theme === "system"
+                        ? "text-primary bg-primary/10"
+                        : "text-foreground"
+                    }`}
+                  >
+                    <Monitor size={16} /> System
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* DESKTOP ONLY: Auth Button */}
+          <div className="hidden md:block">
+            {!isAuthenticated ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={openModal}
+                className="bg-primary text-primary-foreground px-6 py-2.5 lg:px-8 lg:py-3 rounded-full font-black text-sm lg:text-lg tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90 whitespace-nowrap"
+              >
+                Login
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/")}
+                className="bg-primary text-primary-foreground px-6 py-2.5 lg:px-8 lg:py-3 rounded-full font-black text-sm lg:text-xl tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90 whitespace-nowrap"
+              >
+                Start Now
+              </motion.button>
+            )}
+          </div>
+
+          {/* MOBILE ONLY: Hamburger Menu Toggle */}
+          <button
+            className="md:hidden flex items-center justify-center p-2 text-foreground hover:bg-muted rounded-lg transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
-      <div className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-foreground/10 transition-colors">
-        <button onClick={themeSwitch}>{isDarkMode ? <Sun /> : <Moon />}</button>
-      </div>
+      {/* MOBILE MENU DROPDOWN */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="md:hidden overflow-hidden bg-background border-b border-border shadow-lg"
+          >
+            <div className="px-6 py-6 flex flex-col gap-4">
+              <NavLink
+                to="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors py-2"
+              >
+                Features
+              </NavLink>
+              <NavLink
+                to="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors py-2"
+              >
+                Modules
+              </NavLink>
 
-      <div className="flex items-center gap-4">
-        {!isAuthenticated ? (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={openModal}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black text-lg tracking-widest shadow-lg shadow-primary/30"
-          >
-            Login
-          </motion.button>
-        ) : (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/")}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-black sm:text-xl text-sm tracking-widest shadow-lg shadow-primary/30"
-          >
-            <div>Start Now</div>
-          </motion.button>
+              <div className="pt-4 mt-2 border-t border-border">
+                {!isAuthenticated ? (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      openModal();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-black text-lg tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90"
+                  >
+                    Login
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      navigate("/");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-black text-lg tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90"
+                  >
+                    Start Now
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </nav>
   );
 };
