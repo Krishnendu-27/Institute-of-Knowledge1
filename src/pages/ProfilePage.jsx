@@ -302,7 +302,7 @@ const ProfilePage = () => {
       setShowProfilePicModal(true);
     }
   };
-  
+
   if (isLoading || !profileData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -1027,6 +1027,7 @@ const ProfilePage = () => {
       <AnimatePresence>
         {showProfilePicModal && modalImageSrc && (
           <motion.div
+            key="profile-pic-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1053,8 +1054,10 @@ const ProfilePage = () => {
           </motion.div>
         )}
 
+        {/* ADDED KEY HERE */}
         {activeDocument && (
           <motion.div
+            key="document-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1102,15 +1105,15 @@ const ProfilePage = () => {
             </motion.div>
           </motion.div>
         )}
-
-        <DeleteConfirmModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={confirmDeleteAction}
-          itemName={profileData?.name}
-          isLoading={isDeleting}
-        />
       </AnimatePresence>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteAction}
+        itemName={profileData?.name}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
