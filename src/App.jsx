@@ -43,11 +43,12 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loaduser();
-    const timer = setTimeout(() => {
+    const initApp = async () => {
+      await loaduser();
       setIsLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
+    };
+
+    initApp();
   }, []);
 
   useEffect(() => {
@@ -60,11 +61,11 @@ const App = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       const timeOut = setTimeout(openLoginModal, 5000);
       return () => clearTimeout(timeOut);
     }
-  }, [isAuthenticated, openLoginModal]);
+  }, [isAuthenticated, openLoginModal, isLoading]);
 
   if (isLoading) {
     return <Loading />;
