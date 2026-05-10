@@ -169,7 +169,7 @@ export const NavigationLayout = () => {
               className="w-full max-w-3xl bg-background border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[500px]"
             >
               <div className="w-full md:w-56 bg-muted/30 border-b md:border-b-0 md:border-r border-border p-6">
-                <h2 className="text-xs font-bold text-muted-foreground mb-4 uppercase tracking-wider">
+                <h2 className="text-lg font-bold text-muted-foreground mb-4 capitalize tracking-wider">
                   Settings
                 </h2>
                 <nav className="space-y-2">
