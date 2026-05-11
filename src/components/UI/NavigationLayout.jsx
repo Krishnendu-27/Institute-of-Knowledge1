@@ -95,7 +95,7 @@ export const NavigationLayout = () => {
       { path: "/", icon: Home, label: "Dashboard" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
-      { path: "/registeruser", icon: UserPlus, label: "Register New User" },
+      // { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },

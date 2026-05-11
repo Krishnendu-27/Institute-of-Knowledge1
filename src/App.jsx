@@ -110,8 +110,22 @@ const App = () => {
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
-                <Route path="/registeruser" element={<RegisterNewUser />} />
+
                 <Route path="/fees" element={<Fees />} />
+              </Route>
+
+              {/* ==========================================
+                  ROLE: (Teacher , Student)
+                  ========================================== */}
+
+              <Route
+                element={
+                  <ProtectedRouteRoleBased
+                    allowedRoles={["Student", "Teacher"]}
+                  />
+                }
+              >
+                <Route path="/idcard" />
               </Route>
 
               {/* ==========================================
@@ -130,6 +144,7 @@ const App = () => {
                   <Route path="createcourse" element={<CreateCourse />} />
                   <Route path="addnewstudent" element={<AddNewStudent />} />
                 </Route>
+                <Route path="/registeruser" element={<RegisterNewUser />} />
 
                 {/* BATCH MANAGEMENT ROUTES */}
                 <Route path="/batches/create" element={<CreateBatch />} />
@@ -143,7 +158,6 @@ const App = () => {
                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
               >
                 <Route path="/student-profile" element={<StudentProfile />} />
-                <Route path="/idcard" />
                 <Route path="/course-certificate" />
                 <Route path="/admit-card" />
                 <Route path="/registration-form" />
