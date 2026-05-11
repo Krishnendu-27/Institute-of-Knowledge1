@@ -398,16 +398,10 @@ export const NavigationLayout = () => {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 px-6 pb-6 md:px-10 md:pb-10 min-h-[calc(100vh-68px)] md:min-h-screen">
-        {/* DESKTOP NAVBAR & PAGE TITLE */}
-        <div className="sticky top-0 z-20 pt-6 md:pt-10 pb-4 bg-background max-w-6xl mx-auto flex items-end justify-between">
+        <div className="sticky top-0 z-20 bg-background py-2 max-w-6xl mx-auto flex items-end justify-between">
           <div>
             <Breadcrumbs />
-            <h1 className="w-fit text-3xl font-extrabold tracking-tight text-primary capitalize mt-2">
-              {getPageTitle()}
-            </h1>
           </div>
-
-          {/* Desktop Top Navbar Actions (Hidden on Mobile) */}
           <div className="hidden md:flex items-center gap-2 mb-1">
             <button
               onClick={() => setIsSettingsOpen(true)}
