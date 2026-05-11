@@ -71,16 +71,20 @@ const useAttendanceStore = create((set, get) => ({
   selectBatch: async (batch) => {
     set({ isLoading: true, error: null });
     try {
+      // Fetch full batch data with populated students
+      const response = await api.get(`/batch/show/${batch._id}`);
+      const fullBatchData = response.data || response.data.data;
+
       // Get students from mainClassStudentPairs
       let students = [];
 
       if (
-        batch.mainClassStudentPairs &&
-        Array.isArray(batch.mainClassStudentPairs)
+        fullBatchData.mainClassStudentPairs &&
+        Array.isArray(fullBatchData.mainClassStudentPairs)
       ) {
         // Extract unique students from pairs
         const studentMap = {};
-        batch.mainClassStudentPairs.forEach((pair) => {
+        fullBatchData.mainClassStudentPairs.forEach((pair) => {
           if (pair.student && pair.student._id) {
             if (!studentMap[pair.student._id]) {
               studentMap[pair.student._id] = pair.student;
@@ -88,6 +92,15 @@ const useAttendanceStore = create((set, get) => ({
           }
         });
         students = Object.values(studentMap);
+      }
+
+      // Fallback: use students array if mainClassStudentPairs is empty
+      if (
+        students.length === 0 &&
+        fullBatchData.students &&
+        Array.isArray(fullBatchData.students)
+      ) {
+        students = fullBatchData.students;
       }
 
       // Initialize attendance object
@@ -98,7 +111,7 @@ const useAttendanceStore = create((set, get) => ({
 
       set({
         isLoading: false,
-        selectedBatch: batch,
+        selectedBatch: fullBatchData,
         students: students,
         attendance: attendance,
       });
