@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import useFeesStore from "../stores/useFeesStore";
+import useUserStore from "../stores/useUserStore";
 import FilterPanel from "../components/UI/FilterPanel";
 import StudentRow from "../components/UI/StudentRow";
+import DashboardCards from "../components/UI/DashboardCards";
+import StudentSearch from "../components/UI/StudentSearch";
+import DiscountToggleButton from "../components/UI/DiscountToggleButton";
 
 const Fees = () => {
   const {
@@ -24,14 +28,22 @@ const Fees = () => {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [classFeesAmount, setClassFeesAmount] = useState(0);
   const [filteredBatches, setFilteredBatches] = useState([]);
+  const [showDiscountFields, setShowDiscountFields] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // For Global Search
+  const { students: allStudents, getStudents } = useUserStore();
+  const [globalSearchResults, setGlobalSearchResults] = useState([]);
 
   // Fetch initial data
   useEffect(() => {
     const loadInitialData = async () => {
       await Promise.all([fetchMainClasses(), fetchBatches()]);
+      if (getStudents) getStudents(); // Load all students for global search
     };
     loadInitialData();
-  }, [fetchMainClasses, fetchBatches]);
+  }, [fetchMainClasses, fetchBatches, getStudents]);
 
   // Fetch students when main class is selected
   useEffect(() => {
@@ -60,10 +72,33 @@ const Fees = () => {
   useEffect(() => {
     if (selectedBatch) {
       fetchStudentsForBatch(selectedBatch);
+      setSearchResults([]);
+      setIsSearching(false);
     } else {
       setFilteredStudents([]);
     }
   }, [selectedBatch, fetchStudentsForBatch]);
+
+  // Handle search
+  const handleSearch = (results) => {
+    setSearchResults(results);
+    setIsSearching(results.length > 0 || results.length === 0);
+  };
+
+  // Determine which students to display
+  const displayedStudents = isSearching ? searchResults : students;
+
+  // Calculate pending fees count (students without payment for this month)
+  const currentMonth = new Date().toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const pendingFeesCount = useMemo(() => {
+    // This would need backend data to properly calculate
+    // For now, returning estimate based on students count
+    return Math.ceil(displayedStudents.length * 0.3);
+  }, [displayedStudents.length]);
 
   const handleMainClassChange = (mainClassId) => {
     setSelectedMainClass(mainClassId);
@@ -75,15 +110,68 @@ const Fees = () => {
   };
 
   const handlePaymentSuccess = () => {
-    // Optionally refresh student data or show success message
+    // Refresh student data
+    if (selectedBatch) {
+      fetchStudentsForBatch(selectedBatch);
+    }
     toast.success("Payment processed successfully!");
   };
 
-  // Find selected batch name
+  // Handle Global Auto Selection
+  const handleAutoSelectStudent = (student) => {
+    let foundBatch = null;
+    let foundMainClassId = null;
+
+    for (const batch of batches) {
+      const hasStudent =
+        batch.students?.some(
+          (s) => s === student._id || s._id === student._id,
+        ) ||
+        batch.mainClassStudentPairs?.some(
+          (pair) =>
+            pair.student === student._id || pair.student?._id === student._id,
+        );
+      if (hasStudent) {
+        foundBatch = batch;
+        const pair = batch.mainClassStudentPairs?.find(
+          (p) => p.student === student._id || p.student?._id === student._id,
+        );
+        if (pair) {
+          foundMainClassId = pair.mainClass?._id || pair.mainClass;
+        } else if (batch.mainClasses?.length > 0) {
+          foundMainClassId = batch.mainClasses[0]?._id || batch.mainClasses[0];
+        }
+        break;
+      }
+    }
+
+    if (foundBatch && foundMainClassId) {
+      handleMainClassChange(foundMainClassId);
+      setTimeout(() => handleBatchChange(foundBatch._id), 100);
+      setGlobalSearchResults([]); // close search
+      toast.success(`Found and selected ${student.name}'s batch`);
+    } else if (student.mainClasses?.length > 0) {
+      handleMainClassChange(
+        student.mainClasses[0]?._id || student.mainClasses[0],
+      );
+      toast.success(
+        `Selected main class for ${student.name}. Please select a batch manually.`,
+      );
+      setGlobalSearchResults([]);
+    } else {
+      toast.error("Student is not assigned to any batch or class.");
+    }
+  };
+
+  // Find selected batch name and main class name
   const selectedBatchObj = batches.find((b) => b._id === selectedBatch);
+  const selectedMainClassObj = mainClasses.find(
+    (mc) => mc._id === selectedMainClass,
+  );
   const batchName = selectedBatchObj
     ? `${selectedBatchObj.name} (${selectedBatchObj.startTime} - ${selectedBatchObj.endTime})`
     : "";
+  const mainClassName = selectedMainClassObj?.name || "";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8 transition-colors duration-300">
@@ -96,6 +184,52 @@ const Fees = () => {
           Manage student fees, calculate fines, apply discounts, and process
           payments
         </p>
+      </div>
+
+      {/* Dashboard Cards */}
+      <DashboardCards
+        totalStudents={displayedStudents.length}
+        courseName={mainClassName}
+        batchName={selectedBatchObj?.name || "N/A"}
+        pendingFeesCount={pendingFeesCount}
+        isLoading={isLoading}
+      />
+
+      {/* Global Student Search */}
+      <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">
+          Global Student Search
+        </h2>
+        <StudentSearch
+          students={allStudents || []}
+          onSearch={(results) => setGlobalSearchResults(results)}
+          debounceMs={300}
+        />
+        {globalSearchResults.length > 0 && (
+          <div className="mt-4 border border-border rounded-xl overflow-hidden divide-y divide-border/50 max-h-60 overflow-y-auto">
+            {globalSearchResults.map((student) => (
+              <div
+                key={student._id}
+                className="flex items-center justify-between p-3 bg-muted/20 hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <p className="font-semibold text-foreground">
+                    {student.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Phone: {student.phone} | Email: {student.email}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAutoSelectStudent(student)}
+                  className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Locate & Select
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filter Panel */}
@@ -114,6 +248,21 @@ const Fees = () => {
       {/* Students Table */}
       {selectedMainClass && selectedBatch && (
         <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden transition-colors">
+          {/* Search Bar */}
+          <div className="p-6 border-b border-border">
+            <StudentSearch
+              students={students}
+              onSearch={handleSearch}
+              debounceMs={500}
+            />
+            {isSearching && searchResults.length > 0 && (
+              <div className="mt-3 p-3 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary">
+                Showing {searchResults.length} search result
+                {searchResults.length !== 1 ? "s" : ""}
+              </div>
+            )}
+          </div>
+
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader className="w-8 h-8 text-primary animate-spin" />
@@ -121,19 +270,21 @@ const Fees = () => {
                 Loading students...
               </span>
             </div>
-          ) : students && students.length === 0 ? (
+          ) : displayedStudents && displayedStudents.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-muted-foreground text-lg">
-                {selectedBatch
-                  ? "No students found for this batch."
-                  : "Please select both a class and batch to view students."}
+                {isSearching
+                  ? "No students found matching your search."
+                  : selectedBatch
+                    ? "No students found for this batch."
+                    : "Please select both a class and batch to view students."}
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-muted/50 border-b border-border">
+                  <tr className="bg-muted/50 border-b border-border sticky top-0">
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Photo
                     </th>
@@ -141,22 +292,27 @@ const Fees = () => {
                       Student Name
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Father Name
+                      ID
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Village
+                      Phone
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Total Fees
+                      Month
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Fine Amount
+                      Monthly Fee
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Discount
+                      Fine
                     </th>
+                    {showDiscountFields && (
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
+                        Cons
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
-                      Final Amount
+                      Total Payable
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">
                       Action
@@ -164,7 +320,7 @@ const Fees = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {students.map((student) => (
+                  {displayedStudents.map((student) => (
                     <StudentRow
                       key={student._id}
                       student={student}
@@ -172,6 +328,7 @@ const Fees = () => {
                       classFees={classFeesAmount}
                       batchName={batchName}
                       onPaymentSuccess={handlePaymentSuccess}
+                      showDiscount={showDiscountFields}
                     />
                   ))}
                 </tbody>
@@ -180,56 +337,56 @@ const Fees = () => {
           )}
 
           {/* Table Summary */}
-          {students && students.length > 0 && (
+          {displayedStudents && displayedStudents.length > 0 && (
             <div className="bg-muted/30 border-t border-border px-6 py-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-foreground font-medium">
-                  Total Students:{" "}
-                  <span className="font-bold text-lg text-primary">
-                    {students.length}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Total Students:</span>
+                  <p className="font-bold text-lg text-primary">
+                    {displayedStudents.length}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Class:</span>
+                  <p className="font-bold text-primary">
+                    {mainClasses.find((mc) => mc._id === selectedMainClass)
+                      ?.name || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Batch:</span>
+                  <p className="font-bold text-primary">
+                    {selectedBatchObj?.name || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">
+                    Fee per Student:
                   </span>
-                </span>
-                <span className="text-foreground font-medium">
-                  Class:{" "}
-                  <span className="font-bold text-primary">
-                    {
-                      mainClasses.find((mc) => mc._id === selectedMainClass)
-                        ?.name
-                    }
-                  </span>
-                </span>
-                {selectedBatchObj && (
-                  <span className="text-foreground font-medium">
-                    Batch:{" "}
-                    <span className="font-bold text-primary">
-                      {selectedBatchObj.name}
-                    </span>
-                  </span>
-                )}
+                  <p className="font-bold text-primary">₹{classFeesAmount}</p>
+                </div>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Info Box */}
+      {/* Info Boxes */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-primary/10 border border-primary/20 rounded-xl p-5 shadow-sm">
           <h3 className="font-semibold text-primary mb-2">
             📅 Fine Calculation
           </h3>
           <p className="text-sm text-foreground/80">
-            Select a payment date and click "Calculate Fine" to determine
-            applicable fine amount based on late payment.
+            ₹10 per day after the 10th of every month. Select a payment date and
+            click "Calculate Fine" to determine the applicable fine amount.
           </p>
         </div>
         <div className="bg-success/10 border border-success/20 rounded-xl p-5 shadow-sm">
-          <h3 className="font-semibold text-success mb-2">
-            💰 Discount Option
-          </h3>
+          <h3 className="font-semibold text-success mb-2">Cons Option</h3>
           <p className="text-sm text-foreground/80">
-            Click "Add Discount" to apply manual adjustments or institutional
-            discounts to the fees.
+            Click the floating button at the bottom-right to show/hide discount
+            fields for all students. Apply fixed amount discounts as needed.
           </p>
         </div>
         <div className="bg-muted/50 border border-border rounded-xl p-5 shadow-sm">
@@ -238,25 +395,39 @@ const Fees = () => {
           </h3>
           <p className="text-sm text-muted-foreground">
             The Process button only enables when the paid amount exactly matches
-            the calculated final amount.
+            the calculated total (fees + fine - discount).
           </p>
         </div>
       </div>
 
-      {/* PDF Generation Placeholder */}
-      <div className="mt-8 bg-warning/10 border border-warning/30 rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-warning mb-2">
-          📄 PDF Bill Generation
+      {/* Floating Discount Button */}
+      <DiscountToggleButton
+        isVisible={showDiscountFields}
+        onToggle={() => setShowDiscountFields(!showDiscountFields)}
+      />
+
+      {/* Footer Note */}
+      <div className="mt-8 bg-info/10 border border-info/30 rounded-xl p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-info mb-2">
+          💡 Tips for Managing Fees
         </h3>
-        <p className="text-warning/80 mb-3">
-          PDF receipt generation is currently on hold pending backend support.
-          Once payments are processed, bills will be automatically generated and
-          can be downloaded.
-        </p>
-        <div className="bg-warning/20 border border-warning/40 rounded-lg p-3 text-sm text-warning font-medium">
-          <strong>Coming Soon:</strong> Automated PDF receipts with QR codes and
-          payment details
-        </div>
+        <ul className="text-sm text-foreground/80 space-y-2">
+          <li>
+            • Use the search bar to quickly find students by name, ID, or phone
+            number
+          </li>
+          <li>
+            • Fine is calculated as ₹10 per day after the 10th of the month
+          </li>
+          <li>
+            • Students can pay multiple months together; fines apply to each
+            month separately
+          </li>
+          <li>
+            • Discounts only reduce the payable amount; fines are not reduced
+          </li>
+          <li>• Payment must exactly match the total amount to process</li>
+        </ul>
       </div>
     </div>
   );

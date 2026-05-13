@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { CheckCircle, Clock } from "lucide-react";
 import useFeesStore from "../../stores/useFeesStore";
+import {
+  calculateFineForMonth,
+  formatFineAmount,
+} from "../../util/fineCalculation";
 
 const StudentRow = ({
   student,
@@ -8,22 +13,59 @@ const StudentRow = ({
   classFees,
   batchName,
   onPaymentSuccess,
+  showDiscount = false,
 }) => {
   const [paymentDate, setPaymentDate] = useState(
     new Date().toISOString().split("T")[0],
   );
   const [fineAmount, setFineAmount] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [showDiscount, setShowDiscount] = useState(false);
   const [paidAmount, setPaidAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [fineCalculated, setFineCalculated] = useState(false);
+  const [fineCalculated, setFineCalculated] = useState(true);
   const [showFineLoading, setShowFineLoading] = useState(false);
 
   const recordFeesPaid = useFeesStore((state) => state.recordFeesPaid);
 
+  // Define exact months array to guarantee match with FeesYearlyStatus
+  const MONTHS = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Handle month drop-down
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  });
+  const [availableMonths] = useState(() => {
+    const options = [];
+    const d = new Date();
+    d.setMonth(d.getMonth() - 6);
+    for (let i = 0; i < 12; i++) {
+      options.push(`${MONTHS[d.getMonth()]} ${d.getFullYear()}`);
+      d.setMonth(d.getMonth() + 1);
+    }
+    return options;
+  });
+
+  // Get student ID and phone
+  const studentId = student.studentId || student._id || student.id;
+  const studentPhone = student.phone || student.phoneNumber || "-";
+  const studentPhoto = student.profilePic || student.profile_picture || "";
+
   // Calculate final amount
-  const totalAmount = classFees;
+  const totalAmount = parseFloat(classFees) || 0;
   const finalAmount = totalAmount + fineAmount - discountAmount;
 
   // Check if process button should be enabled
@@ -41,7 +83,7 @@ const StudentRow = ({
     setFineCalculated(false);
   };
 
-  // Calculate fine based on payment date
+  // Calculate fine based on payment date using the utility function
   const handleCalculateFine = async () => {
     if (!paymentDate) {
       toast.error("Please select a payment date");
@@ -50,23 +92,16 @@ const StudentRow = ({
 
     setShowFineLoading(true);
     try {
-      // For now, we'll use a simple calculation:
-      // Fine = late days * X amount per day
-      // This should ideally come from backend
+      // Use the fine calculation utility
+      // ₹10 per day after 10th of month
       const selectedDate = new Date(paymentDate);
-      const today = new Date();
+      const fine = calculateFineForMonth(selectedDate, 10, 10);
 
-      let lateDays = 0;
-      if (selectedDate < today) {
-        lateDays = Math.floor((today - selectedDate) / (1000 * 60 * 60 * 24));
-      }
-
-      // Example: 50 per day late fee
-      const calculatedFine = lateDays * 50;
-      setFineAmount(calculatedFine);
+      setFineAmount(fine);
       setFineCalculated(true);
-      if (calculatedFine > 0) {
-        toast.success(`Fine calculated: ₹${calculatedFine}`);
+
+      if (fine > 0) {
+        toast.success(`Fine calculated: ${formatFineAmount(fine)}`);
       } else {
         toast.success("No fine applicable");
       }
@@ -86,9 +121,6 @@ const StudentRow = ({
 
     setIsProcessing(true);
     try {
-      // Get the correct student ID - could be either id or _id
-      const studentId = student.id || student._id;
-
       // Validate IDs before sending
       if (!mainClassId || !studentId) {
         console.error(
@@ -106,15 +138,9 @@ const StudentRow = ({
       const paymentDateTime = new Date(paymentDate);
       const isoDateTime = paymentDateTime.toISOString();
 
-      // Create month string in "Month Year" format
-      const monthString = paymentDateTime.toLocaleString("default", {
-        month: "long",
-        year: "numeric",
-      });
-
       const paymentData = {
-        month: monthString,
-        totalAmount: finalAmount,
+        month: selectedMonth,
+        totalAmount: parseFloat(paidAmount),
         PaidAt: isoDateTime,
       };
 
@@ -129,18 +155,18 @@ const StudentRow = ({
 
       const result = await recordFeesPaid(mainClassId, studentId, paymentData);
 
-      if (result) {
-        // Reset form
-        setPaymentDate(new Date().toISOString().split("T")[0]);
-        setFineAmount(0);
-        setDiscountAmount(0);
-        setPaidAmount("");
-        setFineCalculated(false);
-        setShowDiscount(false);
-        onPaymentSuccess?.();
-      } else {
-        toast.error("Failed to record payment. Please try again.");
+      if (result === false) {
+        setIsProcessing(false);
+        return; // Stop here if the store failed to process the payment
       }
+
+      // Reset form
+      setPaymentDate(new Date().toISOString().split("T")[0]);
+      setFineAmount(0);
+      setDiscountAmount(0);
+      setPaidAmount("");
+      setFineCalculated(true);
+      onPaymentSuccess?.();
     } catch (error) {
       console.error("Payment error:", error);
       toast.error("Failed to process payment");
@@ -153,15 +179,18 @@ const StudentRow = ({
     <tr className="border-b border-border hover:bg-muted/30 transition-colors">
       {/* Student Photo */}
       <td className="px-4 py-3">
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold overflow-hidden">
-          {student.profilePic ? (
+        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold overflow-hidden shrink-0">
+          {studentPhoto ? (
             <img
-              src={student.profilePic}
+              src={studentPhoto}
               alt={student.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
             />
           ) : (
-            <span>{student.name?.charAt(0)?.toUpperCase()}</span>
+            <span>{student.name?.charAt(0)?.toUpperCase() || "S"}</span>
           )}
         </div>
       </td>
@@ -169,14 +198,29 @@ const StudentRow = ({
       {/* Student Name */}
       <td className="px-4 py-3 font-medium text-foreground">{student.name}</td>
 
-      {/* Father Name */}
-      <td className="px-4 py-3 text-muted-foreground">
-        {student.fatherName || "-"}
+      {/* Student ID */}
+      <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
+        {studentId ? String(studentId).substring(0, 8) : "-"}
       </td>
 
-      {/* Village Name */}
-      <td className="px-4 py-3 text-muted-foreground">
-        {student.address || "-"}
+      {/* Phone Number */}
+      <td className="px-4 py-3 text-sm text-muted-foreground">
+        {studentPhone !== "-" ? studentPhone : "-"}
+      </td>
+
+      {/* Month Selection Dropdown */}
+      <td className="px-4 py-3">
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm w-36 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
+        >
+          {availableMonths.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
       </td>
 
       {/* Total Fees */}
@@ -198,22 +242,17 @@ const StudentRow = ({
           >
             {showFineLoading ? "Calculating..." : "Calculate Fine"}
           </button>
-          <div className="text-sm font-semibold text-destructive">
-            ₹{fineAmount.toFixed(2)}
+          <div
+            className={`text-sm font-semibold ${fineAmount > 0 ? "text-destructive" : "text-success"}`}
+          >
+            {formatFineAmount(fineAmount)}
           </div>
         </div>
       </td>
 
       {/* Discount Amount */}
-      <td className="px-4 py-3">
-        {!showDiscount ? (
-          <button
-            onClick={() => setShowDiscount(true)}
-            className="px-3 py-1 text-xs bg-muted text-foreground border border-border hover:bg-accent hover:text-accent-foreground rounded transition-all"
-          >
-            Add Discount
-          </button>
-        ) : (
+      {showDiscount && (
+        <td className="px-4 py-3">
           <div className="flex gap-2">
             <input
               type="number"
@@ -222,27 +261,23 @@ const StudentRow = ({
                 setDiscountAmount(parseFloat(e.target.value) || 0)
               }
               placeholder="Discount"
-              className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm w-24 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
+              className="px-2 py-1 border border-border bg-background text-foreground rounded text-sm w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
               min="0"
             />
-            <button
-              onClick={() => {
-                setShowDiscount(false);
-                setDiscountAmount(0);
-              }}
-              className="px-2 py-1 text-xs bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-all"
-            >
-              Clear
-            </button>
           </div>
-        )}
-      </td>
+        </td>
+      )}
 
       {/* Final Amount to Pay */}
       <td className="px-4 py-3">
         <div className="text-lg font-bold text-success">
           ₹{finalAmount.toFixed(2)}
         </div>
+        {discountAmount > 0 && (
+          <div className="text-xs text-muted-foreground">
+            Discount: ₹{discountAmount.toFixed(2)}
+          </div>
+        )}
       </td>
 
       {/* Paid Amount & Action */}
@@ -261,13 +296,23 @@ const StudentRow = ({
           <button
             onClick={handleProcessPayment}
             disabled={!isProcessButtonEnabled || isProcessing}
-            className={`px-4 py-2 text-sm font-semibold rounded transition-all ${
+            className={`px-4 py-2 text-sm font-semibold rounded transition-all flex items-center justify-center gap-2 ${
               isProcessButtonEnabled
                 ? "bg-success text-success-foreground hover:opacity-90 shadow-md shadow-success/20"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}
           >
-            {isProcessing ? "Processing..." : "Process"}
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Process
+              </>
+            )}
           </button>
           {!isProcessButtonEnabled && fineCalculated && (
             <div className="text-xs text-destructive">

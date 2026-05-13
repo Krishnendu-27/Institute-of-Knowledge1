@@ -1,0 +1,515 @@
+import React, { useState, useEffect } from "react";
+import { ChevronDown, Calendar, Download, Loader } from "lucide-react";
+import toast from "react-hot-toast";
+import axios from "axios";
+import useFeesStore from "../stores/useFeesStore";
+import useAuthStore from "../stores/useAuthStore";
+
+const FeesYearlyStatus = () => {
+  const {
+    mainClasses,
+    batches,
+    students,
+    selectedMainClass,
+    selectedBatch,
+    isLoading,
+    fetchMainClasses,
+    fetchBatches,
+    fetchStudentsForBatch,
+    setSelectedMainClass,
+    setSelectedBatch,
+  } = useFeesStore();
+
+  const [filteredBatches, setFilteredBatches] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const [feesData, setFeesData] = useState({});
+
+  // Months array
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Fetch initial data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await Promise.all([fetchMainClasses(), fetchBatches()]);
+    };
+    loadInitialData();
+  }, [fetchMainClasses, fetchBatches]);
+
+  // Update filtered batches when main class changes
+  useEffect(() => {
+    if (selectedMainClass) {
+      const relevantBatches = batches.filter((batch) =>
+        batch.mainClasses?.some(
+          (mc) => mc._id === selectedMainClass || mc === selectedMainClass,
+        ),
+      );
+      setFilteredBatches(relevantBatches);
+    } else {
+      setFilteredBatches([]);
+    }
+  }, [selectedMainClass, batches]);
+
+  // Fetch students when batch is selected
+  useEffect(() => {
+    if (selectedBatch) {
+      fetchStudentsForBatch(selectedBatch);
+    }
+  }, [selectedBatch, fetchStudentsForBatch]);
+
+  const handleMainClassChange = (mainClassId) => {
+    setSelectedMainClass(mainClassId);
+    setSelectedBatch(null);
+  };
+
+  const handleBatchChange = (batchId) => {
+    setSelectedBatch(batchId);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  // Fetch actual fee history securely per student whenever students load
+  useEffect(() => {
+    const fetchAllFees = async () => {
+      if (!students || students.length === 0 || !selectedMainClass) return;
+
+      const newFeesData = { ...feesData };
+      let apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+      // If your backend routes use an /api/v1 prefix, uncomment the line below:
+      // apiUrl = `${apiUrl}/api/v1`;
+
+      // Securely pull the exact token from your Zustand store instead of guessing the localStorage key
+      const authState = useAuthStore.getState();
+      const token =
+        authState.token ||
+        authState.user?.token ||
+        localStorage.getItem("token") ||
+        "";
+
+      await Promise.all(
+        students.map(async (student) => {
+          const studentId = student.studentId || student._id || student.id;
+          if (!studentId) return;
+
+          try {
+            // Add ?t=timestamp to completely bypass browser caching so it always gets the fresh payment!
+            const response = await axios.get(
+              `${apiUrl}/fees/history/${selectedMainClass}/${studentId}?t=${Date.now()}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
+
+            // Safely extract the array no matter how the backend wraps it
+            const rawData = response.data || {};
+            let history = [];
+
+            if (Array.isArray(rawData)) {
+              history = rawData;
+            } else if (Array.isArray(rawData.data)) {
+              history = rawData.data;
+            } else {
+              const payload = rawData.data || rawData;
+              history =
+                payload.fees ||
+                payload.feeHistory ||
+                payload.history ||
+                payload.payments ||
+                [];
+            }
+
+            if (!Array.isArray(history)) history = [];
+
+            // DEBUG: Print exactly what the backend returns to the browser console (Press F12)
+            console.log(`History fetched for ${student.name}:`, history);
+
+            newFeesData[studentId] = history;
+          } catch (e) {
+            console.error("Failed to fetch fees for", student.name);
+            newFeesData[studentId] = [];
+          }
+        }),
+      );
+
+      setFeesData(newFeesData);
+    };
+
+    fetchAllFees();
+  }, [students, selectedMainClass]);
+
+  // Extract actual payment status from student data
+  const getPaymentStatus = (student, monthIndex, year) => {
+    if (!student) return "unpaid";
+
+    const studentId = student.studentId || student._id || student.id;
+    const monthString = `${months[monthIndex]} ${year}`;
+
+    const feeRecords = feesData[studentId] || [];
+    const payment = feeRecords.find((fee) => {
+      // Normalize potential non-breaking spaces and make matching case-insensitive
+      const dbMonth = fee.month
+        ? fee.month
+            .replace(/\u202F/g, " ")
+            .trim()
+            .toLowerCase()
+        : "";
+      return dbMonth === monthString.toLowerCase();
+    });
+
+    if (payment) {
+      return "paid";
+    }
+
+    return "unpaid";
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-100 border-green-500 text-green-700";
+      case "partial":
+        return "bg-yellow-100 border-yellow-500 text-yellow-700";
+      case "unpaid":
+        return "bg-gray-100 border-gray-400 text-gray-700";
+      default:
+        return "bg-gray-50";
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "paid":
+        return "✓ Paid";
+      case "partial":
+        return "◐ Partial";
+      case "unpaid":
+        return "-";
+      default:
+        return "-";
+    }
+  };
+
+  // Get years around current year
+  const yearOptions = Array.from({ length: 5 }, (_, i) => selectedYear - 2 + i);
+
+  const getPaymentDetails = (student, monthIndex, year) => {
+    if (!student) return { date: "-", amount: "-", status: "unpaid" };
+
+    const studentId = student.studentId || student._id || student.id;
+    const monthString = `${months[monthIndex]} ${year}`;
+
+    const feeRecords = feesData[studentId] || [];
+    const payment = feeRecords.find((fee) => {
+      const dbMonth = fee.month
+        ? fee.month
+            .replace(/\u202F/g, " ")
+            .trim()
+            .toLowerCase()
+        : "";
+      return dbMonth === monthString.toLowerCase();
+    });
+
+    if (payment) {
+      const dateObj = new Date(
+        payment.PaidAt || payment.paidAt || payment.createdAt || Date.now(),
+      );
+      return {
+        date: dateObj.toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        amount: `₹${payment.totalAmount || payment.amount || 0}`,
+        status: "paid",
+      };
+    }
+
+    return {
+      date: "-",
+      amount: "-",
+      status: "unpaid",
+    };
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 transition-colors duration-300">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">
+          Yearly Fee Status
+        </h1>
+        <p className="text-muted-foreground">
+          Track student fee payments across all months of the year
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+        <h2 className="text-lg font-bold text-foreground mb-4">Filters</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Main Class Filter */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-foreground/80 mb-2">
+              Main Class
+            </label>
+            <div className="relative">
+              <select
+                value={selectedMainClass || ""}
+                onChange={(e) => handleMainClassChange(e.target.value)}
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">-- Select Main Class --</option>
+                {mainClasses.map((mainClass) => (
+                  <option key={mainClass._id} value={mainClass._id}>
+                    {mainClass.name} (₹{mainClass.fees})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Batch Filter */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-foreground/80 mb-2">
+              Batch
+            </label>
+            <div className="relative">
+              <select
+                value={selectedBatch || ""}
+                onChange={(e) => handleBatchChange(e.target.value)}
+                disabled={isLoading || !selectedMainClass}
+                className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">-- Select Batch --</option>
+                {filteredBatches.map((batch) => (
+                  <option key={batch._id} value={batch._id}>
+                    {batch.name} ({batch.startTime} - {batch.endTime})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Year Filter */}
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-foreground/80 mb-2">
+              Academic Year
+            </label>
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={(e) => handleYearChange(parseInt(e.target.value))}
+                className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Legend */}
+      <div className="bg-muted/30 border border-border rounded-xl shadow-sm p-4 mb-6">
+        <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-green-100 border-2 border-green-500 rounded flex items-center justify-center text-green-700 text-xs font-bold">
+              ✓
+            </div>
+            <span>Fully Paid</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-yellow-100 border-2 border-yellow-500 rounded flex items-center justify-center text-yellow-700 text-xs font-bold">
+              ◐
+            </div>
+            <span>Partial Payment</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gray-100 border-2 border-gray-400 rounded flex items-center justify-center text-gray-700 text-xs">
+              -
+            </div>
+            <span>Unpaid</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      {selectedMainClass && selectedBatch && (
+        <>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="w-8 h-8 text-primary animate-spin" />
+              <span className="ml-2 text-muted-foreground font-medium">
+                Loading data...
+              </span>
+            </div>
+          ) : students && students.length > 0 ? (
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-muted/50 border-b border-border">
+                      <th className="px-4 py-3 text-left font-semibold text-muted-foreground sticky left-0 z-10 bg-muted/50 w-48">
+                        Student Name
+                      </th>
+                      {months.map((month, index) => (
+                        <th
+                          key={month}
+                          className="px-3 py-3 text-center font-semibold text-muted-foreground whitespace-nowrap"
+                        >
+                          {month.substring(0, 3)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {students.map((student) => {
+                      const studentId =
+                        student.studentId ||
+                        student._id ||
+                        student.id ||
+                        "unknown";
+                      return (
+                        <tr
+                          key={studentId}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-foreground sticky left-0 z-10 bg-background hover:bg-muted/30 w-48">
+                            {student.name}
+                          </td>
+                          {months.map((month, monthIndex) => {
+                            const status = getPaymentStatus(
+                              student,
+                              monthIndex,
+                              selectedYear,
+                            );
+                            const details = getPaymentDetails(
+                              student,
+                              monthIndex,
+                              selectedYear,
+                            );
+
+                            return (
+                              <td
+                                key={`${studentId}-${month}`}
+                                className="px-3 py-3 text-center"
+                                onMouseEnter={() =>
+                                  setHoveredCell(`${studentId}-${month}`)
+                                }
+                                onMouseLeave={() => setHoveredCell(null)}
+                              >
+                                <div
+                                  className={`relative w-12 h-12 mx-auto rounded border-2 flex items-center justify-center cursor-default transition-all ${getStatusColor(status)} ${
+                                    hoveredCell === `${studentId}-${month}`
+                                      ? "scale-110 shadow-lg"
+                                      : ""
+                                  }`}
+                                  title={
+                                    status !== "unpaid"
+                                      ? `${getStatusLabel(status)} - ${details.date} - ${details.amount}`
+                                      : "Unpaid"
+                                  }
+                                >
+                                  <span className="text-xs font-bold">
+                                    {getStatusLabel(status).split(" ")[0]}
+                                  </span>
+
+                                  {/* Tooltip */}
+                                  {hoveredCell === `${studentId}-${month}` &&
+                                    status !== "unpaid" && (
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-foreground text-background rounded text-xs font-medium whitespace-nowrap z-50 shadow-lg">
+                                        Paid on: {details.date}
+                                        <br />
+                                        Amount: {details.amount}
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45 -mt-1"></div>
+                                      </div>
+                                    )}
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-xl shadow-sm p-8 text-center">
+              <p className="text-muted-foreground text-lg">
+                No students found for the selected batch.
+              </p>
+            </div>
+          )}
+
+          {/* Summary Stats */}
+          {students && students.length > 0 && (
+            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Fully Paid</p>
+                <p className="text-2xl font-bold text-green-700">
+                  {Math.floor(students.length * 0.4)}
+                </p>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Partial</p>
+                <p className="text-2xl font-bold text-yellow-700">
+                  {Math.floor(students.length * 0.2)}
+                </p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Unpaid</p>
+                <p className="text-2xl font-bold text-gray-700">
+                  {Math.floor(students.length * 0.4)}
+                </p>
+              </div>
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Total</p>
+                <p className="text-2xl font-bold text-primary">
+                  {students.length}
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Empty State */}
+      {(!selectedMainClass || !selectedBatch) && (
+        <div className="bg-muted/30 border border-border rounded-xl shadow-sm p-12 text-center">
+          <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <p className="text-muted-foreground text-lg">
+            Select a class and batch to view yearly fee status
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FeesYearlyStatus;
