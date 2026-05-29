@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { api } from "../api/api";
+import useTradeStore from "./useTradeStore";
 
 const useBatchStore = create((set, get) => ({
   batches: [],
@@ -52,10 +53,13 @@ const useBatchStore = create((set, get) => ({
   },
 
   // 4. Create a batch (Admin)
-  createBatch: async (batchData, navigate) => {
+  createBatch: async (batchData, navigate, tradeId) => {
     set({ isLoading: true, error: null });
     try {
       const response = await api.post("/batch/create", batchData);
+      if (tradeId && response?.data?._id) {
+        useTradeStore.getState().assignTradeToBatch(response.data._id, tradeId);
+      }
       set((state) => ({
         batches: [...state.batches, response.data],
         isLoading: false,

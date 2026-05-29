@@ -5,6 +5,7 @@ import { Search, Trash2, AlertTriangle } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
 import { generateSlug } from "../../util/generateSlug";
+import useTradeStore from "../../stores/useTradeStore";
 
 // --- Reusable Confirmation Modal ---
 const ConfirmModal = ({
@@ -68,6 +69,10 @@ const BatchList = () => {
   const { batches, fetchBatches, isLoading } = useBatchStore();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTradeId, setSelectedTradeId] = useState("");
+  const trades = useTradeStore((state) => state.trades);
+  const batchTradeMap = useTradeStore((state) => state.batchTradeMap);
+  const getTradeLabel = useTradeStore((state) => state.getTradeLabel);
 
   useEffect(() => {
     fetchBatches();
@@ -75,11 +80,20 @@ const BatchList = () => {
 
   const filteredBatches = batches.filter((batch) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       batch.name?.toLowerCase().includes(query) ||
       batch.weekday?.toLowerCase().includes(query) ||
-      batch.teacherEmail?.toLowerCase().includes(query)
-    );
+      batch.teacherEmail?.toLowerCase().includes(query);
+
+    const tradeId = batchTradeMap[batch._id] || "";
+    const matchesTrade =
+      selectedTradeId === ""
+        ? true
+        : selectedTradeId === "unassigned"
+          ? !tradeId
+          : tradeId === selectedTradeId;
+
+    return matchesSearch && matchesTrade;
   });
 
   return (
@@ -109,6 +123,22 @@ const BatchList = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background/60 backdrop-blur-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all shadow-sm"
             />
+          </div>
+
+          <div className="w-full sm:w-56">
+            <select
+              value={selectedTradeId}
+              onChange={(e) => setSelectedTradeId(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background/60 backdrop-blur-xl text-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all shadow-sm"
+            >
+              <option value="">All Trades</option>
+              <option value="unassigned">Unassigned</option>
+              {trades.map((trade) => (
+                <option key={trade.id} value={trade.id}>
+                  {trade.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Create Batch Button (Admin Only) */}
@@ -188,6 +218,10 @@ const BatchList = () => {
                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary shrink-0">
                       {batch.weekday}
                     </span>
+                  </div>
+
+                  <div className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/20 mb-3">
+                    {getTradeLabel(batchTradeMap[batch._id])}
                   </div>
 
                   <div className="space-y-3 text-sm text-muted-foreground">

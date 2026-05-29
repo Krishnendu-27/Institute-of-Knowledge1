@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import useFeesStore from "../stores/useFeesStore";
@@ -8,6 +8,7 @@ import StudentRow from "../components/UI/StudentRow";
 import DashboardCards from "../components/UI/DashboardCards";
 import StudentSearch from "../components/UI/StudentSearch";
 import DiscountToggleButton from "../components/UI/DiscountToggleButton";
+import { api } from "../api/api";
 
 const Fees = () => {
   const {
@@ -35,6 +36,9 @@ const Fees = () => {
   // For Global Search
   const { students: allStudents, getStudents } = useUserStore();
   const [globalSearchResults, setGlobalSearchResults] = useState([]);
+  const [pendingCurrentMonth, setPendingCurrentMonth] = useState(0);
+  const [pendingPreviousMonth, setPendingPreviousMonth] = useState(0);
+  const [pendingLoading, setPendingLoading] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -88,17 +92,73 @@ const Fees = () => {
   // Determine which students to display
   const displayedStudents = isSearching ? searchResults : students;
 
-  // Calculate pending fees count (students without payment for this month)
-  const currentMonth = new Date().toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
+  const getMonthLabel = (date) =>
+    date.toLocaleString("default", { month: "long", year: "numeric" });
 
-  const pendingFeesCount = useMemo(() => {
-    // This would need backend data to properly calculate
-    // For now, returning estimate based on students count
-    return Math.ceil(displayedStudents.length * 0.3);
-  }, [displayedStudents.length]);
+  useEffect(() => {
+    if (!allStudents?.length) return;
+
+    let isMounted = true;
+    const loadPendingCounts = async () => {
+      setPendingLoading(true);
+      const currentMonthLabel = getMonthLabel(new Date());
+      const previousMonthDate = new Date();
+      previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+      const previousMonthLabel = getMonthLabel(previousMonthDate);
+
+      const pendingCurrent = new Set();
+      const pendingPrevious = new Set();
+
+      for (const student of allStudents) {
+        const studentId = student._id;
+        const classIds = (student.mainClasses || []).map(
+          (cls) => cls._id || cls,
+        );
+
+        for (const classId of classIds) {
+          try {
+            const response = await api.get(
+              `/fees/history/${classId}/${studentId}`,
+            );
+            const history = response.data?.history || [];
+
+            const paidCurrent = history.some((record) =>
+              String(record.month || "")
+                .trim()
+                .toLowerCase() === currentMonthLabel.toLowerCase(),
+            );
+            const paidPrevious = history.some((record) =>
+              String(record.month || "")
+                .trim()
+                .toLowerCase() === previousMonthLabel.toLowerCase(),
+            );
+
+            if (!paidCurrent) pendingCurrent.add(studentId);
+            if (!paidPrevious) pendingPrevious.add(studentId);
+          } catch (error) {
+            // Silently skip 404 errors (endpoint not ready yet)
+            if (error.response?.status !== 404) {
+              pendingCurrent.add(studentId);
+              pendingPrevious.add(studentId);
+            }
+          }
+        }
+      }
+
+      if (isMounted) {
+        setPendingCurrentMonth(pendingCurrent.size);
+        setPendingPreviousMonth(pendingPrevious.size);
+      }
+
+      if (isMounted) setPendingLoading(false);
+    };
+
+    loadPendingCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [allStudents]);
 
   const handleMainClassChange = (mainClassId) => {
     setSelectedMainClass(mainClassId);
@@ -171,7 +231,6 @@ const Fees = () => {
   const batchName = selectedBatchObj
     ? `${selectedBatchObj.name} (${selectedBatchObj.startTime} - ${selectedBatchObj.endTime})`
     : "";
-  const mainClassName = selectedMainClassObj?.name || "";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8 transition-colors duration-300">
@@ -189,10 +248,9 @@ const Fees = () => {
       {/* Dashboard Cards */}
       <DashboardCards
         totalStudents={displayedStudents.length}
-        courseName={mainClassName}
-        batchName={selectedBatchObj?.name || "N/A"}
-        pendingFeesCount={pendingFeesCount}
-        isLoading={isLoading}
+        pendingCurrentMonth={pendingCurrentMonth}
+        pendingPreviousMonth={pendingPreviousMonth}
+        isLoading={isLoading || pendingLoading}
       />
 
       {/* Global Student Search */}

@@ -7,9 +7,8 @@ import { Users, BookOpen, Clock, AlertCircle } from "lucide-react";
  */
 const DashboardCards = ({
   totalStudents = 0,
-  courseName = "N/A",
-  batchName = "N/A",
-  pendingFeesCount = 0,
+  pendingCurrentMonth = 0,
+  pendingPreviousMonth = 0,
   isLoading = false,
 }) => {
   // Skeleton loader
@@ -38,36 +37,25 @@ const DashboardCards = ({
     },
     {
       id: 2,
-      title: "Course Name",
-      value: courseName,
-      subtitle: "Main Class",
-      icon: BookOpen,
-      bgGradient: "from-purple-500/10 to-purple-600/5",
-      borderColor: "border-purple-500/20",
-      iconColor: "text-purple-600",
-      iconBg: "bg-purple-100",
-    },
-    {
-      id: 3,
-      title: "Batch",
-      value: batchName,
-      subtitle: "Selected Batch",
-      icon: Clock,
-      bgGradient: "from-green-500/10 to-green-600/5",
-      borderColor: "border-green-500/20",
-      iconColor: "text-green-600",
-      iconBg: "bg-green-100",
-    },
-    {
-      id: 4,
       title: "Pending Fees",
-      value: pendingFeesCount,
-      subtitle: "This Month",
+      value: pendingCurrentMonth,
+      subtitle: "Current Month",
       icon: AlertCircle,
       bgGradient: "from-orange-500/10 to-orange-600/5",
       borderColor: "border-orange-500/20",
       iconColor: "text-orange-600",
       iconBg: "bg-orange-100",
+    },
+    {
+      id: 3,
+      title: "Previous Month Pending",
+      value: pendingPreviousMonth,
+      subtitle: "Last Month",
+      icon: Clock,
+      bgGradient: "from-green-500/10 to-green-600/5",
+      borderColor: "border-green-500/20",
+      iconColor: "text-green-600",
+      iconBg: "bg-green-100",
     },
   ];
 
@@ -84,7 +72,7 @@ const DashboardCards = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       {cards.map((card) => {
         const Icon = card.icon;
         return (

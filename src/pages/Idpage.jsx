@@ -1,19 +1,25 @@
 import React, { useEffect } from "react";
 import IdCard from "../components/IDcard/IdCard";
 import useAuthStore from "../stores/useAuthStore";
+import useUserStore from "../stores/useUserStore";
 import { Image } from "../assets/Image";
 import { getStudentId } from "../util/getStudentId";
 
 const Idpage = () => {
   // Extract your refetch function from the store (e.g., checkAuth, fetchProfile, etc.)
   const { user, isAuthenticated, loadUser } = useAuthStore();
+  const students = useUserStore((state) => state.students);
+  const getStudents = useUserStore((state) => state.getStudents);
 
   // Refetch data every time the user navigates to the ID Page
   useEffect(() => {
     if (loadUser) {
       loadUser();
     }
-  }, [loadUser]);
+    if (getStudents && !students?.length) {
+      getStudents();
+    }
+  }, [loadUser, getStudents, students]);
 
   // Show a proper loading state while fetching/authenticating
   if (!isAuthenticated || !user) {
@@ -29,7 +35,7 @@ const Idpage = () => {
   const studentData = {
     profileImage: user?.profilePic,
     name: user?.name || "Unknown Student",
-    idNumber: getStudentId(user) || "N/A",
+    idNumber: getStudentId(user, students) || "N/A",
     role: user?.role || "Student",
     validUntil: user?.graduationDate || "2026-12-31",
     qrCode: user?.qrCodeUrl || Image?.qrCode,
