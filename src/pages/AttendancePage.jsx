@@ -108,7 +108,14 @@ const AttendancePage = () => {
 
   // Calculate statistics
   const totalStudents = students.length;
-  const presentCount = Object.values(attendance).filter((val) => val).length;
+  const checkIsPresent = (val) => {
+    if (!val) return false;
+    if (val === true) return true;
+    if (typeof val === "string" && val.toLowerCase() === "present") return true;
+    if (val.status && val.status.toLowerCase() === "present") return true;
+    return false;
+  };
+  const presentCount = Object.values(attendance).filter(checkIsPresent).length;
   const absentCount = totalStudents - presentCount;
 
   // Filter students by search term
@@ -414,12 +421,12 @@ const AttendancePage = () => {
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                attendance[student._id]
+                                checkIsPresent(attendance[student._id])
                                   ? "bg-success text-success-foreground"
                                   : "bg-muted text-muted-foreground"
                               }`}
                             >
-                              {attendance[student._id] ? (
+                              {checkIsPresent(attendance[student._id]) ? (
                                 <Check className="w-5 h-5" />
                               ) : (
                                 <X className="w-5 h-5" />

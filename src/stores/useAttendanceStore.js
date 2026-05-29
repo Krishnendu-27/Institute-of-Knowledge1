@@ -106,7 +106,7 @@ const useAttendanceStore = create((set, get) => ({
       // Initialize attendance object
       const attendance = {};
       students.forEach((student) => {
-        attendance[student._id] = true; // Default to present
+        attendance[student._id] = false; // Default to absent (manual)
       });
 
       set({
@@ -115,6 +115,13 @@ const useAttendanceStore = create((set, get) => ({
         students: students,
         attendance: attendance,
       });
+
+      // Fetch and apply historical attendance for the currently selected date
+      await get().loadAttendanceState(
+        fullBatchData._id,
+        get().attendanceDate,
+        students,
+      );
 
       return students;
     } catch (err) {
@@ -127,6 +134,125 @@ const useAttendanceStore = create((set, get) => ({
       console.error("Select Batch Error:", err);
       throw err;
     }
+  },
+
+  // Load historical attendance state from the backend
+  loadAttendanceState: async (batchId, date, studentsList) => {
+    let newAttendance = {};
+
+    // 1. Force default everything to absent (false)
+    studentsList.forEach((student) => {
+      newAttendance[student._id] = false;
+    });
+
+    try {
+      // 2. Fetch the attendance record for the date
+      // Try standard route, fallback to by-date route if needed
+      let response;
+      try {
+        // Try the by-date route first (more specific)
+        response = await api.get(`/attendence/by-date/${batchId}?date=${date}`);
+      } catch (e) {
+        // Fallback to standard route
+        response = await api.get(`/attendence/${batchId}?date=${date}`);
+      }
+
+      const data = response.data?.data || response.data;
+
+      // If data is nested (e.g. data.attendance)
+      const actualData = data?.attendance ? data.attendance : data;
+
+      // Extract the correct record
+      let record = null;
+
+      if (Array.isArray(actualData)) {
+        const isIndividualRecords =
+          actualData.length > 0 &&
+          (actualData[0].student || actualData[0].studentId) &&
+          actualData[0].status;
+
+        if (isIndividualRecords) {
+          // Scenario A: Array of individual Attendence documents
+          actualData.forEach((rec) => {
+            const studentId =
+              typeof rec.student === "object"
+                ? rec.student._id
+                : rec.student || rec.studentId;
+            if (
+              studentId &&
+              rec.status &&
+              rec.status.toLowerCase() === "present"
+            ) {
+              newAttendance[studentId.toString()] = true;
+            }
+          });
+          set({ attendance: newAttendance });
+          return;
+        } else {
+          // Scenario B: Array of daily summary Class documents
+          record = actualData.find((d) => {
+            if (!d.date) return false;
+            if (d.date.startsWith(date)) return true;
+            try {
+              if (new Date(d.date).toISOString().split("T")[0] === date)
+                return true;
+            } catch (e) {}
+            // Loose fallback match
+            const dateParts = date.split("-");
+            return dateParts.every((part) => d.date.includes(part));
+          });
+
+          // Fallback to the first item if the backend already filtered by date
+          if (!record && actualData.length > 0) {
+            record = actualData[0];
+          }
+        }
+      } else if (actualData && typeof actualData === "object") {
+        // Scenario C: Single Class document returned directly
+        record = actualData;
+      }
+
+      // If we found a valid daily record, accurately map the present students
+      if (record) {
+        const presentArray =
+          record.presentStudentIds ||
+          record.Present_students ||
+          record.presentStudents ||
+          record.present ||
+          record.students ||
+          record.attendance ||
+          [];
+
+        if (Array.isArray(presentArray)) {
+          const presentIds = presentArray.map((id) => {
+            if (typeof id === "object") {
+              return (
+                id.student ||
+                id.studentId ||
+                id._id ||
+                id.id ||
+                id
+              ).toString();
+            }
+            return id.toString();
+          });
+
+          studentsList.forEach((student) => {
+            if (presentIds.includes(student._id.toString())) {
+              newAttendance[student._id] = true;
+            }
+          });
+        }
+      }
+    } catch (err) {
+      // Expected behavior for days where attendance has never been submitted
+      console.warn(
+        "Could not fetch historical attendance, defaulting to absent.",
+        err,
+      );
+    }
+
+    set({ attendance: newAttendance });
   },
 
   // Toggle attendance for a student
@@ -199,8 +325,15 @@ const useAttendanceStore = create((set, get) => ({
   },
 
   // Update attendance date
-  setAttendanceDate: (date) => {
-    set({ attendanceDate: date });
+  setAttendanceDate: async (date) => {
+    set({ attendanceDate: date, isLoading: true });
+    const { selectedBatch, students, loadAttendanceState } = get();
+
+    // Reload the specific attendance data for this newly selected date
+    if (selectedBatch && students.length > 0) {
+      await loadAttendanceState(selectedBatch._id, date, students);
+    }
+    set({ isLoading: false });
   },
 
   // Reset store
