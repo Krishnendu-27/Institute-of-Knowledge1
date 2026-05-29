@@ -14,37 +14,42 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export const Breadcrumbs = () => {
-  // Remove empty segments (like trailing slashes)
+  const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   return (
     <nav
-      className="flex items-center text-sm text-foreground/60 mb-4"
+      className="flex items-center text-sm md:text-base text-foreground/60 font-medium"
       aria-label="Breadcrumb"
     >
       <Link
         to="/"
-        className="hover:text-primary transition-colors flex items-center"
+        className="hover:text-primary transition-all duration-200 flex items-center bg-foreground/5 py-1.5 px-3 rounded-lg hover:bg-primary/10"
       >
-        <Home size={16} className="mr-1.5" />
+        <Home size={18} className="mr-2" />
         Dashboard
       </Link>
+
       {pathnames.map((value, index) => {
-        // Build up the path up to this point
         const to = `/${pathnames.slice(0, index + 1).join("/")}`;
         const isLast = index === pathnames.length - 1;
         const title = value.replaceAll("-", " ");
 
         return (
           <div key={to} className="flex items-center capitalize">
-            <ChevronRight size={16} className="mx-1" />
+            <ChevronRight size={18} className="mx-1 text-foreground/40" />
             {isLast ? (
-              <span className="text-foreground font-medium">{title}</span>
+              <span className="text-foreground font-bold bg-foreground/5 py-1.5 px-3 rounded-lg shadow-sm">
+                {title}
+              </span>
             ) : (
-              <Link to={to} className="hover:text-primary transition-colors">
+              <Link
+                to={to}
+                className="hover:text-primary transition-all duration-200 bg-foreground/5 py-1.5 px-3 rounded-lg hover:bg-primary/10"
+              >
                 {title}
               </Link>
             )}

@@ -34,6 +34,8 @@ import EditBatch from "./pages/Batch/EditBatch";
 import CourseDetails from "./pages/Admin/CourseDetails";
 
 import Fees from "./pages/Fees";
+import FeesYearlyStatus from "./pages/FeesYearlyStatus";
+import IdCard from "./components/IDcard/IdCard";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -112,6 +114,10 @@ const App = () => {
                 <Route path="/attendance" element={<AttendancePage />} />
 
                 <Route path="/fees" element={<Fees />} />
+                <Route
+                  path="/fees-yearly-status"
+                  element={<FeesYearlyStatus />}
+                />
               </Route>
 
               {/* ==========================================
@@ -125,7 +131,7 @@ const App = () => {
                   />
                 }
               >
-                <Route path="/idcard" />
+                <Route path="/idcard" element={<IdCard />} />
               </Route>
 
               {/* ==========================================
