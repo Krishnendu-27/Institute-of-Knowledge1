@@ -360,12 +360,17 @@ import useClassStore from "../../stores/useClassStore";
 import useUserStore from "../../stores/useUserStore";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
+import useTradeStore from "../../stores/useTradeStore";
 
 const CreateCourse = () => {
   const navigate = useNavigate();
   const { createClass, isLoading, error } = useClassStore();
   const { getTeachers, teachers } = useUserStore();
   const userLoading = useUserStore((state) => state.isLoading);
+  const trades = useTradeStore((state) => state.trades);
+  const assignTradeToCourse = useTradeStore(
+    (state) => state.assignTradeToCourse,
+  );
 
   const [formData, setFormData] = useState({
     name: "",
@@ -377,6 +382,7 @@ const CreateCourse = () => {
 
   const [calculatedEndDate, setCalculatedEndDate] = useState(null);
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState("");
 
   useEffect(() => {
     getTeachers();
@@ -409,7 +415,10 @@ const CreateCourse = () => {
           : null,
       };
 
-      await createClass(payload);
+      const created = await createClass(payload);
+      if (created?._id && selectedTradeId) {
+        assignTradeToCourse(created._id, selectedTradeId);
+      }
       toast.success("Course Created Successfully");
       navigate("/courses");
     } catch (err) {
@@ -573,6 +582,26 @@ const CreateCourse = () => {
                         })()}
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Trade
+                    </label>
+                    <select
+                      value={selectedTradeId}
+                      onChange={(event) =>
+                        setSelectedTradeId(event.target.value)
+                      }
+                      className="block w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    >
+                      <option value="">Unassigned</option>
+                      {trades.map((trade) => (
+                        <option key={trade.id} value={trade.id}>
+                          {trade.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

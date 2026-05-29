@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,6 +21,9 @@ import {
 import useAuthStore from "../stores/useAuthStore";
 import useUserStore from "../stores/useUserStore";
 import useBatchStore from "../stores/useBatchStore";
+import useClassStore from "../stores/useClassStore";
+import { getStudentId } from "../util/getStudentId";
+import { api } from "../api/api";
 
 // ==========================================
 // REUSABLE UI COMPONENTS (CARDS)
@@ -113,12 +116,15 @@ const SectionCard = ({ title, icon: Icon, children, action }) => (
 const AdminDashboard = ({
   navigate,
   students,
-  teachers,
   batches,
   isLoading,
+  currentStudentsCount,
+  feesDueCount,
+  recentEnrollments,
+  isMetricsLoading,
 }) => {
-  // Get recent 4 students
-  const recentStudents = students?.slice(0, 4) || [];
+  // Get recent students
+  const recentStudents = recentEnrollments || [];
 
   return (
     <motion.div
@@ -137,16 +143,16 @@ const AdminDashboard = ({
           trend={{ value: "Active", label: "currently enrolled" }}
         />
         <KpiCard
-          isLoading={isLoading}
-          title="Active Faculty"
-          value={teachers?.length || 0}
+          isLoading={isMetricsLoading}
+          title="Current Students"
+          value={currentStudentsCount}
           icon={Users}
           colorType="success"
         />
         <KpiCard
-          isLoading={isLoading}
-          title="Running Batches"
-          value={batches?.length || 0}
+          isLoading={isMetricsLoading}
+          title="Fees Due Students"
+          value={feesDueCount}
           icon={Layers}
           colorType="warning"
         />
@@ -185,7 +191,7 @@ const AdminDashboard = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <SectionCard title="Recent Enrollments" icon={Users}>
-            {isLoading ? (
+            {isLoading || isMetricsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="animate-spin text-primary w-8 h-8" />
               </div>
@@ -194,34 +200,37 @@ const AdminDashboard = ({
                 <table className="w-full text-sm text-left">
                   <thead className="text-muted-foreground border-b border-border/50">
                     <tr>
+                      <th className="pb-3 font-semibold">#</th>
                       <th className="pb-3 font-semibold">Student Name</th>
-                      <th className="pb-3 font-semibold">Email</th>
-                      <th className="pb-3 font-semibold">Phone</th>
-                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold">Student ID</th>
+                      <th className="pb-3 font-semibold">Address</th>
+                      <th className="pb-3 font-semibold">Course</th>
+                      <th className="pb-3 font-semibold">Admission Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
-                    {recentStudents.map((student) => (
+                    {recentStudents.map((student, index) => (
                       <tr
                         key={student._id}
                         className="hover:bg-muted/30 transition-colors"
                       >
-                        <td className="py-3 text-foreground font-medium flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                            {student.name?.charAt(0)}
-                          </div>
+                        <td className="py-3 text-muted-foreground">
+                          {index + 1}
+                        </td>
+                        <td className="py-3 text-foreground font-medium">
                           {student.name}
                         </td>
-                        <td className="py-3 text-muted-foreground">
-                          {student.email}
+                        <td className="py-3 text-muted-foreground font-mono">
+                          {getStudentId(student, students) || "-"}
                         </td>
                         <td className="py-3 text-muted-foreground">
-                          {student.phone}
+                          {student.address || "-"}
                         </td>
-                        <td className="py-3">
-                          <span className="px-2.5 py-1 text-xs font-medium bg-success/10 text-success rounded-lg border border-success/20">
-                            Active
-                          </span>
+                        <td className="py-3 text-muted-foreground">
+                          {student.courses || "-"}
+                        </td>
+                        <td className="py-3 text-muted-foreground">
+                          {student.admissionDate || "-"}
                         </td>
                       </tr>
                     ))}
@@ -475,12 +484,23 @@ export default function Dashboard() {
 
   const {
     students,
-    teachers,
     getStudents,
-    getTeachers,
     isLoading: userLoading,
   } = useUserStore();
   const { batches, fetchBatches, isLoading: batchLoading } = useBatchStore();
+  const {
+    allClass,
+    getClasses,
+    isLoading: classLoading,
+  } = useClassStore();
+
+  const studentProgress = useUserStore((state) => state.studentProgress);
+  const getStudentProgress = useUserStore((state) => state.getStudentProgress);
+
+  const [currentStudentsCount, setCurrentStudentsCount] = useState(0);
+  const [feesDueCount, setFeesDueCount] = useState(0);
+  const [recentEnrollments, setRecentEnrollments] = useState([]);
+  const [metricsLoading, setMetricsLoading] = useState(false);
 
   const isLoading = userLoading || batchLoading;
 
@@ -488,10 +508,139 @@ export default function Dashboard() {
   useEffect(() => {
     if (role === "Admin") {
       getStudents();
-      getTeachers();
+      getClasses();
     }
     fetchBatches();
-  }, [role, getStudents, getTeachers, fetchBatches]);
+  }, [role, getStudents, getClasses, fetchBatches]);
+
+  useEffect(() => {
+    if (role !== "Admin" || !students?.length) return;
+
+    let isMounted = true;
+    const fetchMetrics = async () => {
+      setMetricsLoading(true);
+      try {
+        const allMainClasses = allClass || [];
+        const mainClassMap = new Map(
+          allMainClasses.map((cls) => [cls._id, cls.name]),
+        );
+
+        const progressFetches = [];
+        students.forEach((student) => {
+          const studentId = student._id;
+          const classIds = (student.mainClasses || []).map(
+            (cls) => cls._id || cls,
+          );
+
+          classIds.forEach((classId) => {
+            const key = `${studentId}_${classId}`;
+            if (!studentProgress[key]) {
+              progressFetches.push(getStudentProgress(studentId, classId));
+            }
+          });
+        });
+
+        await Promise.all(progressFetches);
+
+        const updatedProgress = useUserStore.getState().studentProgress;
+
+        const activeStudents = students.filter((student) => {
+          const classIds = (student.mainClasses || []).map(
+            (cls) => cls._id || cls,
+          );
+
+          return !classIds.some((classId) => {
+            const key = `${student._id}_${classId}`;
+            return updatedProgress[key]?.certificateIssued;
+          });
+        });
+
+        const recent = [...students]
+          .sort((a, b) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime(),
+          )
+          .slice(0, 6)
+          .map((student) => {
+            const classLabels = (student.mainClasses || [])
+              .map((cls) => mainClassMap.get(cls._id || cls))
+              .filter(Boolean)
+              .join(", ");
+
+            return {
+              ...student,
+              courses: classLabels,
+              admissionDate: student.createdAt
+                ? new Date(student.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "-",
+            };
+          });
+
+        const currentMonthLabel = new Date().toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        });
+
+        const feesDueStudents = new Set();
+
+        for (const student of students) {
+          const studentId = student._id;
+          const classIds = (student.mainClasses || []).map(
+            (cls) => cls._id || cls,
+          );
+
+          for (const classId of classIds) {
+            try {
+              const response = await api.get(
+                `/fees/history/${classId}/${studentId}`,
+              );
+              const history = response.data?.history || [];
+              const paid = history.some((record) => {
+                const label = String(record.month || "")
+                  .trim()
+                  .toLowerCase();
+                return label === currentMonthLabel.toLowerCase();
+              });
+              if (!paid) {
+                feesDueStudents.add(studentId);
+              }
+            } catch (err) {
+              // Silently skip 404s (endpoint not ready yet)
+              if (err.response?.status !== 404) {
+                feesDueStudents.add(studentId);
+              }
+            }
+          }
+        }
+
+        if (isMounted) {
+          setCurrentStudentsCount(activeStudents.length);
+          setRecentEnrollments(recent);
+          setFeesDueCount(feesDueStudents.size);
+        }
+      } finally {
+        if (isMounted) {
+          setMetricsLoading(false);
+        }
+      }
+    };
+
+    fetchMetrics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    role,
+    students,
+    allClass,
+    getStudentProgress,
+    studentProgress,
+  ]);
 
   // Page entry animations
   const pageVariants = {
@@ -527,9 +676,12 @@ export default function Dashboard() {
         <AdminDashboard
           navigate={navigate}
           students={students}
-          teachers={teachers}
           batches={batches}
           isLoading={isLoading}
+          currentStudentsCount={currentStudentsCount}
+          feesDueCount={feesDueCount}
+          recentEnrollments={recentEnrollments}
+          isMetricsLoading={metricsLoading || classLoading}
         />
       )}
       {role === "Teacher" && (

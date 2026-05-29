@@ -21,10 +21,12 @@ import useClassStore from "../../stores/useClassStore";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
 import { getReadableError } from "../../util/Error/Error";
+import useTradeStore from "../../stores/useTradeStore";
 
 const CreateBatch = () => {
   const navigate = useNavigate();
   const { createBatch, isLoading, error } = useBatchStore();
+  const trades = useTradeStore((state) => state.trades);
 
   // Store connections
   const { teachers, students, getTeachers, getStudents } = useUserStore();
@@ -40,6 +42,7 @@ const CreateBatch = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [selectedTradeId, setSelectedTradeId] = useState("");
 
   // UI / Search State
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -125,7 +128,7 @@ const CreateBatch = () => {
       mainClassStudentPairs,
     };
 
-    await createBatch(payload, navigate);
+    await createBatch(payload, navigate, selectedTradeId);
   };
 
   // --- Helper Components & Functions ---
@@ -312,6 +315,33 @@ const CreateBatch = () => {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Trade Selection */}
+              <div className="md:col-span-1">
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Trade
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedTradeId}
+                    onChange={(event) =>
+                      setSelectedTradeId(event.target.value)
+                    }
+                    className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                  >
+                    <option value="">Unassigned</option>
+                    {trades.map((trade) => (
+                      <option key={trade.id} value={trade.id}>
+                        {trade.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="absolute right-4 top-3.5 text-muted-foreground pointer-events-none"
+                    size={18}
+                  />
+                </div>
+              </div>
             </div>
           </div>
           {/* SECTION 3: Schedule */}
@@ -398,7 +428,7 @@ const CreateBatch = () => {
                 onClick={() => setActiveDropdown("class")}
               >
                 <AnimatePresence>
-                  {selectedClasses.map((cls) => (
+                  {selectedClasses.map((cls, index) => (
                     <motion.span
                       layout
                       initial={{ scale: 0.8, opacity: 0 }}
@@ -408,7 +438,7 @@ const CreateBatch = () => {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium"
                     >
                       <BookOpen size={14} />
-                      {cls.name}
+                      {index + 1}. {cls.name}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -460,7 +490,7 @@ const CreateBatch = () => {
                           ?.toLowerCase()
                           .includes(searchQueries.class.toLowerCase()),
                       )
-                      .map((cls) => (
+                      .map((cls, index) => (
                         <div
                           key={cls._id}
                           onClick={() => {
@@ -480,7 +510,7 @@ const CreateBatch = () => {
                           />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-foreground">
-                              {cls.name}
+                              {index + 1}. {cls.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {cls.code}
@@ -509,7 +539,7 @@ const CreateBatch = () => {
                 onClick={() => setActiveDropdown("student")}
               >
                 <AnimatePresence>
-                  {selectedStudents.map((std) => (
+                  {selectedStudents.map((std, index) => (
                     <motion.span
                       layout
                       initial={{ scale: 0.8, opacity: 0 }}
@@ -526,7 +556,7 @@ const CreateBatch = () => {
                         alt={std.name}
                         className="w-5 h-5 rounded-full object-cover"
                       />
-                      {std.name || std.email.split("@")[0]}
+                      {index + 1}. {std.name || std.email.split("@")[0]}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -582,7 +612,7 @@ const CreateBatch = () => {
                             ?.toLowerCase()
                             .includes(searchQueries.student.toLowerCase()),
                       )
-                      .map((student) => (
+                      .map((student, index) => (
                         <div
                           key={student._id}
                           onClick={() => {
@@ -602,7 +632,7 @@ const CreateBatch = () => {
                           />
                           <div className="flex-1 overflow-hidden">
                             <p className="text-sm font-medium text-foreground truncate">
-                              {student.name || "Unknown Student"}
+                              {index + 1}. {student.name || "Unknown Student"}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
                               {student.email}

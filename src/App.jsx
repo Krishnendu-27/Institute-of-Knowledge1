@@ -22,10 +22,12 @@ import CoursesPage from "./pages/Admin/CoursesPage";
 import CreateCourse from "./pages/Admin/CreateCourse";
 import AddNewStudent from "./pages/Admin/AddNewStudent";
 import AttendancePage from "./pages/AttendancePage";
+import AttendanceStatus from "./pages/AttendanceStatus";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
 import StudentProfile from "./pages/StudentProfile";
+import TradeManagement from "./pages/Admin/TradeManagement";
 
 import BatchList from "./pages/Batch/BatchList";
 import BatchDetails from "./pages/Batch/BatchDetails";
@@ -112,6 +114,10 @@ const App = () => {
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
+                <Route
+                  path="/attendance-status"
+                  element={<AttendanceStatus />}
+                />
 
                 <Route path="/fees" element={<Fees />} />
                 <Route
@@ -151,6 +157,7 @@ const App = () => {
                   <Route path="addnewstudent" element={<AddNewStudent />} />
                 </Route>
                 <Route path="/registeruser" element={<RegisterNewUser />} />
+                <Route path="/trades" element={<TradeManagement />} />
 
                 {/* BATCH MANAGEMENT ROUTES */}
                 <Route path="/batches/create" element={<CreateBatch />} />

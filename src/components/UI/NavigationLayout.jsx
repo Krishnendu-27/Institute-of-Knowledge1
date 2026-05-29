@@ -22,6 +22,8 @@ import {
   Sun,
   Moon,
   Monitor,
+  // Sitemap,
+  BarChart3,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
@@ -82,8 +84,15 @@ export const NavigationLayout = () => {
       { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/courses", icon: BadgePlus, label: "All Courses" },
+      { path: "/trades", icon: BadgePlus, label: "Trade Management" },
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },
+      { path: "/fees-yearly-status", icon: BarChart3, label: "Fees Status" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
+      {
+        path: "/attendance-status",
+        icon: BarChart3,
+        label: "Attendance Status",
+      },
       {
         path: `/profile/${generateSlug(user?.name)}`,
         icon: User,
@@ -98,7 +107,13 @@ export const NavigationLayout = () => {
       // { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
+      {
+        path: "/attendance-status",
+        icon: BarChart3,
+        label: "Attendance Status",
+      },
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },
+      { path: "/fees-yearly-status", icon: BarChart3, label: "Fees Status" },
       {
         path: `/profile/${generateSlug(user?.name)}`,
         icon: User,
@@ -117,6 +132,7 @@ export const NavigationLayout = () => {
         icon: Newspaper,
         label: "Course Certificate",
       },
+      { path: "/fees-yearly-status", icon: HandCoins, label: "Fees Status" },
       {
         path: `/profile/${generateSlug(user?.name)}`,
         icon: User,
@@ -144,6 +160,8 @@ export const NavigationLayout = () => {
       return `Publish New Course`;
     if (location.pathname.startsWith("/batches/create"))
       return `Configure New Batch`;
+    if (location.pathname.startsWith("/trades"))
+      return `Trade Management`;
     if (location.pathname.startsWith("/batches")) return `Batches`;
     return location.pathname.split("/").pop().replaceAll("-", " ");
   };

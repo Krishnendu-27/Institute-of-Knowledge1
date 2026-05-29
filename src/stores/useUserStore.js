@@ -1,13 +1,16 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { api } from "../api/api";
 
-const useUserStore = create((set, get) => ({
-  isLoading: false,
-  error: null,
-  success: false,
-  students: [],
-  teachers: [],
-  studentProgress: {}, // Store progress data { studentId_mainClassId: { batchcompletion, examcompletion, certificateIssued } }
+const useUserStore = create(
+  persist(
+    (set, get) => ({
+      isLoading: false,
+      error: null,
+      success: false,
+      students: [],
+      teachers: [],
+      studentProgress: {}, // Store progress data { studentId_mainClassId: { batchcompletion, examcompletion, certificateIssued } }
 
   getStudents: async () => {
     set({ isLoading: true, error: null });
@@ -55,6 +58,10 @@ const useUserStore = create((set, get) => ({
 
       return data;
     } catch (err) {
+      // Silently handle 404s (endpoint not ready yet) - don't log to console
+      if (err.response?.status === 404) {
+        return null;
+      }
       console.error("Error fetching student progress:", err);
       return null;
     }
@@ -63,11 +70,7 @@ const useUserStore = create((set, get) => ({
   // Update progress for a student in a mainClass
   updateStudentProgress: async (studentId, mainClassId, progressData) => {
     try {
-      const response = await api.patch(
-        `/attendance/update-progress/${studentId}/${mainClassId}`,
-        progressData,
-      );
-
+      // Update UI optimistically
       const key = `${studentId}_${mainClassId}`;
       set((state) => ({
         studentProgress: {
@@ -89,7 +92,18 @@ const useUserStore = create((set, get) => ({
         },
       }));
 
-      return response.data;
+      // Try to sync with backend
+      try {
+        const response = await api.patch(
+          `/attendance/update-progress/${studentId}/${mainClassId}`,
+          progressData,
+        );
+        return response.data;
+      } catch (apiErr) {
+        // If backend endpoint fails, UI still updates locally (graceful fallback)
+        console.warn("Backend sync failed, but UI updated locally:", apiErr);
+        return null;
+      }
     } catch (err) {
       console.error("Error updating student progress:", err);
       set({ error: err.response?.data?.message || "Error updating progress" });
@@ -174,6 +188,15 @@ const useUserStore = create((set, get) => ({
   },
 
   resetStatus: () => set({ success: false, error: null }),
-}));
+    }),
+    {
+      name: "user-store",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        studentProgress: state.studentProgress,
+      }),
+    }
+  )
+);
 
 export default useUserStore;

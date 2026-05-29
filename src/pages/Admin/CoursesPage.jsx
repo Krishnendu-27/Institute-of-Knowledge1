@@ -12,26 +12,43 @@ import {
   IndianRupee,
 } from "lucide-react";
 import useClassStore from "../../stores/useClassStore";
+import useTradeStore from "../../stores/useTradeStore";
 
 const CoursesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTradeId, setSelectedTradeId] = useState("");
   const navigate = useNavigate();
 
   const allClass = useClassStore((state) => state.allClass);
   const getClasses = useClassStore((state) => state.getClasses);
   const isLoading = useClassStore((state) => state.isLoading);
   const error = useClassStore((state) => state.error);
+  const trades = useTradeStore((state) => state.trades);
+  const courseTradeMap = useTradeStore((state) => state.courseTradeMap);
+  const getTradeLabel = useTradeStore((state) => state.getTradeLabel);
 
   useEffect(() => {
     getClasses();
   }, [getClasses]);
 
   const filteredClasses = Array.isArray(allClass)
-    ? allClass.filter(
-        (item) =>
+    ? allClass.filter((item) => {
+        const matchesSearch =
           item?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item?.teacherName?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+          item?.teacherName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase());
+
+        const tradeId = courseTradeMap[item?._id] || "";
+        const matchesTrade =
+          selectedTradeId === ""
+            ? true
+            : selectedTradeId === "unassigned"
+              ? !tradeId
+              : tradeId === selectedTradeId;
+
+        return matchesSearch && matchesTrade;
+      })
     : [];
 
   const getClassStatus = (startDate, endDate, isActive) => {
@@ -121,17 +138,37 @@ const CoursesPage = () => {
             </Link>
           </div>
 
-          <div className="relative group max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-4 items-end">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by class name or instructor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search by class name or instructor..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
-            />
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-foreground/80 mb-2">
+                Trade
+              </label>
+              <select
+                value={selectedTradeId}
+                onChange={(e) => setSelectedTradeId(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              >
+                <option value="">All Trades</option>
+                <option value="unassigned">Unassigned</option>
+                {trades.map((trade) => (
+                  <option key={trade.id} value={trade.id}>
+                    {trade.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {error && (
@@ -198,6 +235,9 @@ const CoursesPage = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-6 mt-2">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/10 rounded-lg text-xs font-medium text-primary border border-primary/20">
+                        {getTradeLabel(courseTradeMap[classItem?._id])}
+                      </div>
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/50 rounded-lg text-xs font-medium text-muted-foreground border border-border/50">
                         <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />
                         {classItem?.duration || 0} Months

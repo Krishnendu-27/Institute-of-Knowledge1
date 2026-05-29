@@ -1,40 +1,68 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  ChevronRight,
-  Loader2,
-  Mail,
-  Phone,
-  User,
-  GraduationCap,
-} from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { CheckCircle2, Loader2, Search, XCircle } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
-import { useNavigate } from "react-router-dom";
-import { generateSlug } from "../../util/generateSlug";
+import useClassStore from "../../stores/useClassStore";
+import { getStudentId } from "../../util/getStudentId";
 
 const AllStudents = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [loadingKeys, setLoadingKeys] = useState({});
 
-  // Assuming your store has `students` and `getStudents` functions
   const students = useUserStore((state) => state.students);
   const getStudents = useUserStore((state) => state.getStudents);
+  const getStudentProgress = useUserStore((state) => state.getStudentProgress);
+  const updateStudentProgress = useUserStore(
+    (state) => state.updateStudentProgress,
+  );
+  const studentProgress = useUserStore((state) => state.studentProgress);
   const isLoading = useUserStore((state) => state.isLoading);
   const error = useUserStore((state) => state.error);
 
-  const navigate = useNavigate();
+  const allClass = useClassStore((state) => state.allClass);
+  const getClasses = useClassStore((state) => state.getClasses);
 
   useEffect(() => {
-    // Fetch students when the component mounts
     getStudents();
-  }, [getStudents]);
+    getClasses();
+  }, [getStudents, getClasses]);
+
+  useEffect(() => {
+    if (!students?.length) return;
+
+    const fetchProgress = async () => {
+      const tasks = [];
+      students.forEach((student) => {
+        const classIds = (student.mainClasses || []).map(
+          (cls) => cls._id || cls,
+        );
+        classIds.forEach((classId) => {
+          const key = `${student._id}_${classId}`;
+          if (!studentProgress[key]) {
+            tasks.push(getStudentProgress(student._id, classId));
+          }
+        });
+      });
+
+      await Promise.all(tasks);
+    };
+
+    fetchProgress();
+  }, [students, studentProgress, getStudentProgress]);
+
+  const classMap = useMemo(() => {
+    return new Map((allClass || []).map((cls) => [cls._id, cls.name]));
+  }, [allClass]);
 
   const filteredStudents = Array.isArray(students)
-    ? students.filter(
-        (student) =>
-          student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student?.email?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+    ? students.filter((student) => {
+        const query = searchTerm.toLowerCase();
+        return (
+          student?.name?.toLowerCase().includes(query) ||
+          student?.email?.toLowerCase().includes(query) ||
+          student?.phone?.toLowerCase().includes(query)
+        );
+      })
     : [];
 
   const pageVariants = {
@@ -49,153 +77,206 @@ const AllStudents = () => {
     duration: 0.3,
   };
 
-  return (
-    <>
-      <motion.div
-        initial="initial"
-        animate="in"
-        exit="out"
-        variants={pageVariants}
-        transition={pageTransition}
-        className="min-h-screen bg-background p-6 md:p-8 transition-colors duration-300"
+  const handleToggle = async (studentId, classId, fieldName, currentValue) => {
+    const key = `${studentId}_${classId}_${fieldName}`;
+    setLoadingKeys((prev) => ({ ...prev, [key]: true }));
+
+    await updateStudentProgress(studentId, classId, {
+      [fieldName]: !currentValue,
+    });
+
+    setLoadingKeys((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const renderStatusToggle = (studentId, classId, fieldName, label) => {
+    const key = `${studentId}_${classId}`;
+    const isChecked = studentProgress[key]?.[fieldName] || false;
+    const isUpdating =
+      loadingKeys[`${studentId}_${classId}_${fieldName}`] || false;
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleToggle(studentId, classId, fieldName, isChecked)}
+        disabled={isUpdating}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors disabled:opacity-60"
       >
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div>
-            <p className="text-muted-foreground mt-1">
-              Manage and view all students along with their assigned batches and
-              details.
-            </p>
+        {isUpdating ? (
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+        ) : isChecked ? (
+          <CheckCircle2 className="w-4 h-4 text-success" />
+        ) : (
+          <XCircle className="w-4 h-4 text-muted-foreground" />
+        )}
+        <span className="text-xs font-semibold text-muted-foreground">
+          {label}
+        </span>
+      </button>
+    );
+  };
+
+  return (
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+      className="min-h-screen bg-background p-6 md:p-8 transition-colors duration-300"
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div>
+          <p className="text-muted-foreground mt-1">
+            Manage and view all students with course completion status.
+          </p>
+        </div>
+
+        <div className="relative group max-w-2xl">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           </div>
+          <input
+            type="text"
+            placeholder="Search by name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
+          />
+        </div>
 
-          <div className="relative group max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-4 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
-            />
+        {error && (
+          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-2 font-medium">
+            <span>!</span> {error}
           </div>
+        )}
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-2 font-medium">
-              <span>⚠️</span> {error}
-            </div>
-          )}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+            <p>Loading Students...</p>
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border border-dashed p-12 text-center text-muted-foreground">
+            No students found.
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      #
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Student Name
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Student ID
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Father Name
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Village
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Mobile Number
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                      Course Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredStudents.map((student, index) => {
+                    const studentId = getStudentId(student, students);
+                    const classIds = (student.mainClasses || []).map(
+                      (cls) => cls._id || cls,
+                    );
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-              <p>Loading Students...</p>
-            </div>
-          ) : filteredStudents.length === 0 ? (
-            <div className="bg-card rounded-2xl border border-border border-dashed p-12 text-center">
-              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <GraduationCap className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                No Students Found
-              </h3>
-              <p className="text-muted-foreground">
-                {searchTerm
-                  ? "Try adjusting your search criteria."
-                  : "No students available at the moment."}
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <AnimatePresence>
-                {filteredStudents.map((student, index) => (
-                  <motion.div
-                    key={student._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() =>
-                      navigate(`/profile/${generateSlug(student.name)}`, {
-                        state: {
-                          userId: student?._id,
-                          userData: student,
-                        },
-                      })
-                    }
-                    className="group bg-card rounded-2xl border border-border hover:border-primary hover:shadow-lg transition-all cursor-pointer overflow-hidden shadow-sm"
-                  >
-                    <div className="p-6 flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-4">
-                          {student.profilePic ? (
-                            <img
-                              src={student.profilePic}
-                              alt={student.name}
-                              className="w-14 h-14 rounded-full object-cover bg-muted"
-                            />
+                    return (
+                      <tr key={student._id || index}>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {index + 1}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-foreground">
+                          {student.name || "Unnamed"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground font-mono">
+                          {studentId || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {student.fatherName || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {student.address || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {student.phone || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {classIds.length === 0 ? (
+                            <div className="text-muted-foreground text-xs">
+                              No courses assigned
+                            </div>
                           ) : (
-                            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                              {student.name.charAt(0).toUpperCase()}
+                            <div className="min-w-[320px]">
+                              <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-muted-foreground mb-2">
+                                <span>Course</span>
+                                <span className="text-center">Course Complete</span>
+                                <span className="text-center">Exam Complete</span>
+                                <span className="text-center">
+                                  Certificate Complete
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {classIds.map((classId) => (
+                                  <div
+                                    key={classId}
+                                    className="grid grid-cols-4 gap-2 items-center"
+                                  >
+                                    <span className="text-xs font-medium text-foreground">
+                                      {classMap.get(classId) || "Unknown"}
+                                    </span>
+                                    {renderStatusToggle(
+                                      student._id,
+                                      classId,
+                                      "batchcompletion",
+                                      "Course",
+                                    )}
+                                    {renderStatusToggle(
+                                      student._id,
+                                      classId,
+                                      "examcompletion",
+                                      "Exam",
+                                    )}
+                                    {renderStatusToggle(
+                                      student._id,
+                                      classId,
+                                      "certificateIssued",
+                                      "Certificate",
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {student.name}
-                            </h3>
-                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Mail
-                                  size={16}
-                                  className="text-muted-foreground/70"
-                                />
-                                {student.email}
-                              </div>
-                              {student.phone && (
-                                <div className="flex items-center gap-1">
-                                  <Phone
-                                    size={16}
-                                    className="text-muted-foreground/70"
-                                  />
-                                  {student.phone}
-                                </div>
-                              )}
-                              {/* Optional: Show stream or grade if available */}
-                              {student.grade && (
-                                <div className="flex items-center gap-1">
-                                  <GraduationCap
-                                    size={16}
-                                    className="text-muted-foreground/70"
-                                  />
-                                  Grade: {student.grade}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        <div className="text-right hidden sm:block">
-                          <p className="text-2xl font-bold text-primary">
-                            {student.batches?.length ||
-                              student.mainClasses?.length ||
-                              0}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Batches
-                          </p>
-                        </div>
-                        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      </motion.div>
-    </>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
