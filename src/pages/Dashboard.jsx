@@ -171,7 +171,7 @@ const AdminDashboard = ({
           onClick={() => navigate("/register")}
           className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground px-5 py-2.5 rounded-xl font-semibold shadow-sm shadow-primary/20 transition-all active:scale-95"
         >
-          <UserPlus size={18} /> Register User
+          <UserPlus size={18} /> Register New User
         </button>
         <button
           onClick={() => navigate("/batches/create")}

@@ -91,7 +91,7 @@ const CreateBatch = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -344,7 +344,72 @@ const CreateBatch = () => {
               </div>
             </div>
           </div>
+          {/* SECTION 3: Schedule */}
+          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
+              <Calendar size={20} className="text-primary" />
+              Schedule Timing
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Weekday
+                </label>
+                <div className="relative">
+                  <select
+                    value={weekday}
+                    onChange={(e) => setWeekday(e.target.value)}
+                    className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                  >
+                    {[
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                      "Sunday",
+                    ].map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="absolute right-4 top-3.5 text-muted-foreground pointer-events-none"
+                    size={18}
+                  />
+                </div>
+              </div>
 
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Clock size={14} className="text-muted-foreground" /> Start
+                  Time
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Clock size={14} className="text-muted-foreground" /> End Time
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                />
+              </div>
+            </div>
+          </div>
           {/* SECTION 2: Enrollments */}
           <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-8">
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-2">
@@ -583,73 +648,6 @@ const CreateBatch = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </div>
-
-          {/* SECTION 3: Schedule */}
-          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
-              <Calendar size={20} className="text-primary" />
-              Schedule Timing
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">
-                  Weekday
-                </label>
-                <div className="relative">
-                  <select
-                    value={weekday}
-                    onChange={(e) => setWeekday(e.target.value)}
-                    className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
-                  >
-                    {[
-                      "Monday",
-                      "Tuesday",
-                      "Wednesday",
-                      "Thursday",
-                      "Friday",
-                      "Saturday",
-                      "Sunday",
-                    ].map((day) => (
-                      <option key={day} value={day}>
-                        {day}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    className="absolute right-4 top-3.5 text-muted-foreground pointer-events-none"
-                    size={18}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Clock size={14} className="text-muted-foreground" /> Start
-                  Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Clock size={14} className="text-muted-foreground" /> End Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
-                />
-              </div>
             </div>
           </div>
 
