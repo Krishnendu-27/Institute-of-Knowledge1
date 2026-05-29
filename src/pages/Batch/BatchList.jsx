@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Trash2, AlertTriangle } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
-import { generateSlug } from "../../util/generateSlug";
 import useTradeStore from "../../stores/useTradeStore";
+import { generateSlug } from "../../util/generateSlug";
+import { TRADES, getTradeLabel } from "../../constants/trades";
 
 // --- Reusable Confirmation Modal ---
 const ConfirmModal = ({
@@ -70,9 +71,7 @@ const BatchList = () => {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradeId, setSelectedTradeId] = useState("");
-  const trades = useTradeStore((state) => state.trades);
   const batchTradeMap = useTradeStore((state) => state.batchTradeMap);
-  const getTradeLabel = useTradeStore((state) => state.getTradeLabel);
 
   useEffect(() => {
     fetchBatches();
@@ -133,7 +132,7 @@ const BatchList = () => {
             >
               <option value="">All Trades</option>
               <option value="unassigned">Unassigned</option>
-              {trades.map((trade) => (
+              {TRADES.map((trade) => (
                 <option key={trade.id} value={trade.id}>
                   {trade.name}
                 </option>

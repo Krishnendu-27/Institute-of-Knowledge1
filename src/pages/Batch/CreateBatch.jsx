@@ -21,12 +21,11 @@ import useClassStore from "../../stores/useClassStore";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
 import { getReadableError } from "../../util/Error/Error";
-import useTradeStore from "../../stores/useTradeStore";
+import { TRADES } from "../../constants/trades";
 
 const CreateBatch = () => {
   const navigate = useNavigate();
   const { createBatch, isLoading, error } = useBatchStore();
-  const trades = useTradeStore((state) => state.trades);
 
   // Store connections
   const { teachers, students, getTeachers, getStudents } = useUserStore();
@@ -324,13 +323,11 @@ const CreateBatch = () => {
                 <div className="relative">
                   <select
                     value={selectedTradeId}
-                    onChange={(event) =>
-                      setSelectedTradeId(event.target.value)
-                    }
+                    onChange={(event) => setSelectedTradeId(event.target.value)}
                     className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
                   >
                     <option value="">Unassigned</option>
-                    {trades.map((trade) => (
+                    {TRADES.map((trade) => (
                       <option key={trade.id} value={trade.id}>
                         {trade.name}
                       </option>
