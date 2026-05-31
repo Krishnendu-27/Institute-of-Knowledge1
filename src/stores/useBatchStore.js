@@ -3,6 +3,37 @@ import toast from "react-hot-toast";
 import { api } from "../api/api";
 import useTradeStore from "./useTradeStore";
 
+// Helper to process incoming batches (Hydrates Trade Store & Cleans Name)
+const processBatchForTrade = (batch) => {
+  if (!batch || !batch.name) return batch;
+  const match = batch.name.match(/ \[Trade: (.*?)\]$/);
+  if (match) {
+    const tradeName = match[1];
+    const trades = useTradeStore.getState().trades;
+    const tradeObj = trades.find((t) => t.name === tradeName);
+    if (tradeObj && batch._id) {
+      useTradeStore.getState().assignTradeToBatch(batch._id, tradeObj.id);
+    }
+    return { ...batch, name: batch.name.replace(match[0], "") };
+  }
+  return batch;
+};
+
+// Helper to format outgoing batches (Appends Trade Name for cross-device persistence)
+const formatBatchNameForTrade = (name, batchId, tradeIdOverride) => {
+  let tradeId = tradeIdOverride;
+  if (!tradeId && batchId) {
+    tradeId = useTradeStore.getState().batchTradeMap[batchId];
+  }
+  if (tradeId) {
+    const tradeLabel = useTradeStore.getState().getTradeLabel(tradeId);
+    if (tradeLabel && name && !name.includes(`[Trade:`)) {
+      return `${name} [Trade: ${tradeLabel}]`;
+    }
+  }
+  return name;
+};
+
 const useBatchStore = create((set, get) => ({
   batches: [],
   currentBatch: null,
@@ -15,7 +46,8 @@ const useBatchStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/batch");
-      set({ batches: response.data, isLoading: false });
+      const processedBatches = response.data.map(processBatchForTrade);
+      set({ batches: processedBatches, isLoading: false });
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to fetch batches";
@@ -29,7 +61,8 @@ const useBatchStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/batch/show/${id}`);
-      set({ currentBatch: response.data, isLoading: false });
+      const processedBatch = processBatchForTrade(response.data);
+      set({ currentBatch: processedBatch, isLoading: false });
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to fetch batch details";
@@ -56,12 +89,14 @@ const useBatchStore = create((set, get) => ({
   createBatch: async (batchData, navigate, tradeId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post("/batch/create", batchData);
-      if (tradeId && response?.data?._id) {
-        useTradeStore.getState().assignTradeToBatch(response.data._id, tradeId);
+      if (batchData.name) {
+        batchData.name = formatBatchNameForTrade(batchData.name, null, tradeId);
       }
+
+      const response = await api.post("/batch/create", batchData);
+      const processedBatch = processBatchForTrade(response.data);
       set((state) => ({
-        batches: [...state.batches, response.data],
+        batches: [...state.batches, processedBatch],
         isLoading: false,
       }));
       toast.success("Batch created successfully!");
@@ -92,6 +127,10 @@ const useBatchStore = create((set, get) => ({
   updateBatch: async (id, updatedData, navigate) => {
     set({ isLoading: true, error: null });
     try {
+      if (updatedData.name) {
+        updatedData.name = formatBatchNameForTrade(updatedData.name, id);
+      }
+
       const response = await api.put(`/batch/edit/${id}`, updatedData);
       toast.success("Batch updated successfully!");
       get().fetchBatchById(id); // Refresh current batch

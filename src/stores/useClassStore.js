@@ -139,6 +139,28 @@
 
 import { create } from "zustand";
 import { api } from "../api/api";
+import useTradeStore from "./useTradeStore";
+
+// Helper to process batches inside classes to clean names and hydrate trade store
+const processClassBatches = (cls) => {
+  if (cls && cls.batches && Array.isArray(cls.batches)) {
+    cls.batches = cls.batches.map((batch) => {
+      if (!batch || !batch.name) return batch;
+      const match = batch.name.match(/ \[Trade: (.*?)\]$/);
+      if (match) {
+        const tradeName = match[1];
+        const trades = useTradeStore.getState().trades;
+        const tradeObj = trades.find((t) => t.name === tradeName);
+        if (tradeObj && batch._id) {
+          useTradeStore.getState().assignTradeToBatch(batch._id, tradeObj.id);
+        }
+        return { ...batch, name: batch.name.replace(match[0], "") };
+      }
+      return batch;
+    });
+  }
+  return cls;
+};
 
 const useClassStore = create((set) => ({
   isLoading: false,
@@ -152,8 +174,9 @@ const useClassStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/mainclass");
-      set({ isLoading: false, allClass: response.data });
-      return response.data;
+      const processedClasses = response.data.map(processClassBatches);
+      set({ isLoading: false, allClass: processedClasses });
+      return processedClasses;
     } catch (err) {
       const errorMessage =
         err.response?.data?.error || "Failed to fetch classes";
@@ -170,11 +193,16 @@ const useClassStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/mainclass/show/${classId}`);
+      let processedClass = response.data;
+      if (processedClass && processedClass.mainClass) {
+        processedClass.mainClass = processClassBatches(
+          processedClass.mainClass,
+        );
+      }
       set({ isLoading: false });
-      return response.data;
+      return processedClass;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.error || "Failed to fetch class";
+      const errorMessage = err.response?.data?.error || "Failed to fetch class";
       set({
         isLoading: false,
         error: errorMessage,
@@ -275,8 +303,7 @@ const useClassStore = create((set) => ({
       setTimeout(() => set({ success: false }), 3000);
       return response.data;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.error || "Something went wrong";
+      const errorMessage = err.response?.data?.error || "Something went wrong";
       set({
         isLoading: false,
         error: errorMessage,
@@ -298,8 +325,7 @@ const useClassStore = create((set) => ({
       setTimeout(() => set({ success: false }), 3000);
       return response.data;
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.error || "Something went wrong";
+      const errorMessage = err.response?.data?.error || "Something went wrong";
       set({
         isLoading: false,
         error: errorMessage,
