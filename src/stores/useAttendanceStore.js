@@ -1,5 +1,22 @@
 import { create } from "zustand";
 import { api } from "../api/api";
+import useTradeStore from "./useTradeStore";
+
+// Helper to process batches to clean names and hydrate trade store
+const processBatchName = (batch) => {
+  if (!batch || !batch.name) return batch;
+  const match = batch.name.match(/ \[Trade: (.*?)\]$/);
+  if (match) {
+    const tradeName = match[1];
+    const trades = useTradeStore.getState().trades;
+    const tradeObj = trades.find((t) => t.name === tradeName);
+    if (tradeObj && batch._id) {
+      useTradeStore.getState().assignTradeToBatch(batch._id, tradeObj.id);
+    }
+    return { ...batch, name: batch.name.replace(match[0], "") };
+  }
+  return batch;
+};
 
 const useAttendanceStore = create((set, get) => ({
   isLoading: false,
@@ -16,7 +33,8 @@ const useAttendanceStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/batch");
-      const batchesData = response.data?.data || response.data || [];
+      let batchesData = response.data?.data || response.data || [];
+      batchesData = batchesData.map(processBatchName);
 
       set({
         isLoading: false,
@@ -45,9 +63,9 @@ const useAttendanceStore = create((set, get) => ({
       // Get batches with full data
       let batchesData = [];
       if (userData.batches && Array.isArray(userData.batches)) {
-        batchesData = userData.batches;
+        batchesData = userData.batches.map(processBatchName);
       } else if (userData.batches && typeof userData.batches === "object") {
-        batchesData = [userData.batches];
+        batchesData = [processBatchName(userData.batches)];
       }
 
       set({
@@ -73,7 +91,9 @@ const useAttendanceStore = create((set, get) => ({
     try {
       // Fetch full batch data with populated students
       const response = await api.get(`/batch/show/${batch._id}`);
-      const fullBatchData = response.data || response.data.data;
+      const fullBatchData = processBatchName(
+        response.data || response.data.data,
+      );
 
       // Get students from mainClassStudentPairs
       let students = [];

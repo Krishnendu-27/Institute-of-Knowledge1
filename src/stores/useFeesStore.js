@@ -1,6 +1,31 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { api } from "../api/api";
+import useTradeStore from "./useTradeStore";
+
+// Helper to process batches to clean names and hydrate trade store
+const processBatchName = (batch) => {
+  if (!batch || !batch.name) return batch;
+  const match = batch.name.match(/ \[Trade: (.*?)\]$/);
+  if (match) {
+    const tradeName = match[1];
+    const trades = useTradeStore.getState().trades;
+    const tradeObj = trades.find((t) => t.name === tradeName);
+    if (tradeObj && batch._id) {
+      useTradeStore.getState().assignTradeToBatch(batch._id, tradeObj.id);
+    }
+    return { ...batch, name: batch.name.replace(match[0], "") };
+  }
+  return batch;
+};
+
+// Helper to process batches inside classes
+const processClassBatches = (cls) => {
+  if (cls && cls.batches && Array.isArray(cls.batches)) {
+    cls.batches = cls.batches.map(processBatchName);
+  }
+  return cls;
+};
 
 const useFeesStore = create((set, get) => ({
   students: [],
@@ -16,7 +41,8 @@ const useFeesStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/mainclass");
-      set({ mainClasses: response.data, isLoading: false });
+      const processedClasses = response.data.map(processClassBatches);
+      set({ mainClasses: processedClasses, isLoading: false });
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to fetch main classes";
@@ -30,7 +56,8 @@ const useFeesStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/batch");
-      set({ batches: response.data, isLoading: false });
+      const processedBatches = response.data.map(processBatchName);
+      set({ batches: processedBatches, isLoading: false });
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to fetch batches";
@@ -59,11 +86,13 @@ const useFeesStore = create((set, get) => ({
     try {
       // Get all batches and filter for the selected main class
       const batchesResponse = await api.get("/batch");
-      const relevantBatches = batchesResponse.data.filter((batch) =>
-        batch.mainClasses?.some(
-          (mc) => mc._id === mainClassId || mc === mainClassId,
-        ),
-      );
+      const relevantBatches = batchesResponse.data
+        .map(processBatchName)
+        .filter((batch) =>
+          batch.mainClasses?.some(
+            (mc) => mc._id === mainClassId || mc === mainClassId,
+          ),
+        );
 
       // Collect all students from relevant batches
       const studentMap = new Map();
