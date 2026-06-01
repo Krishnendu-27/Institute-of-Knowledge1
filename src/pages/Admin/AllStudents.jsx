@@ -23,6 +23,7 @@ const StudentRow = ({
   allStudents,
   onProgressUpdate,
   onShowToast,
+  isBuildingMap,
 }) => {
   const [loadingToggles, setLoadingToggles] = useState({});
   const patchStudentProgress = useClassStore(
@@ -30,7 +31,15 @@ const StudentRow = ({
   );
 
   const studentId = getStudentId(student, allStudents);
-  const classIds = (student.mainClasses || []).map((cls) => cls._id || cls);
+
+  // Get all enrolled classes
+  const allEnrolledClassIds = (student.mainClasses || []).map(
+    (cls) => cls._id || cls,
+  );
+
+  const assignedClassIds = allEnrolledClassIds.filter(
+    (clsId) => progressMap[`${student._id}_${clsId}`],
+  );
 
   const handleToggle = async (clsId, fieldName, currentValue, label) => {
     const progressDoc = progressMap[`${student._id}_${clsId}`];
@@ -164,12 +173,20 @@ const StudentRow = ({
         {student.fatherName || "-"}
       </td>
       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
+        {student.address || "-"}
+      </td>
+      <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
         {student.phone || "-"}
       </td>
       <td className="px-4 py-4">
-        {classIds.length === 0 ? (
+        {isBuildingMap ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-xs italic">
+            <Loader2 className="w-3 h-3 animate-spin text-primary" />
+            Loading progress...
+          </div>
+        ) : assignedClassIds.length === 0 ? (
           <div className="text-muted-foreground text-xs italic">
-            No courses assigned
+            No active batches assigned
           </div>
         ) : (
           <div className="min-w-[420px]">
@@ -180,7 +197,7 @@ const StudentRow = ({
               <span className="text-center">Certificate</span>
             </div>
             <div className="space-y-3">
-              {classIds.map((clsId) => (
+              {assignedClassIds.map((clsId) => (
                 <div
                   key={clsId}
                   className="grid grid-cols-4 gap-3 items-center bg-muted/10 p-2 rounded-xl border border-border/50"
@@ -397,8 +414,8 @@ const AllStudents = () => {
               </div>
             )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div className="overflow-auto custom-scrollbar">
+              <table className="w-full text-sm text-left ">
                 <thead className="bg-muted/50 border-b border-border/60 text-muted-foreground">
                   <tr>
                     <th className="px-4 py-4 font-semibold whitespace-nowrap">
@@ -412,6 +429,9 @@ const AllStudents = () => {
                     </th>
                     <th className="px-4 py-4 font-semibold whitespace-nowrap">
                       Father Name
+                    </th>
+                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
+                      Address
                     </th>
                     <th className="px-4 py-4 font-semibold whitespace-nowrap">
                       Mobile
@@ -432,6 +452,7 @@ const AllStudents = () => {
                       allStudents={students}
                       onProgressUpdate={handleProgressUpdate}
                       onShowToast={triggerToast}
+                      isBuildingMap={isBuildingMap}
                     />
                   ))}
                 </tbody>
