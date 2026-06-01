@@ -24,7 +24,6 @@ import AddNewStudent from "./pages/Admin/AddNewStudent";
 import AttendancePage from "./pages/AttendancePage";
 import AttendanceStatus from "./pages/AttendanceStatus";
 import RegisterNewUser from "./pages/RegisterNewUser";
-import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
 import StudentProfile from "./pages/Student/StudentProfile";
 import TradeManagement from "./pages/Admin/TradeManagement";
@@ -181,7 +180,6 @@ const App = () => {
           {/* PUBLIC ROUTES */}
           <Route element={<PublicRoute />}>
             <Route path="/home" element={<LandingPage />} />
-            <Route path="/t" element={<Tteacher />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />
