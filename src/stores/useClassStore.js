@@ -1,5 +1,27 @@
 // import { create } from "zustand";
 // import { api } from "../api/api";
+// import useTradeStore from "./useTradeStore";
+
+// // Helper to process batches inside classes to clean names and hydrate trade store
+// const processClassBatches = (cls) => {
+//   if (cls && cls.batches && Array.isArray(cls.batches)) {
+//     cls.batches = cls.batches.map((batch) => {
+//       if (!batch || !batch.name) return batch;
+//       const match = batch.name.match(/ \[Trade: (.*?)\]$/);
+//       if (match) {
+//         const tradeName = match[1];
+//         const trades = useTradeStore.getState().trades;
+//         const tradeObj = trades.find((t) => t.name === tradeName);
+//         if (tradeObj && batch._id) {
+//           useTradeStore.getState().assignTradeToBatch(batch._id, tradeObj.id);
+//         }
+//         return { ...batch, name: batch.name.replace(match[0], "") };
+//       }
+//       return batch;
+//     });
+//   }
+//   return cls;
+// };
 
 // const useClassStore = create((set) => ({
 //   isLoading: false,
@@ -13,11 +35,12 @@
 //     set({ isLoading: true, error: null });
 //     try {
 //       const response = await api.get("/mainclass");
-//       set({ isLoading: false, allClass: response.data });
-//       return response.data;
+//       const processedClasses = response.data.map(processClassBatches);
+//       set({ isLoading: false, allClass: processedClasses });
+//       return processedClasses;
 //     } catch (err) {
 //       const errorMessage =
-//         err.response?.data?.message || "Failed to fetch classes";
+//         err.response?.data?.error || "Failed to fetch classes";
 //       set({
 //         isLoading: false,
 //         error: errorMessage,
@@ -31,11 +54,16 @@
 //     set({ isLoading: true, error: null });
 //     try {
 //       const response = await api.get(`/mainclass/show/${classId}`);
+//       let processedClass = response.data;
+//       if (processedClass && processedClass.mainClass) {
+//         processedClass.mainClass = processClassBatches(
+//           processedClass.mainClass,
+//         );
+//       }
 //       set({ isLoading: false });
-//       return response.data;
+//       return processedClass;
 //     } catch (err) {
-//       const errorMessage =
-//         err.response?.data?.message || "Failed to fetch class";
+//       const errorMessage = err.response?.data?.error || "Failed to fetch class";
 //       set({
 //         isLoading: false,
 //         error: errorMessage,
@@ -53,12 +81,53 @@
 //       return response.data;
 //     } catch (err) {
 //       const errorMessage =
-//         err.response?.data?.message || "Failed to fetch classes";
+//         err.response?.data?.error || "Failed to create class";
 //       set({
 //         isLoading: false,
 //         error: errorMessage,
 //       });
-//       console.error("Get Classes Error:", err);
+//       console.error("Create Class Error:", err);
+//       throw err;
+//     }
+//   },
+
+//   // NEW: Edit an existing main class
+//   updateClass: async (classId, updatedData) => {
+//     set({ isLoading: true, error: null });
+//     try {
+//       const response = await api.patch(
+//         `/mainclass/edit/${classId}`,
+//         updatedData,
+//       );
+//       set({ isLoading: false });
+//       return response.data;
+//     } catch (err) {
+//       const errorMessage =
+//         err.response?.data?.error || "Failed to update class";
+//       set({
+//         isLoading: false,
+//         error: errorMessage,
+//       });
+//       console.error("Update Class Error:", err);
+//       throw err;
+//     }
+//   },
+
+//   // NEW: Delete a main class
+//   deleteClass: async (classId) => {
+//     set({ isLoading: true, error: null });
+//     try {
+//       const response = await api.delete(`/mainclass/delete/${classId}`);
+//       set({ isLoading: false });
+//       return response.data;
+//     } catch (err) {
+//       const errorMessage =
+//         err.response?.data?.error || "Failed to delete class";
+//       set({
+//         isLoading: false,
+//         error: errorMessage,
+//       });
+//       console.error("Delete Class Error:", err);
 //       throw err;
 //     }
 //   },
@@ -74,12 +143,12 @@
 //       return response.data;
 //     } catch (err) {
 //       const errorMessage =
-//         err.response?.data?.message || "Failed to fetch classes";
+//         err.response?.data?.error || "Failed to update progress";
 //       set({
-//         isLoading: studentProgressLoading,
+//         studentProgressLoading: false,
 //         error: errorMessage,
 //       });
-//       console.error("Get Classes Error:", err);
+//       console.error("Get Progress Error:", err);
 //       throw err;
 //     }
 //   },
@@ -93,17 +162,15 @@
 //       );
 //       set({ isLoading: false, success: true });
 //       setTimeout(() => set({ success: false }), 3000);
-//       // console.log(response.data);
 //       return response.data;
 //     } catch (err) {
-//       const errorMessage =
-//         err.response?.data?.message || "Something went wrong";
+//       const errorMessage = err.response?.data?.error || "Something went wrong";
 //       set({
 //         isLoading: false,
 //         error: errorMessage,
 //       });
 //       setTimeout(() => set({ error: null }), 4000);
-//       console.error("Add Class Error:", err);
+//       console.error("Add Student Error:", err);
 //       throw err;
 //     }
 //   },
@@ -119,8 +186,7 @@
 //       setTimeout(() => set({ success: false }), 3000);
 //       return response.data;
 //     } catch (err) {
-//       const errorMessage =
-//         err.response?.data?.message || "Something went wrong";
+//       const errorMessage = err.response?.data?.error || "Something went wrong";
 //       set({
 //         isLoading: false,
 //         error: errorMessage,
@@ -141,7 +207,6 @@ import { create } from "zustand";
 import { api } from "../api/api";
 import useTradeStore from "./useTradeStore";
 
-// Helper to process batches inside classes to clean names and hydrate trade store
 const processClassBatches = (cls) => {
   if (cls && cls.batches && Array.isArray(cls.batches)) {
     cls.batches = cls.batches.map((batch) => {
@@ -169,7 +234,6 @@ const useClassStore = create((set) => ({
   studentProgressLoading: false,
   allClass: [],
 
-  // Get all classes
   getClasses: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -230,7 +294,6 @@ const useClassStore = create((set) => ({
     }
   },
 
-  // NEW: Edit an existing main class
   updateClass: async (classId, updatedData) => {
     set({ isLoading: true, error: null });
     try {
@@ -252,7 +315,6 @@ const useClassStore = create((set) => ({
     }
   },
 
-  // NEW: Delete a main class
   deleteClass: async (classId) => {
     set({ isLoading: true, error: null });
     try {
@@ -278,7 +340,7 @@ const useClassStore = create((set) => ({
         `/mainclass/${studentBatchId}`,
         updatedData,
       );
-      set({ studentProgressLoading: false, allClass: response.data });
+      set({ studentProgressLoading: false });
       return response.data;
     } catch (err) {
       const errorMessage =
@@ -336,7 +398,6 @@ const useClassStore = create((set) => ({
     }
   },
 
-  // Reset status
   resetStatus: () => set({ success: false, error: null }),
 }));
 
