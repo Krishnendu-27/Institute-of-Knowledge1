@@ -232,11 +232,11 @@ const AdminDashboard = ({
                           {student.name}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground font-mono whitespace-nowrap">
-                          {getStudentId(student, students) || "-"}
+                          {getStudentId(student) || "-"}
                         </td>
                         <td
                           className="py-3 px-4 text-muted-foreground max-w-[200px] truncate"
-                          title={student.address} // Shows full address on hover
+                          title={student.address}
                         >
                           {student.address || "-"}
                         </td>
