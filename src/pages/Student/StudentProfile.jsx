@@ -10,8 +10,8 @@ import {
   Calendar,
   ArrowLeft,
 } from "lucide-react";
-import useAuthStore from "../stores/useAuthStore";
-import useUserStore from "../stores/useUserStore";
+import useAuthStore from "../../stores/useAuthStore";
+import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
 
 const StudentProfile = () => {
