@@ -7,7 +7,6 @@ import {
   UserPlus,
   User,
   LogOut,
-  ChevronRight,
   BadgePlus,
   IdCard,
   Newspaper,
@@ -22,7 +21,6 @@ import {
   Sun,
   Moon,
   Monitor,
-  // Sitemap,
   BarChart3,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
@@ -47,6 +45,7 @@ export const NavigationLayout = () => {
   const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
 
+  // --- Theme Management ---
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
@@ -64,7 +63,6 @@ export const NavigationLayout = () => {
 
   useEffect(() => {
     if (theme !== "system") return;
-
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
       const root = window.document.documentElement;
@@ -76,6 +74,7 @@ export const NavigationLayout = () => {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
+  // --- Roles & Menus ---
   const roleMenus = {
     admin: [
       { path: "/", icon: Home, label: "Dashboard" },
@@ -94,7 +93,7 @@ export const NavigationLayout = () => {
         label: "Attendance Status",
       },
       {
-        path: `/profile/${generateSlug(user?.name)}`,
+        path: `/profile/${generateSlug(user?.name || "user")}`,
         icon: User,
         label: "Profile",
         state: { userId: user?._id },
@@ -104,7 +103,6 @@ export const NavigationLayout = () => {
       { path: "/", icon: Home, label: "Dashboard" },
       { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
-      // { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       {
@@ -115,7 +113,7 @@ export const NavigationLayout = () => {
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },
       { path: "/fees-yearly-status", icon: BarChart3, label: "Fees Status" },
       {
-        path: `/profile/${generateSlug(user?.name)}`,
+        path: `/profile/${generateSlug(user?.name || "user")}`,
         icon: User,
         label: "Profile",
         state: { userId: user?._id },
@@ -134,7 +132,7 @@ export const NavigationLayout = () => {
       },
       { path: "/fees-yearly-status", icon: HandCoins, label: "Fees Status" },
       {
-        path: `/profile/${generateSlug(user?.name)}`,
+        path: `/profile/${generateSlug(user?.name || "user")}`,
         icon: User,
         label: "Profile",
         state: { userId: user?._id },
@@ -145,30 +143,18 @@ export const NavigationLayout = () => {
   const currentRole = userRole ? userRole.toLowerCase() : "student";
   const menuItems = roleMenus[currentRole] || roleMenus.student;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
+      await logout();
       toast.success("Logging out...");
-    } catch (_) {}
-  };
-
-  const getPageTitle = () => {
-    if (location.pathname === "/") return "Dashboard";
-    if (location.pathname.startsWith("/profile")) return `${userRole} Profile`;
-    if (location.pathname === "/registeruser") return `Register New User`;
-    if (location.pathname.startsWith("/courses/createcourse"))
-      return `Publish New Course`;
-    if (location.pathname.startsWith("/batches/create"))
-      return `Configure New Batch`;
-    if (location.pathname.startsWith("/trades"))
-      return `Trade Management`;
-    if (location.pathname.startsWith("/batches")) return `Batches`;
-    return location.pathname.split("/").pop().replaceAll("-", " ");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground relative flex-col md:flex-row">
-      {/* SETTINGS MODAL */}
+    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
+      {/* ---------------- SETTINGS MODAL ---------------- */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -270,84 +256,104 @@ export const NavigationLayout = () => {
         )}
       </AnimatePresence>
 
-      {/* MOBILE HEADER */}
-      <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center gap-3">
-          <img src={Image.Logo} alt="Logo" className="w-8 h-8 object-contain" />
-          <h1 className="font-bold text-sm leading-tight tracking-tight">
-            Institute of Knowledge
-          </h1>
-        </div>
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-foreground/80 hover:text-primary transition-colors focus:outline-none"
-        >
-          {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
-        </button>
-      </header>
-
-      {/* MOBILE DROPDOWN MENU */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ ease: "linear", duration: 0.2 }}
-            className="md:hidden fixed top-[68px] left-0 right-0 bg-card border-b border-border z-40 overflow-hidden shadow-lg"
+      {/* ---------------- MOBILE HEADER & MENU ---------------- */}
+      <div className="md:hidden flex flex-col w-full h-full">
+        <header className="flex items-center justify-between p-4 bg-card border-b border-border shadow-sm z-50 relative">
+          <div className="flex items-center gap-3">
+            <img
+              src={Image.Logo}
+              alt="Logo"
+              className="w-8 h-8 object-contain"
+            />
+            <h1 className="font-bold text-sm leading-tight tracking-tight">
+              Institute of Knowledge
+            </h1>
+          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-foreground/80 hover:text-primary transition-colors focus:outline-none"
           >
-            <nav className="flex flex-col p-4 space-y-2">
-              {menuItems.map((item) => {
-                const isActive =
-                  item.path === "/"
-                    ? location.pathname === "/"
-                    : location.pathname.startsWith(item.path);
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </header>
 
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.path}
-                    state={item.state}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center p-4 rounded-xl transition-all ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                        : "text-foreground/70 hover:bg-primary/10 hover:text-primary"
-                    }`}
-                  >
-                    <item.icon size={22} className="mr-4 shrink-0" />
-                    <span className="font-medium text-base">{item.label}</span>
-                  </Link>
-                );
-              })}
+        {/* Mobile Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ ease: "linear", duration: 0.2 }}
+              className="absolute top-[68px] left-0 right-0 bg-card border-b border-border z-40 overflow-hidden shadow-lg max-h-[calc(100vh-68px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              <nav className="flex flex-col p-4 space-y-2">
+                {menuItems.map((item) => {
+                  // ✅ FIXED ACTIVE LOGIC HERE
+                  const isActive =
+                    item.path === "/"
+                      ? location.pathname === "/"
+                      : location.pathname === item.path ||
+                        location.pathname.startsWith(`${item.path}/`);
 
-              {/* Mobile Settings Button */}
-              <button
-                onClick={() => {
-                  setIsSettingsOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center p-4 rounded-xl text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors w-full text-left mt-2 border-t border-border"
-              >
-                <Settings className="mr-4 shrink-0" size={22} />
-                <span className="font-medium text-base">Settings</span>
-              </button>
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.path}
+                      state={item.state}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center p-4 rounded-xl transition-all ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                          : "text-foreground/70 hover:bg-primary/10 hover:text-primary"
+                      }`}
+                    >
+                      <item.icon size={22} className="mr-4 shrink-0" />
+                      <span className="font-medium text-base">
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
 
-              {/* Mobile Logout Button */}
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
-              >
-                <LogOut className="mr-4 shrink-0" size={22} />
-                <span className="font-medium text-base">Logout</span>
-              </button>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <button
+                  onClick={() => {
+                    setIsSettingsOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center p-4 rounded-xl text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors w-full text-left mt-2 border-t border-border"
+                >
+                  <Settings className="mr-4 shrink-0" size={22} />
+                  <span className="font-medium text-base">Settings</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
+                >
+                  <LogOut className="mr-4 shrink-0" size={22} />
+                  <span className="font-medium text-base">Logout</span>
+                </button>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Main Content */}
+        <main className="flex-1 overflow-y-auto w-full">
+          <div className="p-4 md:p-6 w-full max-w-6xl mx-auto">
+            <Breadcrumbs />
+            <div className="mt-4">
+              <Outlet />
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* ---------------- DESKTOP LAYOUT ---------------- */}
 
       {/* DESKTOP SIDEBAR */}
       <motion.aside
@@ -355,13 +361,13 @@ export const NavigationLayout = () => {
         transition={{ ease: "linear", duration: 0.2 }}
         onMouseEnter={() => setIsCollapsed(false)}
         onMouseLeave={() => setIsCollapsed(true)}
-        className="hidden md:flex h-screen sticky top-0 left-0 bg-card border-r border-border flex-col p-4 z-40 overflow-hidden"
+        className="hidden md:flex h-full bg-card border-r border-border flex-col p-4 z-40 relative"
       >
-        <div className="flex items-center px-2 mb-6 h-5">
+        <div className="flex items-center px-2 mb-6 h-10 mt-2">
           <img
             src={Image.Logo}
             alt="Logo"
-            className="w-10 h-10 object-contain"
+            className="w-10 h-10 object-contain shrink-0"
           />
           <AnimatePresence>
             {!isCollapsed && (
@@ -370,7 +376,7 @@ export const NavigationLayout = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ ease: "linear", duration: 0.2 }}
-                className="ml-4 font-bold text-sm leading-tight tracking-tight whitespace-nowrap"
+                className="ml-4 font-bold text-sm leading-tight tracking-tight whitespace-nowrap overflow-hidden"
               >
                 Institute of
                 <br />
@@ -380,16 +386,15 @@ export const NavigationLayout = () => {
           </AnimatePresence>
         </div>
 
-        <nav
-          className={`flex-1 space-y-2 overflow-y-auto overflow-x-hidden ${
-            isCollapsed ? "no-scrollbar" : "custom-scrollbar"
-          }`}
-        >
+        {/* SCROLLABLE NAV WITH HIDDEN SCROLLBAR */}
+        <nav className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {menuItems.map((item) => {
+            // ✅ FIXED ACTIVE LOGIC HERE
             const isActive =
               item.path === "/"
                 ? location.pathname === "/"
-                : location.pathname.startsWith(item.path);
+                : location.pathname === item.path ||
+                  location.pathname.startsWith(`${item.path}/`);
 
             return (
               <Link
@@ -414,13 +419,13 @@ export const NavigationLayout = () => {
         </nav>
       </motion.aside>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 px-6 pb-6 md:px-10 md:pb-10 min-h-[calc(100vh-68px)] md:min-h-screen">
-        <div className="sticky top-0 z-20 bg-background py-2 max-w-6xl mx-auto flex items-end justify-between">
+      {/* DESKTOP MAIN CONTENT */}
+      <main className="hidden md:flex flex-col flex-1 h-full overflow-y-auto relative bg-background">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-8 py-4 flex items-center justify-between">
           <div>
             <Breadcrumbs />
           </div>
-          <div className="hidden md:flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="p-2.5 rounded-xl border border-border bg-card text-foreground/70 hover:text-primary hover:border-primary/50 transition-all shadow-sm"
@@ -438,7 +443,7 @@ export const NavigationLayout = () => {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto mt-2">
+        <div className="flex-1 w-full max-w-7xl mx-auto p-8">
           <Outlet />
         </div>
       </main>
