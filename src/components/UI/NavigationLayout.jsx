@@ -22,6 +22,7 @@ import {
   Moon,
   Monitor,
   BarChart3,
+  Compass,
 } from "lucide-react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
@@ -83,7 +84,7 @@ export const NavigationLayout = () => {
       { path: "/registeruser", icon: UserPlus, label: "Register New User" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/courses", icon: BadgePlus, label: "All Courses" },
-      { path: "/trades", icon: BadgePlus, label: "Trade Management" },
+      { path: "/trades", icon: Compass, label: "Trade Management" },
       { path: "/fees", icon: HandCoins, label: "Fees Payment" },
       { path: "/fees-yearly-status", icon: BarChart3, label: "Fees Status" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
