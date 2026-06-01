@@ -26,7 +26,7 @@ import AttendanceStatus from "./pages/AttendanceStatus";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import Tteacher from "./pages/Tteacher";
 import NotFoundPage from "./pages/NotFoundPage";
-import StudentProfile from "./pages/StudentProfile";
+import StudentProfile from "./pages/Student/StudentProfile";
 import TradeManagement from "./pages/Admin/TradeManagement";
 
 import BatchList from "./pages/Batch/BatchList";
@@ -111,15 +111,13 @@ const App = () => {
                   />
                 }
               >
-                <Route path="/teachers" element={<AllTeachers />} />
-                <Route path="/students" element={<AllStudents />} />
                 <Route path="/attendance" element={<AttendancePage />} />
+                <Route path="/students" element={<AllStudents />} />
                 <Route
                   path="/attendance-status"
                   element={<AttendanceStatus />}
                 />
 
-                <Route path="/fees" element={<Fees />} />
                 <Route
                   path="/fees-yearly-status"
                   element={<FeesYearlyStatus />}
@@ -130,7 +128,7 @@ const App = () => {
                   ROLE: (Teacher , Student)
                   ========================================== */}
 
-              <Route
+              {/* <Route
                 element={
                   <ProtectedRouteRoleBased
                     allowedRoles={["Student", "Teacher"]}
@@ -138,7 +136,7 @@ const App = () => {
                 }
               >
                 <Route path="/idcard" element={<IdCard />} />
-              </Route>
+              </Route> */}
 
               {/* ==========================================
                   ROLE: ADMIN ONLY
@@ -146,6 +144,8 @@ const App = () => {
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
               >
+                <Route path="/teachers" element={<AllTeachers />} />
+                <Route path="/fees" element={<Fees />} />
                 <Route path="/courses">
                   <Route index element={<CoursesPage />} />
                   <Route

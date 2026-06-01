@@ -101,7 +101,7 @@ export const NavigationLayout = () => {
     ],
     teacher: [
       { path: "/", icon: Home, label: "Dashboard" },
-      { path: "/teachers", icon: Users, label: "Teachers" },
+      // { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
       { path: "/batches", icon: Layers, label: "Batches" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
@@ -110,7 +110,7 @@ export const NavigationLayout = () => {
         icon: BarChart3,
         label: "Attendance Status",
       },
-      { path: "/fees", icon: HandCoins, label: "Fees Payment" },
+      // { path: "/fees", icon: HandCoins, label: "Fees Payment" },
       { path: "/fees-yearly-status", icon: BarChart3, label: "Fees Status" },
       {
         path: `/profile/${generateSlug(user?.name || "user")}`,
