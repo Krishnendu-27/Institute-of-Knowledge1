@@ -37,7 +37,6 @@ const KpiCard = ({
   colorType = "primary",
   isLoading,
 }) => {
-  // Map abstract color names to your semantic Tailwind variables
   const colorStyles = {
     primary: {
       bg: "bg-primary/10",
@@ -192,44 +191,59 @@ const AdminDashboard = ({
         <div className="lg:col-span-2">
           <SectionCard title="Recent Enrollments" icon={Users}>
             {isLoading || isMetricsLoading ? (
-              <div className="flex justify-center py-8">
+              <div className="flex justify-center items-center py-12">
                 <Loader2 className="animate-spin text-primary w-8 h-8" />
               </div>
             ) : recentStudents.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-muted-foreground border-b border-border/50">
+              <div className="overflow-x-auto rounded-md border border-border/50">
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead className="text-muted-foreground bg-muted/30 border-b border-border/50">
                     <tr>
-                      <th className="pb-3 font-semibold">#</th>
-                      <th className="pb-3 font-semibold">Student Name</th>
-                      <th className="pb-3 font-semibold">Student ID</th>
-                      <th className="pb-3 font-semibold">Address</th>
-                      <th className="pb-3 font-semibold">Course</th>
-                      <th className="pb-3 font-semibold">Admission Date</th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        #
+                      </th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        Student Name
+                      </th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        Student ID
+                      </th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        Address
+                      </th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        Course
+                      </th>
+                      <th className="py-3 px-4 font-semibold whitespace-nowrap">
+                        Admission Date
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
                     {recentStudents.map((student, index) => (
                       <tr
                         key={student._id}
-                        className="hover:bg-muted/30 transition-colors"
+                        className="hover:bg-muted/30 transition-colors group"
                       >
-                        <td className="py-3 text-muted-foreground">
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {index + 1}
                         </td>
-                        <td className="py-3 text-foreground font-medium">
+                        <td className="py-3 px-4 text-foreground font-medium whitespace-nowrap">
                           {student.name}
                         </td>
-                        <td className="py-3 text-muted-foreground font-mono">
+                        <td className="py-3 px-4 text-muted-foreground font-mono whitespace-nowrap">
                           {getStudentId(student, students) || "-"}
                         </td>
-                        <td className="py-3 text-muted-foreground">
+                        <td
+                          className="py-3 px-4 text-muted-foreground max-w-[200px] truncate"
+                          title={student.address} // Shows full address on hover
+                        >
                           {student.address || "-"}
                         </td>
-                        <td className="py-3 text-muted-foreground">
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {student.courses || "-"}
                         </td>
-                        <td className="py-3 text-muted-foreground">
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {student.admissionDate || "-"}
                         </td>
                       </tr>
@@ -238,30 +252,11 @@ const AdminDashboard = ({
                 </table>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No recent enrollments found.
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <Users className="w-10 h-10 mb-3 opacity-20" />
+                <p>No recent enrollments found.</p>
               </div>
             )}
-          </SectionCard>
-        </div>
-        <div className="lg:col-span-1">
-          <SectionCard title="System Alerts" icon={AlertCircle}>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-warning/10 border border-warning/20 rounded-xl">
-                <AlertCircle
-                  className="text-warning shrink-0 mt-0.5"
-                  size={18}
-                />
-                <div>
-                  <p className="font-semibold text-foreground text-sm">
-                    Fee Collection Cycle
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Remember to send fee reminders to batches ending this month.
-                  </p>
-                </div>
-              </div>
-            </div>
           </SectionCard>
         </div>
       </div>
@@ -482,17 +477,9 @@ export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
   const role = user?.role || "Student";
 
-  const {
-    students,
-    getStudents,
-    isLoading: userLoading,
-  } = useUserStore();
+  const { students, getStudents, isLoading: userLoading } = useUserStore();
   const { batches, fetchBatches, isLoading: batchLoading } = useBatchStore();
-  const {
-    allClass,
-    getClasses,
-    isLoading: classLoading,
-  } = useClassStore();
+  const { allClass, getClasses, isLoading: classLoading } = useClassStore();
 
   const studentProgress = useUserStore((state) => state.studentProgress);
   const getStudentProgress = useUserStore((state) => state.getStudentProgress);
@@ -556,9 +543,10 @@ export default function Dashboard() {
         });
 
         const recent = [...students]
-          .sort((a, b) =>
-            new Date(b.createdAt || 0).getTime() -
-            new Date(a.createdAt || 0).getTime(),
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt || 0).getTime() -
+              new Date(a.createdAt || 0).getTime(),
           )
           .slice(0, 6)
           .map((student) => {
@@ -634,13 +622,7 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [
-    role,
-    students,
-    allClass,
-    getStudentProgress,
-    studentProgress,
-  ]);
+  }, [role, students, allClass, getStudentProgress, studentProgress]);
 
   // Page entry animations
   const pageVariants = {
