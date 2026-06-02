@@ -5,6 +5,7 @@ import useAttendanceStore from "../stores/useAttendanceStore";
 import useAuthStore from "../stores/useAuthStore";
 import { api } from "../api/api";
 import BackButton from "../components/UI/Button";
+import { filterBatchesForTeacher } from "../util/teacherAccessControl";
 
 const getMonthRange = (monthValue) => {
   const [year, month] = monthValue.split("-").map(Number);
@@ -18,6 +19,7 @@ const getMonthRange = (monthValue) => {
 const AttendanceStatus = () => {
   const userId = useAuthStore((state) => state.id);
   const userRole = useAuthStore((state) => state.userRole);
+  const userData = useAuthStore((state) => state.user);
   const loadUser = useAuthStore((state) => state.loadUser);
 
   const {
@@ -44,11 +46,7 @@ const AttendanceStatus = () => {
 
   useEffect(() => {
     if (!userRole || !userId) return;
-    if (userRole === "Admin") {
-      getAllBatches();
-    } else {
-      getTeacherBatches(userId);
-    }
+    getAllBatches();
   }, [userRole, userId, getAllBatches, getTeacherBatches]);
 
   useEffect(() => {
@@ -135,6 +133,13 @@ const AttendanceStatus = () => {
     );
   }, [students, searchTerm]);
 
+  const displayedBatches = filterBatchesForTeacher(
+    batches,
+    userData?.batches || [],
+    userRole,
+    userData?.email,
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -157,7 +162,7 @@ const AttendanceStatus = () => {
                 disabled={isBatchLoading}
               >
                 <option value="">Select a batch</option>
-                {batches.map((batch) => (
+                {displayedBatches.map((batch) => (
                   <option key={batch._id} value={batch._id}>
                     {batch.name} ({batch.startTime} - {batch.endTime})
                   </option>
@@ -240,7 +245,8 @@ const AttendanceStatus = () => {
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {filteredStudents.map((student, index) => {
-                    const studentId = student._id || student.id || student.studentId;
+                    const studentId =
+                      student._id || student.id || student.studentId;
                     const counts = attendanceCounts[studentId] || {
                       present: 0,
                       absent: 0,

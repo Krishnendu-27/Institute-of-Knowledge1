@@ -7,6 +7,7 @@ import useAuthStore from "../../stores/useAuthStore";
 import useTradeStore from "../../stores/useTradeStore";
 import { generateSlug } from "../../util/generateSlug";
 import { TRADES, getTradeLabel } from "../../constants/trades";
+import { filterBatchesForTeacher } from "../../util/teacherAccessControl";
 
 // --- Reusable Confirmation Modal ---
 const ConfirmModal = ({
@@ -69,6 +70,7 @@ const ConfirmModal = ({
 const BatchList = () => {
   const { batches, fetchBatches, isLoading } = useBatchStore();
   const { user } = useAuthStore();
+  const userRole = useAuthStore((state) => state.userRole);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradeId, setSelectedTradeId] = useState("");
   const batchTradeMap = useTradeStore((state) => state.batchTradeMap);
@@ -77,7 +79,15 @@ const BatchList = () => {
     fetchBatches();
   }, [fetchBatches]);
 
-  const filteredBatches = batches.filter((batch) => {
+  // Filter batches for teachers
+  const batchesForUser = filterBatchesForTeacher(
+    batches,
+    user?.batches || [],
+    userRole,
+    user?.email,
+  );
+
+  const filteredBatches = batchesForUser.filter((batch) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       batch.name?.toLowerCase().includes(query) ||
