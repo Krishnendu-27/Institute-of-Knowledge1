@@ -682,7 +682,7 @@ const StudentProfile = () => {
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-foreground flex items-center gap-2 px-1">
                   <BookOpen className="text-primary" size={22} /> Enrolled
-                  Classes Progress
+                  Course Progress
                 </h3>
                 {profileData.mainClasses?.length > 0 ? (
                   <div className="space-y-4">
