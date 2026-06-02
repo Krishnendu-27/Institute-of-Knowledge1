@@ -19,6 +19,7 @@ import useAuthStore from "../stores/useAuthStore";
 import useAttendanceStore from "../stores/useAttendanceStore";
 import toast from "react-hot-toast";
 import BackButton from "../components/UI/Button";
+import { filterBatchesForTeacher } from "../util/teacherAccessControl";
 
 const AttendancePage = () => {
   const navigate = useNavigate();
@@ -61,11 +62,7 @@ const AttendancePage = () => {
 
   useEffect(() => {
     if (userId && userRole) {
-      if (userRole === "Admin") {
-        getAllBatches();
-      } else {
-        getTeacherBatches(userId);
-      }
+      getAllBatches();
     }
   }, [userId, userRole, getTeacherBatches, getAllBatches]);
 
@@ -150,6 +147,13 @@ const AttendancePage = () => {
     },
   };
 
+  const displayedBatches = filterBatchesForTeacher(
+    batches,
+    userData?.batches || [],
+    userRole,
+    userData?.email
+  );
+
   if (!userData) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground gap-4">
@@ -211,14 +215,14 @@ const AttendancePage = () => {
         </AnimatePresence>
 
         {/* Main Content */}
-        {isLoading && batches.length === 0 ? (
+        {isLoading && displayedBatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
             <p className="text-muted-foreground font-medium">
               Loading your batches...
             </p>
           </div>
-        ) : batches.length === 0 ? (
+        ) : displayedBatches.length === 0 ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -297,7 +301,7 @@ const AttendancePage = () => {
                       exit={{ opacity: 0, y: -10 }}
                       className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden"
                     >
-                      {batches.map((batch) => (
+                      {displayedBatches.map((batch) => (
                         <button
                           key={batch._id}
                           onClick={() => handleSelectBatch(batch)}

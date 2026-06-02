@@ -25,7 +25,7 @@ import AttendancePage from "./pages/AttendancePage";
 import AttendanceStatus from "./pages/AttendanceStatus";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import NotFoundPage from "./pages/NotFoundPage";
-import StudentProfile from "./pages/Student/StudentProfile";
+import StudentProfile from "./pages/StudentProfile";
 import TradeManagement from "./pages/Admin/TradeManagement";
 
 import BatchList from "./pages/Batch/BatchList";
@@ -37,6 +37,7 @@ import CourseDetails from "./pages/Admin/CourseDetails";
 import Fees from "./pages/Fees";
 import FeesYearlyStatus from "./pages/FeesYearlyStatus";
 import IdCard from "./components/IDcard/IdCard";
+import AccessDenied from "./pages/AccessDenied";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -182,6 +183,8 @@ const App = () => {
             <Route path="/home" element={<LandingPage />} />
           </Route>
 
+          {/* ACCESS DENIED & 404 ROUTES */}
+          <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>

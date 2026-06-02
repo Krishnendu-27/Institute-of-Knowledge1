@@ -24,9 +24,15 @@ import {
 import toast from "react-hot-toast";
 import useAuthStore from "../stores/useAuthStore";
 import useUserStore from "../stores/useUserStore";
+import useBatchStore from "../stores/useBatchStore";
 import BackButton from "../components/UI/Button";
 import DeleteConfirmModal from "../components/UI/DeleteConfirmModal";
 import { getStudentId } from "../util/getStudentId";
+import {
+  canTeacherAccessTeacherProfile,
+  canTeacherAccessStudent,
+  filterBatchesForTeacher,
+} from "../util/teacherAccessControl";
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -37,10 +43,15 @@ const ProfilePage = () => {
   const targetUserData = location.state?.userData;
 
   const loggedInUser = useAuthStore((state) => state.user);
+  const loggedInUserRole = useAuthStore((state) => state.userRole);
+  const loggedInUserId = useAuthStore((state) => state.id);
   const updateUser = useUserStore((state) => state.updateUser);
   const deleteUser = useUserStore((state) => state.deleteUser);
   const isUpdating = useUserStore((state) => state.isLoading);
   const getUserById = useUserStore((state) => state.getUserById);
+
+  const batches = useBatchStore((state) => state.batches);
+  const fetchBatches = useBatchStore((state) => state.fetchBatches);
 
   const activeUserId = targetUserId || loggedInUser?._id;
   const isSelf = activeUserId === loggedInUser?._id;
@@ -52,6 +63,7 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const [activeDocument, setActiveDocument] = useState(null);
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
@@ -76,9 +88,45 @@ const ProfilePage = () => {
     : false;
 
   useEffect(() => {
+    fetchBatches();
+  }, [fetchBatches]);
+
+  useEffect(() => {
     if (!activeUserId) {
       navigate("/");
       return;
+    }
+
+    // Teacher access control
+    if (loggedInUserRole === "Teacher" && !isSelf) {
+      // Check if teacher is trying to access another user's profile
+      if (targetUserData?.role === "Teacher" || targetRole === "Teacher") {
+        // Teachers cannot view other teachers' profiles
+        setAccessDenied(true);
+        toast.error("You cannot view other teachers' profiles");
+        navigate("/access-denied");
+        return;
+      }
+
+      if (batches.length > 0) {
+        const teacherBatches = filterBatchesForTeacher(
+          batches,
+          loggedInUser?.batches || [],
+          loggedInUserRole,
+          loggedInUser?.email,
+        );
+        const canAccess = canTeacherAccessStudent(
+          activeUserId,
+          teacherBatches,
+          loggedInUserRole,
+        );
+        if (!canAccess) {
+          setAccessDenied(true);
+          toast.error("You can only view students from your assigned batches");
+          navigate("/access-denied");
+          return;
+        }
+      }
     }
 
     const fetchUserData = async () => {
@@ -111,6 +159,7 @@ const ProfilePage = () => {
     loggedInUser,
     navigate,
     getUserById,
+    batches,
   ]);
 
   const cleanupPreviews = () => {

@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
 import { getReadableError } from "../../util/Error/Error";
 import { TRADES } from "../../constants/trades";
+import useTradeStore from "../../stores/useTradeStore";
 
 const CreateBatch = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const CreateBatch = () => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectedTradeId, setSelectedTradeId] = useState("");
+  const assignTradeToBatch = useTradeStore((state) => state.assignTradeToBatch);
 
   // UI / Search State
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -125,9 +127,21 @@ const CreateBatch = () => {
       mainClasses: selectedClasses.map((c) => c._id),
       students: selectedStudents.map((s) => s._id),
       mainClassStudentPairs,
+      tradeId: selectedTradeId || undefined,
     };
 
-    await createBatch(payload, navigate, selectedTradeId);
+    try {
+      const createdBatch = await createBatch(
+        payload,
+        navigate,
+        selectedTradeId,
+      );
+      if (createdBatch?._id && selectedTradeId) {
+        assignTradeToBatch(createdBatch._id, selectedTradeId);
+      }
+    } catch (err) {
+      console.error("Failed to create batch:", err);
+    }
   };
 
   // --- Helper Components & Functions ---

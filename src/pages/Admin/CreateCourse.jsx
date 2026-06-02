@@ -360,6 +360,7 @@ import useClassStore from "../../stores/useClassStore";
 import useUserStore from "../../stores/useUserStore";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
+import { TRADES } from "../../constants/trades";
 import useTradeStore from "../../stores/useTradeStore";
 
 const CreateCourse = () => {
@@ -367,7 +368,6 @@ const CreateCourse = () => {
   const { createClass, isLoading, error } = useClassStore();
   const { getTeachers, teachers } = useUserStore();
   const userLoading = useUserStore((state) => state.isLoading);
-  const trades = useTradeStore((state) => state.trades);
   const assignTradeToCourse = useTradeStore(
     (state) => state.assignTradeToCourse,
   );
@@ -405,25 +405,53 @@ const CreateCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const payload = {
-        ...formData,
-        duration: Number(formData.duration),
-        fees: Number(formData.fees),
-        endDate: calculatedEndDate
-          ? calculatedEndDate.toISOString().split("T")[0]
-          : null,
-      };
 
+    // Map the trade with course name so it persists across browsers
+    const selectedTrade = TRADES.find((t) => t.id === selectedTradeId);
+    let finalName = formData.name;
+    if (
+      selectedTrade &&
+      !finalName.toLowerCase().includes(selectedTrade.name.toLowerCase())
+    ) {
+      finalName = `${selectedTrade.name} - ${finalName}`;
+    }
+
+    const payload = {
+      ...formData,
+      name: finalName,
+      duration: Number(formData.duration),
+      fees: Number(formData.fees),
+      endDate: calculatedEndDate
+        ? calculatedEndDate.toISOString().split("T")[0]
+        : null,
+      tradeId: selectedTradeId || undefined,
+    };
+
+    try {
       const created = await createClass(payload);
-      if (created?._id && selectedTradeId) {
-        assignTradeToCourse(created._id, selectedTradeId);
+
+      let newCourseId =
+        created?._id || created?.data?._id || created?.data?.data?._id;
+
+      if (!newCourseId) {
+        await useClassStore.getState().getClasses();
+        const classes = useClassStore.getState().allClass;
+        const matched = classes?.find((c) => c.name === payload.name);
+        newCourseId = matched?._id;
+      }
+
+      if (newCourseId && selectedTradeId) {
+        assignTradeToCourse(newCourseId, selectedTradeId);
       }
       toast.success("Course Created Successfully");
       navigate("/courses");
     } catch (err) {
       console.error("Failed to create class", err);
-      toast.error(err);
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create class",
+      );
     }
   };
 
@@ -596,7 +624,7 @@ const CreateCourse = () => {
                       className="block w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     >
                       <option value="">Unassigned</option>
-                      {trades.map((trade) => (
+                      {TRADES.map((trade) => (
                         <option key={trade.id} value={trade.id}>
                           {trade.name}
                         </option>

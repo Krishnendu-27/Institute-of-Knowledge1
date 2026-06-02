@@ -19,6 +19,7 @@ import {
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
 import { generateSlug } from "../../util/generateSlug";
+import { canTeacherAccessBatch } from "../../util/teacherAccessControl";
 
 // --- Reusable Confirmation Modal ---
 const ConfirmModal = ({
@@ -99,7 +100,8 @@ const BatchDetails = () => {
     deleteBatch,
     isLoading,
   } = useBatchStore();
-  const { user } = useAuthStore();
+  const { user: authUser } = useAuthStore();
+  const userRole = useAuthStore((state) => state.userRole);
 
   const { students, getStudents } = useUserStore();
 
@@ -151,8 +153,35 @@ const BatchDetails = () => {
     }
   }, [id, fetchBatchById, navigate]);
 
+  useEffect(() => {
+    if (currentBatch && id) {
+      if (userRole === "Teacher") {
+        const teacherBatches = authUser?.batches || [];
+        const hasAccess = canTeacherAccessBatch(
+          id,
+          teacherBatches,
+          userRole,
+          currentBatch.teacherEmail,
+          authUser?.email,
+        );
+
+        if (!hasAccess) {
+          toast.error("You can only view batches assigned to you");
+          navigate("/access-denied");
+        }
+      }
+    }
+  }, [currentBatch, id, userRole, authUser, navigate]);
+
   const handleAddStudent = async (e) => {
     e.preventDefault();
+
+    // Teachers cannot add students to batches
+    if (userRole === "Teacher") {
+      toast.error("Teachers cannot modify batch students");
+      return;
+    }
+
     if (!studentEmail || !mainClassId) {
       toast.error("Please fill in all fields");
       return;
@@ -170,6 +199,11 @@ const BatchDetails = () => {
   };
 
   const handleDeleteBatch = async () => {
+    // Teachers cannot delete batches
+    if (userRole === "Teacher") {
+      toast.error("Teachers cannot delete batches");
+      return;
+    }
     await deleteBatch(id, navigate);
   };
 
@@ -204,7 +238,7 @@ const BatchDetails = () => {
     );
   }
 
-  const isStaff = user?.role === "Admin" || user?.role === "Teacher";
+  const isStaff = authUser?.role === "Admin" || authUser?.role === "Teacher";
 
   const getStudentClassInfo = (studentId) => {
     const pair = currentBatch.mainClassStudentPairs?.find(
@@ -256,7 +290,7 @@ const BatchDetails = () => {
             </p>
           </div>
 
-          {user?.role === "Admin" && (
+          {authUser?.role === "Admin" && (
             <div className="flex gap-3">
               <button
                 onClick={() =>

@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ChevronDown, Calendar, Download, Loader } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import useFeesStore from "../stores/useFeesStore";
 import useAuthStore from "../stores/useAuthStore";
+import {
+  filterBatchesForTeacher,
+  filterStudentsForTeacher,
+} from "../util/teacherAccessControl";
 
 const FeesYearlyStatus = () => {
   const {
@@ -19,6 +23,9 @@ const FeesYearlyStatus = () => {
     setSelectedMainClass,
     setSelectedBatch,
   } = useFeesStore();
+
+  const userRole = useAuthStore((state) => state.userRole);
+  const userData = useAuthStore((state) => state.user);
 
   const [filteredBatches, setFilteredBatches] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -52,16 +59,25 @@ const FeesYearlyStatus = () => {
   // Update filtered batches when main class changes
   useEffect(() => {
     if (selectedMainClass) {
-      const relevantBatches = batches.filter((batch) =>
+      let relevantBatches = batches.filter((batch) =>
         batch.mainClasses?.some(
           (mc) => mc._id === selectedMainClass || mc === selectedMainClass,
         ),
       );
+
+      // Filter batches for teacher
+      relevantBatches = filterBatchesForTeacher(
+        relevantBatches,
+        userData?.batches || [],
+        userRole,
+        userData?.email,
+      );
+
       setFilteredBatches(relevantBatches);
     } else {
       setFilteredBatches([]);
     }
-  }, [selectedMainClass, batches]);
+  }, [selectedMainClass, batches, userRole, userData]);
 
   // Fetch students when batch is selected
   useEffect(() => {
@@ -83,10 +99,20 @@ const FeesYearlyStatus = () => {
     setSelectedYear(year);
   };
 
+  // Filter students for teacher
+  const filteredStudents = useMemo(() => {
+    return students;
+  }, [students]);
+
   // Fetch actual fee history securely per student whenever students load
   useEffect(() => {
     const fetchAllFees = async () => {
-      if (!students || students.length === 0 || !selectedMainClass) return;
+      if (
+        !filteredStudents ||
+        filteredStudents.length === 0 ||
+        !selectedMainClass
+      )
+        return;
 
       const newFeesData = { ...feesData };
       let apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -103,7 +129,7 @@ const FeesYearlyStatus = () => {
         "";
 
       await Promise.all(
-        students.map(async (student) => {
+        filteredStudents.map(async (student) => {
           const studentId = student.studentId || student._id || student.id;
           if (!studentId) return;
 
@@ -151,7 +177,7 @@ const FeesYearlyStatus = () => {
     };
 
     fetchAllFees();
-  }, [students, selectedMainClass]);
+  }, [filteredStudents, selectedMainClass]);
 
   // Extract actual payment status from student data
   const getPaymentStatus = (student, monthIndex, year) => {
@@ -387,7 +413,7 @@ const FeesYearlyStatus = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
-                    {students.map((student) => {
+                    {filteredStudents.map((student) => {
                       const studentId =
                         student.studentId ||
                         student._id ||

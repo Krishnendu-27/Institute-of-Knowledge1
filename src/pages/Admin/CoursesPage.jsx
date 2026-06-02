@@ -26,6 +26,9 @@ const CoursesPage = () => {
   const trades = useTradeStore((state) => state.trades);
   const courseTradeMap = useTradeStore((state) => state.courseTradeMap);
   const getTradeLabel = useTradeStore((state) => state.getTradeLabel);
+  const getTradeFromCourseName = useTradeStore(
+    (state) => state.getTradeFromCourseName,
+  );
 
   useEffect(() => {
     getClasses();
@@ -35,11 +38,13 @@ const CoursesPage = () => {
     ? allClass.filter((item) => {
         const matchesSearch =
           item?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item?.teacherName
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
+          item?.teacherName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const tradeId = courseTradeMap[item?._id] || "";
+        const tradeId =
+          courseTradeMap[item?._id] ||
+          item?.tradeId ||
+          getTradeFromCourseName(item?.name) ||
+          "";
         const matchesTrade =
           selectedTradeId === ""
             ? true
@@ -236,7 +241,11 @@ const CoursesPage = () => {
 
                     <div className="flex flex-wrap gap-2 mb-6 mt-2">
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/10 rounded-lg text-xs font-medium text-primary border border-primary/20">
-                        {getTradeLabel(courseTradeMap[classItem?._id])}
+                        {getTradeLabel(
+                          courseTradeMap[classItem?._id] ||
+                            classItem?.tradeId ||
+                            getTradeFromCourseName(classItem?.name),
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/50 rounded-lg text-xs font-medium text-muted-foreground border border-border/50">
                         <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />

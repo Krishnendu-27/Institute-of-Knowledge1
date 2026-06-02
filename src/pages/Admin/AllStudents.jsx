@@ -13,7 +13,13 @@ import {
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
+import useAuthStore from "../../stores/useAuthStore";
+import useBatchStore from "../../stores/useBatchStore";
 import { getStudentId } from "../../util/getStudentId";
+import {
+  filterStudentsForTeacher,
+  filterBatchesForTeacher,
+} from "../../util/teacherAccessControl";
 
 const StudentRow = ({
   student,
@@ -233,23 +239,46 @@ const AllStudents = () => {
   const isLoadingStudents = useUserStore((state) => state.isLoading);
   const studentError = useUserStore((state) => state.error);
 
+  // Auth Store - for teacher access control
+  const userRole = useAuthStore((state) => state.userRole);
+  const userData = useAuthStore((state) => state.user);
+
   // Class Store
   const allClass = useClassStore((state) => state.allClass);
   const getClasses = useClassStore((state) => state.getClasses);
   const getClassById = useClassStore((state) => state.getClassById);
 
+  // Batch Store
+  const batches = useBatchStore((state) => state.batches);
+  const fetchBatches = useBatchStore((state) => state.fetchBatches);
+
   useEffect(() => {
     getStudents();
     getClasses();
-  }, [getStudents, getClasses]);
+    fetchBatches();
+  }, [getStudents, getClasses, fetchBatches]);
+
+  // Filter students based on teacher's batches
+  const filteredStudentsForTeacher = useMemo(() => {
+    if (userRole === "Teacher") {
+      const teacherBatches = filterBatchesForTeacher(
+        batches,
+        userData?.batches || [],
+        userRole,
+        userData?.email,
+      );
+      return filterStudentsForTeacher(students, teacherBatches, userRole);
+    }
+    return students;
+  }, [students, userRole, userData, batches]);
 
   useEffect(() => {
-    if (!students?.length) return;
+    if (!filteredStudentsForTeacher?.length) return;
 
     const buildProgressMap = async () => {
       setIsBuildingMap(true);
       const uniqueClassIds = new Set();
-      students.forEach((student) => {
+      filteredStudentsForTeacher.forEach((student) => {
         (student.mainClasses || []).forEach((cls) =>
           uniqueClassIds.add(cls._id || cls),
         );
@@ -277,7 +306,7 @@ const AllStudents = () => {
     };
 
     buildProgressMap();
-  }, [students, getClassById]);
+  }, [filteredStudentsForTeacher, getClassById]);
 
   const triggerToast = (message, type = "success") => {
     const toastId = Date.now();
@@ -303,7 +332,7 @@ const AllStudents = () => {
   }, [allClass]);
 
   const filteredStudents = useMemo(() => {
-    if (!Array.isArray(students)) return [];
+    if (!Array.isArray(filteredStudentsForTeacher)) return [];
     const query = searchTerm.toLowerCase().trim();
     if (!query) return students;
 
