@@ -259,7 +259,7 @@ export const NavigationLayout = () => {
 
       {/* ---------------- MOBILE HEADER & MENU ---------------- */}
       <div className="md:hidden flex flex-col w-full h-full">
-        <header className="flex items-center justify-between p-4 bg-card border-b border-border shadow-sm z-50 relative">
+        <header className="flex items-center justify-between p-4 bg-card border-b border-border shadow-sm z-50 relative print:hidden">
           <div className="flex items-center gap-3">
             <img
               src={Image.Logo}

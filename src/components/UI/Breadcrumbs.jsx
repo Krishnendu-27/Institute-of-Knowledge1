@@ -22,7 +22,7 @@ export const Breadcrumbs = () => {
 
   return (
     <nav
-      className="flex items-center text-sm md:text-base text-foreground/60 font-medium"
+      className="flex items-center text-sm md:text-base text-foreground/60 font-medium print:hidden"
       aria-label="Breadcrumb"
     >
       <Link

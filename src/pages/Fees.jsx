@@ -122,15 +122,17 @@ const Fees = () => {
             );
             const history = response.data?.history || [];
 
-            const paidCurrent = history.some((record) =>
-              String(record.month || "")
-                .trim()
-                .toLowerCase() === currentMonthLabel.toLowerCase(),
+            const paidCurrent = history.some(
+              (record) =>
+                String(record.month || "")
+                  .trim()
+                  .toLowerCase() === currentMonthLabel.toLowerCase(),
             );
-            const paidPrevious = history.some((record) =>
-              String(record.month || "")
-                .trim()
-                .toLowerCase() === previousMonthLabel.toLowerCase(),
+            const paidPrevious = history.some(
+              (record) =>
+                String(record.month || "")
+                  .trim()
+                  .toLowerCase() === previousMonthLabel.toLowerCase(),
             );
 
             if (!paidCurrent) pendingCurrent.add(studentId);

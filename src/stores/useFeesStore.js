@@ -165,6 +165,7 @@ const useFeesStore = create((set, get) => ({
       );
       set({ isLoading: false });
       toast.success("Fees recorded successfully");
+      // console.log(response.data);
       return response.data;
     } catch (error) {
       const message =

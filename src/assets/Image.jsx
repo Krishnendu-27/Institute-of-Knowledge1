@@ -4,6 +4,8 @@ import StudentPic from "./student.png";
 import idFront from "./id_front.jpg";
 import idBack from "./id_back.jpg";
 import qrCode from "./qr.png";
+import ik_slip_header from "./ik_slip_header.png";
+
 // import Logo from "./logo.png";
 export const Image = {
   Logo,
@@ -12,4 +14,5 @@ export const Image = {
   idFront,
   idBack,
   qrCode,
+  ik_slip_header,
 };
