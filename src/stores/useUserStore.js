@@ -148,7 +148,6 @@ const useUserStore = create(
             success: true,
           }));
           setTimeout(() => set({ success: false }), 3000);
-          console.log(response.data);
           return response.data;
         } catch (err) {
           const errorMessage =
