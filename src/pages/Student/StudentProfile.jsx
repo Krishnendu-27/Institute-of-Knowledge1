@@ -569,7 +569,7 @@ const StudentProfile = () => {
                     </span>
                     {profileData._id && (
                       <span className="flex items-center gap-1.5 text-sm text-muted-foreground font-bold bg-muted border border-border px-3 py-1.5 rounded-lg shadow-sm">
-                        <Hash size={14} /> ID: {getStudentId(profileData)}
+                        ID: {getStudentId(profileData)}
                       </span>
                     )}
                   </div>
