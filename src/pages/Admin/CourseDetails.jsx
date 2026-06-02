@@ -20,12 +20,15 @@ import {
   Edit,
   Save,
   ChevronDown,
+  Briefcase,
 } from "lucide-react";
 import useClassStore from "../../stores/useClassStore";
 import useUserStore from "../../stores/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { generateSlug } from "../../util/generateSlug";
+import useTradeStore from "../../stores/useTradeStore";
+import { TRADES, getTradeLabel } from "../../constants/trades";
 
 const CourseDetails = () => {
   const location = useLocation();
@@ -44,6 +47,13 @@ const CourseDetails = () => {
   const updateClass = useClassStore((state) => state.updateClass);
   const deleteClass = useClassStore((state) => state.deleteClass);
   const isLoading = useClassStore((state) => state.isLoading);
+  const courseTradeMap = useTradeStore((state) => state.courseTradeMap);
+  const assignTradeToCourse = useTradeStore(
+    (state) => state.assignTradeToCourse,
+  );
+  const getTradeFromCourseName = useTradeStore(
+    (state) => state.getTradeFromCourseName,
+  );
 
   // User Store (for Instructors)
   const getTeachers = useUserStore((state) => state.getTeachers);
@@ -73,6 +83,7 @@ const CourseDetails = () => {
     teacherName: "",
     teacherEmail: "",
     isActive: true,
+    tradeId: "",
   });
 
   // Delete course states
@@ -139,6 +150,11 @@ const CourseDetails = () => {
       teacherName: mainClass?.teacherName || "",
       teacherEmail: mainClass?.teacherEmail || "",
       isActive: mainClass?.isActive !== undefined ? mainClass.isActive : true,
+      tradeId:
+        courseTradeMap[mainClass?._id] ||
+        mainClass?.tradeId ||
+        getTradeFromCourseName(mainClass?.name) ||
+        "",
     });
     setIsEditModalOpen(true);
   };
@@ -173,14 +189,31 @@ const CourseDetails = () => {
     e.preventDefault();
     setIsUpdatingCourse(true);
     try {
-      await updateClass(courseData.mainClass._id, editFormData);
+      // Map the trade with course name for cross browser persistence
+      const selectedTrade = TRADES.find((t) => t.id === editFormData.tradeId);
+      let finalName = editFormData.name;
+      if (
+        selectedTrade &&
+        !finalName.toLowerCase().includes(selectedTrade.name.toLowerCase())
+      ) {
+        finalName = `${selectedTrade.name} - ${finalName}`;
+      }
+
+      const payload = { ...editFormData, name: finalName };
+
+      await updateClass(courseData.mainClass._id, payload);
+
+      // Save trade to local store
+      if (editFormData.tradeId !== undefined) {
+        assignTradeToCourse(courseData.mainClass._id, editFormData.tradeId);
+      }
 
       // Optimistically update the UI state
       setCourseData((prevData) => ({
         ...prevData,
         mainClass: {
           ...prevData.mainClass,
-          ...editFormData,
+          ...payload,
         },
       }));
 
@@ -398,6 +431,14 @@ const CourseDetails = () => {
               <h1 className="text-2xl md:text-3xl font-bold text-foreground capitalize">
                 {mainClass?.name || displayCourseName}
               </h1>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 w-max rounded-lg text-sm font-medium text-primary border border-primary/20 mt-2 mb-4">
+                <Briefcase className="w-4 h-4" />
+                {getTradeLabel(
+                  courseTradeMap[mainClass?._id] ||
+                    mainClass?.tradeId ||
+                    getTradeFromCourseName(mainClass?.name),
+                )}
+              </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="space-y-1">
@@ -1034,6 +1075,25 @@ const CourseDetails = () => {
                         </span>
                       </label>
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Trade
+                    </label>
+                    <select
+                      name="tradeId"
+                      value={editFormData.tradeId}
+                      onChange={handleEditFormChange}
+                      className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Unassigned</option>
+                      {TRADES.map((trade) => (
+                        <option key={trade.id} value={trade.id}>
+                          {trade.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </form>
               </div>

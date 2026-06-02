@@ -50,6 +50,16 @@ const useTradeStore = create(
       },
 
       /**
+       * Cross-browser fallback: Map trade with course name
+       */
+      getTradeFromCourseName: (courseName) => {
+        if (!courseName) return null;
+        const lowerName = courseName.toLowerCase();
+        const match = TRADES.find((t) => lowerName.includes(t.name.toLowerCase()));
+        return match ? match.id : null;
+      },
+
+      /**
        * Get trade label by id
        */
       getTradeLabel: (id) => {
