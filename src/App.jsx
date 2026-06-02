@@ -25,7 +25,7 @@ import AttendancePage from "./pages/AttendancePage";
 import AttendanceStatus from "./pages/AttendanceStatus";
 import RegisterNewUser from "./pages/RegisterNewUser";
 import NotFoundPage from "./pages/NotFoundPage";
-import StudentProfile from "./pages/StudentProfile";
+import StudentProfile from "./pages/Student/StudentProfile";
 import TradeManagement from "./pages/Admin/TradeManagement";
 
 import BatchList from "./pages/Batch/BatchList";
@@ -144,6 +144,10 @@ const App = () => {
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
               >
+                <Route
+                  path="/studentprofile"
+                  element={<StudentProfile />}
+                />
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/fees" element={<Fees />} />
                 <Route path="/courses">

@@ -575,35 +575,35 @@ export default function Dashboard() {
 
         const feesDueStudents = new Set();
 
-        for (const student of students) {
-          const studentId = student._id;
-          const classIds = (student.mainClasses || []).map(
-            (cls) => cls._id || cls,
-          );
+        // for (const student of students) {
+        //   const studentId = student._id;
+        //   const classIds = (student.mainClasses || []).map(
+        //     (cls) => cls._id || cls,
+        //   );
 
-          for (const classId of classIds) {
-            try {
-              const response = await api.get(
-                `/fees/history/${classId}/${studentId}`,
-              );
-              const history = response.data?.history || [];
-              const paid = history.some((record) => {
-                const label = String(record.month || "")
-                  .trim()
-                  .toLowerCase();
-                return label === currentMonthLabel.toLowerCase();
-              });
-              if (!paid) {
-                feesDueStudents.add(studentId);
-              }
-            } catch (err) {
-              // Silently skip 404s (endpoint not ready yet)
-              if (err.response?.status !== 404) {
-                feesDueStudents.add(studentId);
-              }
-            }
-          }
-        }
+        //   for (const classId of classIds) {
+        //     try {
+        //       const response = await api.get(
+        //         `/fees/history/${classId}/${studentId}`,
+        //       );
+        //       const history = response.data?.history || [];
+        //       const paid = history.some((record) => {
+        //         const label = String(record.month || "")
+        //           .trim()
+        //           .toLowerCase();
+        //         return label === currentMonthLabel.toLowerCase();
+        //       });
+        //       if (!paid) {
+        //         feesDueStudents.add(studentId);
+        //       }
+        //     } catch (err) {
+        //       // Silently skip 404s (endpoint not ready yet)
+        //       if (err.response?.status !== 404) {
+        //         feesDueStudents.add(studentId);
+        //       }
+        //     }
+        //   }
+        // }
 
         if (isMounted) {
           setCurrentStudentsCount(activeStudents.length);

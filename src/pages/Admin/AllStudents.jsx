@@ -20,6 +20,7 @@ import {
   filterStudentsForTeacher,
   filterBatchesForTeacher,
 } from "../../util/teacherAccessControl";
+import { useNavigate } from "react-router-dom";
 
 const StudentRow = ({
   student,
@@ -31,14 +32,14 @@ const StudentRow = ({
   onShowToast,
   isBuildingMap,
 }) => {
+  const navigate = useNavigate();
   const [loadingToggles, setLoadingToggles] = useState({});
   const patchStudentProgress = useClassStore(
     (state) => state.getStudentProgress,
   );
 
-  const studentId = getStudentId(student, allStudents);
+  const studentId = getStudentId(student);
 
-  // Get all enrolled classes
   const allEnrolledClassIds = (student.mainClasses || []).map(
     (cls) => cls._id || cls,
   );
@@ -46,6 +47,17 @@ const StudentRow = ({
   const assignedClassIds = allEnrolledClassIds.filter(
     (clsId) => progressMap[`${student._id}_${clsId}`],
   );
+
+  // --- NEW: Row Click Navigation Handler ---
+  const handleRowClick = () => {
+    navigate("/studentprofile", {
+      state: {
+        userId: student._id,
+        studentId: student._id,
+        userData: student,
+      },
+    });
+  };
 
   const handleToggle = async (clsId, fieldName, currentValue, label) => {
     const progressDoc = progressMap[`${student._id}_${clsId}`];
@@ -96,7 +108,8 @@ const StudentRow = ({
     return (
       <button
         type="button"
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           if (isMissingData) {
             if (onShowToast)
               onShowToast("The batch is not assigned yet.", "error");
@@ -139,7 +152,10 @@ const StudentRow = ({
   };
 
   return (
-    <tr className="hover:bg-muted/30 transition-colors group">
+    <tr
+      onClick={handleRowClick}
+      className="hover:bg-muted/40 transition-colors group cursor-pointer border-b border-border/50 last:border-0"
+    >
       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
         {index + 1}
       </td>
@@ -149,7 +165,7 @@ const StudentRow = ({
             <img
               src={student.profilePic}
               alt={student.name}
-              className="w-10 h-10 rounded-full object-cover border border-border bg-muted shrink-0"
+              className="w-10 h-10 rounded-full object-cover border border-border bg-muted shrink-0 group-hover:border-primary/50 transition-colors"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src =
@@ -159,13 +175,15 @@ const StudentRow = ({
               }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 font-bold text-sm uppercase">
+            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 font-bold text-sm uppercase group-hover:bg-primary/20 transition-colors">
               {student.name ? student.name.charAt(0) : <User size={18} />}
             </div>
           )}
 
           <div className="flex flex-col">
-            <span>{student.name || "Unnamed"}</span>
+            <span className="group-hover:text-primary transition-colors">
+              {student.name || "Unnamed"}
+            </span>
             <span className="text-xs text-muted-foreground font-normal mt-0.5">
               {student.email}
             </span>
