@@ -48,6 +48,16 @@ const AllTeachers = () => {
     duration: 0.3,
   };
 
+  const handleProfileClick = (teacher) => {
+    navigate("/teacherprofile", {
+      state: {
+        userId: teacher?._id,
+        studentId: teacher?._id,
+        userData: teacher,
+      },
+    });
+  };
+
   return (
     <>
       <motion.div
@@ -113,14 +123,15 @@ const AllTeachers = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() =>
-                      navigate(`/profile/${generateSlug(teacher.name)}`, {
-                        state: {
-                          userId: teacher?._id,
-                          userData: teacher, // PASS THE FULL DATA HERE
-                        },
-                      })
-                    }
+                    // onClick={() =>
+                    //   navigate(`/profile/${generateSlug(teacher.name)}`, {
+                    //     state: {
+                    //       userId: teacher?._id,
+                    //       userData: teacher, // PASS THE FULL DATA HERE
+                    //     },
+                    //   })
+                    // }
+                    onClick={() => handleProfileClick(teacher)}
                     className="group bg-card rounded-2xl border border-border hover:border-primary hover:shadow-lg transition-all cursor-pointer overflow-hidden shadow-sm"
                   >
                     <div className="p-6 flex items-center justify-between">

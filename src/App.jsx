@@ -38,6 +38,7 @@ import Fees from "./pages/Fees";
 import FeesYearlyStatus from "./pages/FeesYearlyStatus";
 import IdCard from "./components/IDcard/IdCard";
 import AccessDenied from "./pages/AccessDenied";
+import TeacherProfile from "./pages/Teacher/TeacherProfile";
 
 const App = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -144,10 +145,8 @@ const App = () => {
               <Route
                 element={<ProtectedRouteRoleBased allowedRoles={["Admin"]} />}
               >
-                <Route
-                  path="/studentprofile"
-                  element={<StudentProfile />}
-                />
+                <Route path="/studentprofile" element={<StudentProfile />} />
+                <Route path="/teacherprofile" element={<TeacherProfile />} />
                 <Route path="/teachers" element={<AllTeachers />} />
                 <Route path="/fees" element={<Fees />} />
                 <Route path="/courses">
