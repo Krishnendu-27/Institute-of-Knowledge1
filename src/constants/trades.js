@@ -21,6 +21,10 @@ export const TRADES = [
     id: "coaching",
     name: "Coaching",
   },
+  {
+    id: "spoken_english",
+    name: "Spoken English",
+  },
 ];
 
 /**
