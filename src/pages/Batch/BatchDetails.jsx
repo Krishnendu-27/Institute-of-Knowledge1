@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
 import useUserStore from "../../stores/useUserStore";
+import useClassStore from "../../stores/useClassStore";
 import {
   Loader2,
   Trash2,
@@ -104,6 +105,7 @@ const BatchDetails = () => {
   const userRole = useAuthStore((state) => state.userRole);
 
   const { students, getStudents } = useUserStore();
+  const { addStudentInClass } = useClassStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -140,6 +142,9 @@ const BatchDetails = () => {
 
   const [studentEmail, setStudentEmail] = useState("");
   const [mainClassId, setMainClassId] = useState("");
+  const [admissionDate, setAdmissionDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
 
   // Modal States
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -182,17 +187,39 @@ const BatchDetails = () => {
       return;
     }
 
-    if (!studentEmail || !mainClassId) {
+    if (!studentEmail || !mainClassId || !admissionDate) {
       toast.error("Please fill in all fields");
       return;
     }
 
     setIsAdding(true);
     try {
+      // First try to enroll the student in the main class
+      try {
+        await addStudentInClass({
+          mainClassId,
+          studentEmail,
+          admissionDate,
+        });
+      } catch (err) {
+        // If the student is already enrolled in the main class, we can safely proceed
+        const msg = err.response?.data?.message || err.message;
+        if (msg !== "Student is already added to this main class") {
+          throw err;
+        }
+      }
+
       await addStudentToBatch(id, { studentEmail, mainClassId });
       setStudentEmail("");
       setMainClassId("");
       setSearchQuery("");
+      setAdmissionDate(new Date().toISOString().split("T")[0]);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "An error occurred during enrollment.",
+      );
     } finally {
       setIsAdding(false);
     }
@@ -571,9 +598,25 @@ const BatchDetails = () => {
                   </select>
                 </div>
 
+                {/* Admission Date */}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    Admission Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={admissionDate}
+                    onChange={(e) => setAdmissionDate(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+                  />
+                </div>
+
                 <button
                   type="submit"
-                  disabled={!studentEmail || !mainClassId || isAdding}
+                  disabled={
+                    !studentEmail || !mainClassId || !admissionDate || isAdding
+                  }
                   className="w-full py-3 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold rounded-xl transition-all shadow-md hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2"
                 >
                   {isAdding ? (
