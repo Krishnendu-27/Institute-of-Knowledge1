@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import useClassStore from "../../stores/useClassStore";
 import useTradeStore from "../../stores/useTradeStore";
+import { TRADES } from "../../constants/trades";
 
 const CoursesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,7 +24,6 @@ const CoursesPage = () => {
   const getClasses = useClassStore((state) => state.getClasses);
   const isLoading = useClassStore((state) => state.isLoading);
   const error = useClassStore((state) => state.error);
-  const trades = useTradeStore((state) => state.trades);
   const courseTradeMap = useTradeStore((state) => state.courseTradeMap);
   const getTradeLabel = useTradeStore((state) => state.getTradeLabel);
   const getTradeFromCourseName = useTradeStore(
@@ -167,7 +167,7 @@ const CoursesPage = () => {
               >
                 <option value="">All Trades</option>
                 <option value="unassigned">Unassigned</option>
-                {trades.map((trade) => (
+                {TRADES.map((trade) => (
                   <option key={trade.id} value={trade.id}>
                     {trade.name}
                   </option>
