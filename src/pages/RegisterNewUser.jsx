@@ -183,10 +183,10 @@ const RegisterNewUser = () => {
       return toast.error("Please enter a valid email address.");
     if (formData.phone.length !== 10)
       return toast.error("Phone number must be exactly 10 digits.");
-    if (formData.mainClasses.length === 0) {
-      return toast.error(
-        `Please select at least one ${formData.role === "Student" ? "enrolled" : "assigned"} course.`,
-      );
+
+    // Course selection is no longer required for Students
+    if (formData.role !== "Student" && formData.mainClasses.length === 0) {
+      return toast.error("Please select at least one assigned course.");
     }
     let rawAdhar = "";
     if (formData.role === "Student") {
@@ -475,46 +475,48 @@ const RegisterNewUser = () => {
               </AnimatePresence>
 
               {/* Shared Course Assignment */}
-              <SectionCard title="Course Assignment" icon={Briefcase}>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  {formData.role === "Student"
-                    ? "Enrolled Courses"
-                    : "Assigned Courses"}{" "}
-                  <span className="text-destructive">*</span>
-                </label>
-                {isClassesLoading ? (
-                  <div className="flex items-center text-muted-foreground">
-                    <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-3" />{" "}
-                    Loading courses...
-                  </div>
-                ) : allClass.length === 0 ? (
-                  <p className="text-sm italic text-muted-foreground">
-                    No courses available. Please create classes first.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                    {allClass.map((cls) => {
-                      const isSelected = formData.mainClasses.includes(cls._id);
-                      return (
-                        <button
-                          key={cls._id}
-                          type="button"
-                          disabled={isAddingUser}
-                          onClick={() => toggleClassSelection(cls._id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                            isSelected
-                              ? "bg-primary border-primary text-primary-foreground shadow-md"
-                              : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {isSelected && <CheckCircle2 size={16} />}{" "}
-                          {cls.name || cls.className || "Unnamed Class"}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </SectionCard>
+              {/* Course assignment is hidden for Students */}
+              {formData.role !== "Student" && (
+                <SectionCard title="Course Assignment" icon={Briefcase}>
+                  <label className="block text-sm font-medium text-foreground mb-3">
+                    Assigned Courses <span className="text-destructive">*</span>
+                  </label>
+                  {isClassesLoading ? (
+                    <div className="flex items-center text-muted-foreground">
+                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-3" />{" "}
+                      Loading courses...
+                    </div>
+                  ) : allClass.length === 0 ? (
+                    <p className="text-sm italic text-muted-foreground">
+                      No courses available. Please create classes first.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                      {allClass.map((cls) => {
+                        const isSelected = formData.mainClasses.includes(
+                          cls._id,
+                        );
+                        return (
+                          <button
+                            key={cls._id}
+                            type="button"
+                            disabled={isAddingUser}
+                            onClick={() => toggleClassSelection(cls._id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                              isSelected
+                                ? "bg-primary border-primary text-primary-foreground shadow-md"
+                                : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                            }`}
+                          >
+                            {isSelected && <CheckCircle2 size={16} />}{" "}
+                            {cls.name || cls.className || "Unnamed Class"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </SectionCard>
+              )}
             </div>
 
             {/* Right Column (Uploads & Identity) */}

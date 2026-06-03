@@ -146,6 +146,13 @@ const BatchDetails = () => {
     new Date().toISOString().split("T")[0],
   );
 
+  // Auto-select the first main class since the course selection UI is commented out
+  useEffect(() => {
+    if (currentBatch?.mainClasses?.length > 0 && !mainClassId) {
+      setMainClassId(currentBatch.mainClasses[0]._id);
+    }
+  }, [currentBatch, mainClassId]);
+
   // Modal States
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
@@ -577,6 +584,7 @@ const BatchDetails = () => {
                 </div>
 
                 {/* Enroll Course (Main Class) */}
+                {/*
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
                     Enroll in Course
@@ -597,6 +605,7 @@ const BatchDetails = () => {
                     ))}
                   </select>
                 </div>
+                */}
 
                 {/* Admission Date */}
                 <div>
