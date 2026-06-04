@@ -5,26 +5,26 @@
   /* Base Colors */
   --background: #ffffff;
   --foreground: #0f172a;
-  
+
   /* Primary Brand (Indigo) */
   --primary: #4f46e5;
   --primary-foreground: #ffffff;
-  
+
   /* Cards & Surfaces */
   --card: #f8fafc;
   --card-foreground: #0f172a;
-  
+
   /* Borders */
   --border: #e2e8f0;
-  
+
   /* Secondary/Muted styles (Slate) */
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  
+
   /* Accents & Hovers (Light Indigo) */
   --accent: #e0e7ff;
   --accent-foreground: #3730a3;
-  
+
   /* Error/Destructive states (Red) */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
@@ -33,7 +33,7 @@
   --success: #10b981;
   --success-foreground: #ffffff;
 
-  /* Warning states (Amber) - NEW */
+  /* Warning states (Amber) */
   --warning: #f59e0b;
   --warning-foreground: #ffffff;
 }
@@ -42,26 +42,26 @@
   /* Base Colors - Deep neutral charcoal */
   --background: #131314;
   --foreground: #e3e3e3;
-  
+
   /* Primary Brand */
   --primary: #e3e3e3;
-  --primary-foreground: #131314; 
-  
+  --primary-foreground: #131314;
+
   /* Cards & Surfaces */
   --card: #1e1f20;
   --card-foreground: #e3e3e3;
-  
+
   /* Borders */
   --border: #444746;
-  
+
   /* Secondary/Muted styles */
   --muted: #282a2c;
   --muted-foreground: #8e918f;
-  
+
   /* Accents & Hovers */
   --accent: #333538;
   --accent-foreground: #ffffff;
-  
+
   /* Error/Destructive states */
   --destructive: #f28b82;
   --destructive-foreground: #3c0603;
@@ -70,7 +70,7 @@
   --success: #81c995;
   --success-foreground: #0d381e;
 
-  /* Warning states (Amber/Yellow for dark mode) - NEW */
+  /* Warning states (Amber/Yellow for dark mode) */
   --warning: #fde293;
   --warning-foreground: #5c3a21;
 }
@@ -78,28 +78,27 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  
+
   --color-border: var(--border);
 
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
 
-  /* Mapping the new warning variable */
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 }
@@ -127,8 +126,8 @@
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none;  
-    scrollbar-width: none;  
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
@@ -136,5 +135,31 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Global scrollbar for Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Global scrollbar for Webkit (Chrome, Edge, Safari) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
   }
 }
