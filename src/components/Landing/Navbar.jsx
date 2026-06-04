@@ -94,7 +94,7 @@ export const Navbar = () => {
         <div className="flex md:flex-1 justify-start md:justify-center">
           <div
             className="w-16 md:w-20 lg:w-25 rounded-lg flex items-center justify-center cursor-pointer"
-            onClick={() => navigate("/")}
+            // onClick={() => navigate("/")}
           >
             <img
               src={Image.Logo}
