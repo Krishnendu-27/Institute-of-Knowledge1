@@ -194,7 +194,12 @@ const StudentRow = ({
         {studentId || "-"}
       </td>
       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
-        {student.fatherName || "-"}
+        {student.fatherName ||
+          student.fathersName ||
+          student.father_name ||
+          student.fathername ||
+          student.parentName ||
+          "-"}
       </td>
       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
         {student.address || "-"}

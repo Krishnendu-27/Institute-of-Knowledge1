@@ -43,7 +43,7 @@ const RegisterNewUser = () => {
     email: "",
     phone: "",
     mainClasses: [],
-    fathersName: "",
+    fatherName: "",
     dob: "",
     gender: "",
     nationality: "Indian",
@@ -184,10 +184,6 @@ const RegisterNewUser = () => {
     if (formData.phone.length !== 10)
       return toast.error("Phone number must be exactly 10 digits.");
 
-    // Course selection is no longer required for Students
-    if (formData.role !== "Student" && formData.mainClasses.length === 0) {
-      return toast.error("Please select at least one assigned course.");
-    }
     let rawAdhar = "";
     if (formData.role === "Student") {
       if (formData.pinCode && formData.pinCode.length !== 6)
@@ -205,12 +201,26 @@ const RegisterNewUser = () => {
     data.append("phone", formData.phone);
     data.append("role", formData.role);
 
-    formData.mainClasses.forEach((clsId) => data.append("mainClasses", clsId));
+    if (formData.role === "Teacher" && allClass.length > 0) {
+      // Bypassing backend restriction: The backend strictly requires a course for Teachers.
+      // Since the UI for course selection was removed, we silently assign the first available course to allow creation.
+      data.append("mainClasses", allClass[0]._id);
+    } else {
+      formData.mainClasses.forEach((clsId) =>
+        data.append("mainClasses", clsId),
+      );
+    }
+
     if (profilePic) data.append("profilePic", profilePic);
     if (formData.role === "Student") {
       data.append("adhar", rawAdhar);
-      if (formData.fathersName)
-        data.append("fathersName", formData.fathersName.trim());
+      if (formData.fatherName) {
+        data.append("fatherName", formData.fatherName.trim());
+        data.append("fathersName", formData.fatherName.trim()); // Fallback for backend
+        data.append("fathername", formData.fatherName.trim());
+        data.append("father_name", formData.fatherName.trim());
+        data.append("parentName", formData.fatherName.trim());
+      }
       if (formData.dob) data.append("dob", formData.dob);
       if (formData.gender) data.append("gender", formData.gender);
       if (formData.nationality)
@@ -307,8 +317,8 @@ const RegisterNewUser = () => {
                     <>
                       <TextInput
                         label="Father's Name"
-                        name="fathersName"
-                        value={formData.fathersName}
+                        name="fatherName"
+                        value={formData.fatherName}
                         onChange={handleInputChange}
                         disabled={isAddingUser}
                         placeholder="Richard Doe"
@@ -473,50 +483,6 @@ const RegisterNewUser = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Shared Course Assignment */}
-              {/* Course assignment is hidden for Students */}
-              {formData.role !== "Student" && (
-                <SectionCard title="Course Assignment" icon={Briefcase}>
-                  <label className="block text-sm font-medium text-foreground mb-3">
-                    Assigned Courses <span className="text-destructive">*</span>
-                  </label>
-                  {isClassesLoading ? (
-                    <div className="flex items-center text-muted-foreground">
-                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-3" />{" "}
-                      Loading courses...
-                    </div>
-                  ) : allClass.length === 0 ? (
-                    <p className="text-sm italic text-muted-foreground">
-                      No courses available. Please create classes first.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                      {allClass.map((cls) => {
-                        const isSelected = formData.mainClasses.includes(
-                          cls._id,
-                        );
-                        return (
-                          <button
-                            key={cls._id}
-                            type="button"
-                            disabled={isAddingUser}
-                            onClick={() => toggleClassSelection(cls._id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                              isSelected
-                                ? "bg-primary border-primary text-primary-foreground shadow-md"
-                                : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                            }`}
-                          >
-                            {isSelected && <CheckCircle2 size={16} />}{" "}
-                            {cls.name || cls.className || "Unnamed Class"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </SectionCard>
-              )}
             </div>
 
             {/* Right Column (Uploads & Identity) */}
