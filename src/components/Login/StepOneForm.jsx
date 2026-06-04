@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Mail, RefreshCw } from "lucide-react";
+import {
+  Mail,
+  RefreshCw,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  X,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../../stores/useAuthStore";
 import { Button } from "../UI/Button";
 
 export const StepOneForm = ({ email, setEmail, onVerify }) => {
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailFeedback, setEmailFeedback] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(false);
+
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaText, setCaptchaText] = useState("");
   const canvasRef = useRef(null);
@@ -16,6 +27,53 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
   useEffect(() => {
     return () => clearError();
   }, [clearError]);
+
+  const validateEmailFormat = (emailAddress) => {
+    const trimmedEmail = emailAddress.trim();
+    if (!trimmedEmail) return "";
+
+    if (!trimmedEmail.includes("@")) return "Please include an '@' symbol.";
+
+    const parts = trimmedEmail.split("@");
+    if (parts[0].length === 0) return "Please enter a username before the '@'.";
+    if (parts.length > 2)
+      return "Email address can only contain one '@' symbol.";
+    if (parts[1].length === 0)
+      return "Please enter a domain after the '@' (e.g., gmail).";
+    if (!parts[1].includes("."))
+      return "Please include a dot ('.') in the domain portion.";
+
+    const domainParts = parts[1].split(".");
+    if (domainParts[domainParts.length - 1].length < 2) {
+      return "Please add a valid top-level domain extension (e.g., .com, .org).";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail))
+      return "Please enter a valid email format.";
+
+    return "";
+  };
+
+  useEffect(() => {
+    if (!email) {
+      setEmailFeedback("");
+      setIsEmailValid(false);
+      setIsCheckingEmail(false);
+      return;
+    }
+
+    setIsCheckingEmail(true);
+
+    const timer = setTimeout(() => {
+      const errorMsg = validateEmailFormat(email);
+      setEmailFeedback(errorMsg);
+      setIsEmailValid(errorMsg === "");
+      setIsCheckingEmail(false);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [email]);
 
   const generateCaptcha = () => {
     if (!canvasRef.current) return;
@@ -62,38 +120,38 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     clearError();
+
     if (!email) {
       toast.error("Email required !!");
       return;
-    } else if (!captchaInput) {
-      toast.error("CAPTCHA required !!");
-      return;
-    } else if (captchaInput !== captchaText) {
-      toast.error("Incorrect CAPTCHA. Please try again.");
-      setCaptchaInput("");
-      generateCaptcha();
-      return;
-    } else {
-      setIsLoading(true);
-      try {
-        await sendOtp(email);
-        const { isValidEmail, error: authError } = useAuthStore.getState();
-        if (isValidEmail) {
-          toast.success("OTP sent to your email");
-          onVerify();
-        } else {
-          toast.error(authError || "Failed to send OTP.");
-          setCaptchaInput("");
-          generateCaptcha();
-        }
-      } catch (err) {
-        toast.error("Network error. Please try again.");
-        setCaptchaInput("");
-        generateCaptcha();
-      } finally {
-        setIsLoading(false);
-      }
     }
+
+    if (!isEmailValid) {
+      toast.error("Please provide a completely valid email format.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await sendOtp(email);
+      const { isValidEmail, error: authError } = useAuthStore.getState();
+      if (isValidEmail) {
+        toast.success("OTP sent to your email");
+        onVerify();
+      } else {
+        toast.error(authError || "Failed to send OTP.");
+      }
+    } catch (err) {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper to clear the input and refocus it
+  const handleClearEmail = () => {
+    setEmail("");
+    inputRef.current?.focus();
   };
 
   return (
@@ -115,55 +173,77 @@ export const StepOneForm = ({ email, setEmail, onVerify }) => {
         </p>
       </div>
 
-      <div className="relative">
-        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
-        <input
-          type="email"
-          required
-          disabled={isLoading}
-          placeholder="Email Address"
-          ref={inputRef}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`${email ? "focus:ring-green-400 border-green-400" : "focus:ring-primary border-border"} w-full pl-12 pr-4 py-3 bg-card border border-border text-foreground rounded-xl focus:ring-2 outline-none transition`}
-        />
+      <div className="flex flex-col gap-1">
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+
+          <input
+            type="email"
+            required
+            disabled={isLoading}
+            placeholder="Email Address"
+            ref={inputRef}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            // Note: Added pr-20 to make room for both the clear button and validation icon
+            className={`
+              ${
+                email
+                  ? isEmailValid
+                    ? "focus:ring-green-400 border-green-400"
+                    : "focus:ring-red-400 border-red-400"
+                  : "focus:ring-primary border-border"
+              } 
+              w-full pl-12 pr-20 py-3 bg-card border text-foreground rounded-xl focus:ring-2 outline-none transition
+            `}
+          />
+
+          {/* Action & Validation Icons Container */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {/* Clear "X" Button (Only shows if there is text) */}
+            {email && (
+              <button
+                type="button"
+                onClick={handleClearEmail}
+                disabled={isLoading}
+                className="p-1 rounded-full text-foreground/40 hover:text-foreground hover:bg-foreground/10 transition-colors disabled:opacity-50"
+                aria-label="Clear email"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Validation Status Indicator */}
+            <div className="flex items-center justify-center w-5">
+              {isCheckingEmail ? (
+                <Loader2 className="w-5 h-5 animate-spin text-primary/70" />
+              ) : email && isEmailValid ? (
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+              ) : email && !isEmailValid ? (
+                <AlertCircle className="w-5 h-5 text-red-500" />
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {/* Validation Feedback Message */}
+        {emailFeedback && !isCheckingEmail && (
+          <motion.p
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-red-500 text-xs pl-2 font-medium"
+          >
+            {emailFeedback}
+          </motion.p>
+        )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-        <div className="relative flex items-center justify-center bg-card rounded-xl border border-dashed border-border overflow-hidden h-[50px] w-full sm:w-[140px] shrink-0">
-          <canvas
-            ref={canvasRef}
-            width="140"
-            height="50"
-            className="cursor-pointer"
-            onClick={generateCaptcha}
-            onContextMenu={(e) => e.preventDefault()}
-          />
-          <button
-            type="button"
-            onClick={generateCaptcha}
-            className="absolute right-1 top-1 p-1 bg-background/80 rounded shadow-sm hover:bg-background text-foreground/50 hover:text-primary transition"
-            title="Reload Captcha"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </button>
-        </div>
-        <div className="flex-1 relative w-full">
-          <input
-            type="text"
-            // required
-            disabled={isLoading}
-            placeholder="Enter Captcha"
-            value={captchaInput}
-            onChange={(e) => setCaptchaInput(e.target.value)}
-            className={`${captchaInput === captchaText ? "focus:ring-green-400 border-green-400" : "focus:ring-primary border-border"} w-full px-4 py-3 bg-card border text-foreground rounded-xl focus:ring-2 outline-none transition`}
-          />
-        </div>
-      </div>
       <Button
         buttonType={"submit"}
         buttonName={"Verify Details"}
-        disabledCondition={!email || isLoading}
+        disabledCondition={
+          !email || !isEmailValid || isCheckingEmail || isLoading
+        }
         isLoading={isLoading}
       />
     </motion.form>
