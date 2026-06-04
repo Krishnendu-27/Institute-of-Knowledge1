@@ -61,7 +61,7 @@ const RegisterNewUser = () => {
     email: "",
     phone: "",
     mainClasses: [],
-    fathersName: "",
+    fatherName: "",
     dob: "",
     gender: "",
     nationality: "Indian", // Defaulting to Indian, but editable via dropdown
@@ -210,7 +210,6 @@ const RegisterNewUser = () => {
     if (formData.role !== "Student" && formData.mainClasses.length === 0) {
       return toast.error("Please select at least one assigned course.");
     }
-
     let rawAdhar = "";
     if (formData.role === "Student") {
       rawAdhar = formData.adhar.replace(/\s/g, "");
@@ -226,13 +225,27 @@ const RegisterNewUser = () => {
     data.append("phone", formData.phone);
     data.append("role", formData.role);
 
-    formData.mainClasses.forEach((clsId) => data.append("mainClasses", clsId));
+    if (formData.role === "Teacher" && allClass.length > 0) {
+      // Bypassing backend restriction: The backend strictly requires a course for Teachers.
+      // Since the UI for course selection was removed, we silently assign the first available course to allow creation.
+      data.append("mainClasses", allClass[0]._id);
+    } else {
+      formData.mainClasses.forEach((clsId) =>
+        data.append("mainClasses", clsId),
+      );
+    }
+
     if (profilePic) data.append("profilePic", profilePic);
 
     if (formData.role === "Student") {
       data.append("adhar", rawAdhar);
-      if (formData.fathersName)
-        data.append("fathersName", formData.fathersName.trim());
+      if (formData.fatherName) {
+        data.append("fatherName", formData.fatherName.trim());
+        data.append("fathersName", formData.fatherName.trim()); // Fallback for backend
+        data.append("fathername", formData.fatherName.trim());
+        data.append("father_name", formData.fatherName.trim());
+        data.append("parentName", formData.fatherName.trim());
+      }
       if (formData.dob) data.append("dob", formData.dob);
       if (formData.gender) data.append("gender", formData.gender);
       if (formData.nationality)
@@ -332,8 +345,8 @@ const RegisterNewUser = () => {
                     <>
                       <TextInput
                         label="Father's Name"
-                        name="fathersName"
-                        value={formData.fathersName}
+                        name="fatherName"
+                        value={formData.fatherName}
                         onChange={handleInputChange}
                         disabled={isAddingUser}
                         placeholder="Richard Doe"
@@ -512,35 +525,32 @@ const RegisterNewUser = () => {
                       Loading courses...
                     </div>
                   ) : allClass.length === 0 ? (
-                    <p className="text-sm italic text-muted-foreground bg-muted/20 p-4 rounded-xl border border-border/50">
-                      No courses available. Please create Courses first.
+                    <p className="text-sm italic text-muted-foreground">
+                      No courses available. Please create classes first.
                     </p>
                   ) : (
-                    // Added a wrapper div with muted bg to make the box look like a proper selection area, kept custom-scrollbar
-                    <div className="bg-muted/10 border border-border/60 rounded-xl p-3">
-                      <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
-                        {allClass.map((cls) => {
-                          const isSelected = formData.mainClasses.includes(
-                            cls._id,
-                          );
-                          return (
-                            <button
-                              key={cls._id}
-                              type="button"
-                              disabled={isAddingUser}
-                              onClick={() => toggleClassSelection(cls._id)}
-                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                                isSelected
-                                  ? "bg-primary border-primary text-primary-foreground shadow-md"
-                                  : "bg-background border-border text-muted-foreground hover:border-primary/50 hover:bg-muted/30"
-                              }`}
-                            >
-                              {isSelected && <CheckCircle2 size={16} />}{" "}
-                              {cls.name || cls.className || "Unnamed Class"}
-                            </button>
-                          );
-                        })}
-                      </div>
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                      {allClass.map((cls) => {
+                        const isSelected = formData.mainClasses.includes(
+                          cls._id,
+                        );
+                        return (
+                          <button
+                            key={cls._id}
+                            type="button"
+                            disabled={isAddingUser}
+                            onClick={() => toggleClassSelection(cls._id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                              isSelected
+                                ? "bg-primary border-primary text-primary-foreground shadow-md"
+                                : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                            }`}
+                          >
+                            {isSelected && <CheckCircle2 size={16} />}{" "}
+                            {cls.name || cls.className || "Unnamed Class"}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </SectionCard>

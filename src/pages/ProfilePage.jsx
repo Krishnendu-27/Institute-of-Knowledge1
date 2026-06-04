@@ -286,6 +286,13 @@ const ProfilePage = () => {
       }
     });
 
+    if (formData.fatherName) {
+      submitData.append("fathersName", formData.fatherName);
+      submitData.append("fathername", formData.fatherName);
+      submitData.append("father_name", formData.fatherName);
+      submitData.append("parentName", formData.fatherName);
+    }
+
     if (newProfilePic) submitData.append("profilePic", newProfilePic);
 
     if (isTargetStudent) {
@@ -504,6 +511,20 @@ const ProfilePage = () => {
                       label="Phone Number"
                       value={profileData.phone}
                     />
+                    {isTargetStudent && profileData.dob && (
+                      <InfoRow
+                        icon={User}
+                        label="Father's Name"
+                        value={
+                          profileData.fatherName ||
+                          profileData.fathersName ||
+                          profileData.fathername ||
+                          profileData.father_name ||
+                          profileData.parentName ||
+                          "-"
+                        }
+                      />
+                    )}
                     {isTargetStudent && profileData.dob && (
                       <InfoRow
                         icon={Calendar}
@@ -788,6 +809,33 @@ const ProfilePage = () => {
 
                   {isTargetStudent && (
                     <>
+                      <div className="space-y-1 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-bold text-foreground">
+                          Father's Name
+                        </label>
+                        <div className="relative">
+                          <User
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            name="fatherName"
+                            value={
+                              formData.fatherName ||
+                              formData.fathersName ||
+                              formData.fathername ||
+                              formData.father_name ||
+                              formData.parentName ||
+                              ""
+                            }
+                            onChange={handleInputChange}
+                            placeholder="Father's Name"
+                            className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-shadow"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-1 sm:space-y-2">
                         <label className="text-xs sm:text-sm font-bold text-foreground">
                           Date of Birth
