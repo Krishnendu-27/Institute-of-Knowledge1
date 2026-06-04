@@ -10,6 +10,8 @@ import {
   Check,
   Award,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
@@ -48,7 +50,7 @@ const StudentRow = ({
     (clsId) => progressMap[`${student._id}_${clsId}`],
   );
 
-  // --- NEW: Row Click Navigation Handler ---
+  // --- Row Click Navigation Handler ---
   const handleRowClick = () => {
     navigate("/studentprofile", {
       state: {
@@ -154,7 +156,7 @@ const StudentRow = ({
   return (
     <tr
       onClick={handleRowClick}
-      className="hover:bg-muted/40 transition-colors group cursor-pointer border-b border-border/50 last:border-0"
+      className="hover:bg-muted/40 transition-colors group cursor-pointer border-b border-border/50 last:border-0 bg-card"
     >
       <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
         {index + 1}
@@ -224,7 +226,7 @@ const StudentRow = ({
               {assignedClassIds.map((clsId) => (
                 <div
                   key={clsId}
-                  className="grid grid-cols-4 gap-3 items-center bg-muted/10 p-2 rounded-xl border border-border/50"
+                  className="grid grid-cols-4 gap-3 items-center bg-muted/30 p-2 rounded-xl border border-border/50"
                 >
                   <span
                     className="text-xs font-medium text-foreground truncate pr-2"
@@ -250,6 +252,10 @@ const AllStudents = () => {
   const [progressMap, setProgressMap] = useState({});
   const [isBuildingMap, setIsBuildingMap] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Change to adjust how many rows appear per page
 
   // User Store
   const students = useUserStore((state) => state.students);
@@ -336,7 +342,7 @@ const AllStudents = () => {
 
   const handleProgressUpdate = (studentId, classId, updatedFields) => {
     setProgressMap((prev) => {
-      const key = `${studentId}_${classId}`;
+      const key = `${studentId}_classId`;
       return {
         ...prev,
         [key]: { ...prev[key], ...updatedFields },
@@ -349,18 +355,39 @@ const AllStudents = () => {
     return new Map(validClasses.map((cls) => [cls._id, cls.name]));
   }, [allClass]);
 
+  // Reset to first page whenever search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(filteredStudentsForTeacher)) return [];
     const query = searchTerm.toLowerCase().trim();
-    if (!query) return students;
+    if (!query) return filteredStudentsForTeacher;
 
-    return students.filter(
+    return filteredStudentsForTeacher.filter(
       (student) =>
         student?.name?.toLowerCase().includes(query) ||
         student?.email?.toLowerCase().includes(query) ||
         student?.phone?.toLowerCase().includes(query),
     );
-  }, [students, searchTerm]);
+  }, [filteredStudentsForTeacher, searchTerm]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedStudents = filteredStudents.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const pageVariants = {
     initial: { opacity: 0, y: 10 },
@@ -373,7 +400,8 @@ const AllStudents = () => {
       animate="in"
       variants={pageVariants}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-6 md:p-8 relative"
+      // Changed to h-full flex flex-col to solve scrollbar issue
+      className="h-full bg-background p-4 md:p-8 relative flex flex-col"
     >
       {/* Interactive Toast Notification */}
       <AnimatePresence>
@@ -408,8 +436,9 @@ const AllStudents = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="max-w-[1600px] mx-auto w-full h-full flex flex-col gap-6">
+        {/* HEADER SECTION - shrink-0 to prevent collapsing */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
               Student Directory
@@ -419,7 +448,7 @@ const AllStudents = () => {
             </p>
           </div>
 
-          <div className="relative group w-full md:max-w-md">
+          <div className="relative group w-full md:max-w-md shrink-0">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             </div>
@@ -428,42 +457,57 @@ const AllStudents = () => {
               placeholder="Search by name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+              className="block w-full pl-11 pr-12 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
+            {/* INSTANT CLEAR BUTTON */}
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
 
         {studentError && (
-          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-3 font-medium">
+          <div className="shrink-0 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive flex items-center gap-3 font-medium">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <p>{studentError}</p>
           </div>
         )}
 
         {isLoadingStudents ? (
-          <div className="flex flex-col items-center justify-center py-32 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
+          <div className="flex-1 flex flex-col items-center justify-center py-32 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
             <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
             <p className="font-medium">Loading Student Database...</p>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="bg-card rounded-2xl border border-border border-dashed p-16 flex flex-col items-center justify-center text-muted-foreground">
+          <div className="flex-1 bg-card rounded-2xl border border-border border-dashed p-16 flex flex-col items-center justify-center text-muted-foreground">
             <Search className="w-12 h-12 mb-4 opacity-20" />
             <p className="text-lg font-medium text-foreground">
               No students found
             </p>
-            <p className="text-sm mt-1">Try adjusting your search criteria.</p>
+            <p className="text-sm mt-1">
+              {searchTerm
+                ? "Try adjusting your search criteria."
+                : "No students available at the moment."}
+            </p>
           </div>
         ) : (
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden relative">
+          /* TABLE SECTION - flex-1 min-h-0 makes it fill remaining space but scroll internally */
+          <div className="flex-1 flex flex-col min-h-0 bg-card border border-border rounded-2xl shadow-sm overflow-hidden relative">
             {isBuildingMap && (
-              <div className="absolute top-0 left-0 right-0 h-1 bg-primary/10 overflow-hidden z-10">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-primary/10 overflow-hidden z-20">
                 <div className="h-full bg-primary w-1/3 animate-[slide_1.5s_ease-in-out_infinite]" />
               </div>
             )}
 
-            <div className="overflow-auto custom-scrollbar">
-              <table className="w-full text-sm text-left ">
-                <thead className="bg-muted/50 border-b border-border/60 text-muted-foreground">
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              <table className="w-full text-sm text-left">
+                {/* sticky top-0 ensures header stays visible while scrolling rows */}
+                <thead className="sticky top-0 z-10 bg-muted border-b border-border text-muted-foreground shadow-sm">
                   <tr>
                     <th className="px-4 py-4 font-semibold whitespace-nowrap">
                       #
@@ -489,11 +533,11 @@ const AllStudents = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {filteredStudents.map((student, index) => (
+                  {paginatedStudents.map((student, index) => (
                     <StudentRow
                       key={student._id || index}
                       student={student}
-                      index={index}
+                      index={startIndex + index} // Adjusted to show correct row numbers across pages
                       classMap={classMap}
                       progressMap={progressMap}
                       allStudents={students}
@@ -504,6 +548,63 @@ const AllStudents = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* PAGINATION SECTION - shrink-0 to stay anchored at bottom */}
+        {!isLoadingStudents && totalPages > 1 && (
+          <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
+            <p className="text-sm text-muted-foreground order-2 sm:order-1">
+              Showing{" "}
+              <span className="font-medium text-foreground">
+                {startIndex + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium text-foreground">
+                {Math.min(startIndex + itemsPerPage, filteredStudents.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">
+                {filteredStudents.length}
+              </span>{" "}
+              students
+            </p>
+
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none no-scrollbar">
+                {getPageNumbers().map((number) => (
+                  <button
+                    key={number}
+                    onClick={() => setCurrentPage(number)}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                      currentPage === number
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card border border-border text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
         )}

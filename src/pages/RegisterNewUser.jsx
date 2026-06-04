@@ -7,7 +7,6 @@ import {
   Eye,
   Trash2,
   Image as ImageIcon,
-  FileBadge,
   AlertCircle,
   CheckCircle2,
   User,
@@ -24,6 +23,25 @@ import { SelectInput } from "../components/UI/RegisterNewUser/SelectInput";
 import { FilePreviewModal } from "../components/UI/RegisterNewUser/FilePreviewModal";
 import { SectionCard } from "../components/UI/RegisterNewUser/SectionCard";
 import BackButton from "../components/UI/Button";
+
+// Assuming COUNTRIES is exported as an array of strings from this path
+import { COUNTRIES } from "../util/Countries";
+
+const STREAM_OPTIONS = [
+  "Science",
+  "Commerce",
+  "Arts",
+  "Vocational",
+  "Diploma",
+  "B.Tech",
+  "B.Sc",
+  "B.A",
+  "B.Com",
+  "BCA",
+  "MCA",
+  "MBA",
+  "Other",
+];
 
 const RegisterNewUser = () => {
   const { addUser, isLoading: isAddingUser, error, success } = useUserStore();
@@ -46,7 +64,7 @@ const RegisterNewUser = () => {
     fathersName: "",
     dob: "",
     gender: "",
-    nationality: "Indian",
+    nationality: "Indian", // Defaulting to Indian, but editable via dropdown
     address: "",
     pinCode: "",
     adhar: "",
@@ -106,7 +124,8 @@ const RegisterNewUser = () => {
   };
 
   const handleNumericChange = (e, field, maxLen) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, maxLen);
+    let value = e.target.value.replace(/\D/g, "");
+    if (maxLen) value = value.slice(0, maxLen);
     setFormData({ ...formData, [field]: value });
   };
 
@@ -178,9 +197,12 @@ const RegisterNewUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Auth Modal Level Email Validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email))
       return toast.error("Please enter a valid email address.");
+
     if (formData.phone.length !== 10)
       return toast.error("Phone number must be exactly 10 digits.");
 
@@ -188,10 +210,9 @@ const RegisterNewUser = () => {
     if (formData.role !== "Student" && formData.mainClasses.length === 0) {
       return toast.error("Please select at least one assigned course.");
     }
+
     let rawAdhar = "";
     if (formData.role === "Student") {
-      if (formData.pinCode && formData.pinCode.length !== 6)
-        return toast.error("PIN Code must be 6 digits.");
       rawAdhar = formData.adhar.replace(/\s/g, "");
       if (rawAdhar.length !== 12)
         return toast.error(
@@ -207,6 +228,7 @@ const RegisterNewUser = () => {
 
     formData.mainClasses.forEach((clsId) => data.append("mainClasses", clsId));
     if (profilePic) data.append("profilePic", profilePic);
+
     if (formData.role === "Student") {
       data.append("adhar", rawAdhar);
       if (formData.fathersName)
@@ -234,16 +256,19 @@ const RegisterNewUser = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-6 flex items-center justify-center transition-colors duration-300">
+    // Changed to h-full flex-col so it fits naturally inside NavigationLayout's scroll bounds
+    <div className="h-full bg-background p-4 md:p-6 flex flex-col transition-colors duration-300">
       {/* File Preview Modal */}
       <FilePreviewModal
         viewingFile={viewingFile}
         setViewingFile={setViewingFile}
       />
+
+      {/* shrink-0 and mb-8 to give it breathing room at the bottom of the page */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl w-full bg-card rounded-2xl shadow-xl overflow-hidden border border-border"
+        className="max-w-6xl mx-auto w-full bg-card rounded-2xl shadow-xl overflow-hidden border border-border shrink-0 mb-8"
       >
         <form onSubmit={handleSubmit} className="p-6 md:p-8">
           <div className="mb-8 flex items-center justify-start">
@@ -331,14 +356,16 @@ const RegisterNewUser = () => {
                         disabled={isAddingUser}
                         options={["Male", "Female", "Other"]}
                       />
-                      <TextInput
+
+                      {/* Changed to SelectInput utilizing COUNTRIES array */}
+                      <SelectInput
                         label="Nationality"
                         name="nationality"
                         value={formData.nationality}
                         onChange={handleInputChange}
                         required
                         disabled={isAddingUser}
-                        placeholder="Indian"
+                        options={COUNTRIES}
                       />
                     </>
                   )}
@@ -387,21 +414,16 @@ const RegisterNewUser = () => {
                           placeholder="123 Main Street, City"
                         />
                       </div>
+
+                      {/* Removed 6-digit max length and specific limits */}
                       <TextInput
-                        label="PIN Code"
+                        label="PIN Code / Zip"
                         name="pinCode"
                         value={formData.pinCode}
-                        onChange={(e) => handleNumericChange(e, "pinCode", 6)}
+                        onChange={(e) => handleNumericChange(e, "pinCode")} // No max limit passed
                         required
                         disabled={isAddingUser}
                         placeholder="123456"
-                        maxLength={6}
-                        error={
-                          formData.pinCode.length > 0 &&
-                          formData.pinCode.length < 6
-                            ? "Must be 6 digits"
-                            : ""
-                        }
                       />
                     </>
                   )}
@@ -433,14 +455,17 @@ const RegisterNewUser = () => {
                               placeholder="XYZ High School"
                             />
                           </div>
-                          <TextInput
+
+                          {/* Changed from TextInput to SelectInput with Stream Options */}
+                          <SelectInput
                             label="Stream / Major"
                             name="stream"
                             value={formData.stream}
                             onChange={handleInputChange}
                             disabled={isAddingUser}
-                            placeholder="Science, Commerce, etc."
+                            options={STREAM_OPTIONS}
                           />
+
                           <TextInput
                             label="Year of Passing"
                             name="passingYear"
@@ -487,32 +512,35 @@ const RegisterNewUser = () => {
                       Loading courses...
                     </div>
                   ) : allClass.length === 0 ? (
-                    <p className="text-sm italic text-muted-foreground">
-                      No courses available. Please create classes first.
+                    <p className="text-sm italic text-muted-foreground bg-muted/20 p-4 rounded-xl border border-border/50">
+                      No courses available. Please create Courses first.
                     </p>
                   ) : (
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                      {allClass.map((cls) => {
-                        const isSelected = formData.mainClasses.includes(
-                          cls._id,
-                        );
-                        return (
-                          <button
-                            key={cls._id}
-                            type="button"
-                            disabled={isAddingUser}
-                            onClick={() => toggleClassSelection(cls._id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                              isSelected
-                                ? "bg-primary border-primary text-primary-foreground shadow-md"
-                                : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                            }`}
-                          >
-                            {isSelected && <CheckCircle2 size={16} />}{" "}
-                            {cls.name || cls.className || "Unnamed Class"}
-                          </button>
-                        );
-                      })}
+                    // Added a wrapper div with muted bg to make the box look like a proper selection area, kept custom-scrollbar
+                    <div className="bg-muted/10 border border-border/60 rounded-xl p-3">
+                      <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
+                        {allClass.map((cls) => {
+                          const isSelected = formData.mainClasses.includes(
+                            cls._id,
+                          );
+                          return (
+                            <button
+                              key={cls._id}
+                              type="button"
+                              disabled={isAddingUser}
+                              onClick={() => toggleClassSelection(cls._id)}
+                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                                isSelected
+                                  ? "bg-primary border-primary text-primary-foreground shadow-md"
+                                  : "bg-background border-border text-muted-foreground hover:border-primary/50 hover:bg-muted/30"
+                              }`}
+                            >
+                              {isSelected && <CheckCircle2 size={16} />}{" "}
+                              {cls.name || cls.className || "Unnamed Class"}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </SectionCard>
@@ -608,14 +636,14 @@ const RegisterNewUser = () => {
                             <label className="text-sm font-semibold text-foreground">
                               Supporting Documents
                             </label>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
                               {documents.length} / 3
                             </span>
                           </div>
-                          <label className="block w-full py-4 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors bg-background text-center mb-4">
+                          <label className="block w-full py-5 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors bg-background text-center mb-4">
                             <FileText
                               size={24}
-                              className="mx-auto text-primary mb-1"
+                              className="mx-auto text-primary mb-2 opacity-80"
                             />
                             <span className="text-sm font-medium text-foreground">
                               Click to upload files
@@ -633,23 +661,27 @@ const RegisterNewUser = () => {
                             />
                           </label>
 
-                          <div className="space-y-2">
+                          <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                             {documents.map((doc, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between p-3 bg-background border border-border rounded-lg shadow-sm"
+                                className="flex items-center justify-between p-3 bg-background border border-border rounded-xl shadow-sm"
                               >
                                 <div className="flex items-center gap-3 overflow-hidden">
                                   {doc.type.startsWith("image/") ? (
-                                    <ImageIcon
-                                      size={18}
-                                      className="text-primary flex-shrink-0"
-                                    />
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                      <ImageIcon
+                                        size={18}
+                                        className="text-primary flex-shrink-0"
+                                      />
+                                    </div>
                                   ) : (
-                                    <FileText
-                                      size={18}
-                                      className="text-destructive flex-shrink-0"
-                                    />
+                                    <div className="p-2 bg-destructive/10 rounded-lg">
+                                      <FileText
+                                        size={18}
+                                        className="text-destructive flex-shrink-0"
+                                      />
+                                    </div>
                                   )}
                                   <span className="text-sm text-foreground truncate font-medium">
                                     {doc.name}
