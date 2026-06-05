@@ -441,6 +441,7 @@ const AllStudents = () => {
         userData?.batches || [],
         userRole,
         userData?.email,
+        userData?._id,
       );
       return filterStudentsForTeacher(students, teacherBatches, userRole);
     }

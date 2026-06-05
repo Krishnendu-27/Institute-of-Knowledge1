@@ -631,6 +631,7 @@ const FeesYearlyStatus = () => {
           userData?.batches || [],
           userRole,
           userData?.email,
+          userData?._id,
         );
       } else if (userRole === "Student") {
         relevantBatches = relevantBatches.filter((batch) => {
