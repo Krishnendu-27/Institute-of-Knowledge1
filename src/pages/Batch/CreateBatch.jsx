@@ -522,7 +522,7 @@ const CreateBatch = () => {
                             />
                             <input
                               type="text"
-                              placeholder="Select Class..."
+                              placeholder="Select Course..."
                               value={
                                 activeDropdown === `class-${pair.id}`
                                   ? searchQueries.class
@@ -647,7 +647,7 @@ const CreateBatch = () => {
                               placeholder={
                                 pair.mainClass
                                   ? "Select Student..."
-                                  : "Select Class first"
+                                  : "Select Course first"
                               }
                               value={
                                 activeDropdown === `student-${pair.id}`

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Trash2, AlertTriangle, BookOpen } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
 import useTradeStore from "../../stores/useTradeStore";
@@ -113,13 +113,19 @@ const BatchList = () => {
       className="container mx-auto px-4 py-8 max-w-7xl transition-colors duration-300"
     >
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <p className="text-muted-foreground mt-1">
-          Overview of all active Batches, Assigned Course, fees, and student
-          allocations.
-        </p>
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-8 gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            Batch Management
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Overview of all active Batches, Assigned Course, fees, and student
+            allocations. Manage and organize your educational schedules
+            effectively.
+          </p>
+        </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto shrink-0">
           {/* Search Bar */}
           <div className="relative w-full sm:w-72">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -138,7 +144,7 @@ const BatchList = () => {
             <select
               value={selectedTradeId}
               onChange={(e) => setSelectedTradeId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background/60 backdrop-blur-xl text-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all shadow-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background/60 backdrop-blur-xl text-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all shadow-sm appearance-none cursor-pointer"
             >
               <option value="">All Trades</option>
               <option value="unassigned">Unassigned</option>
