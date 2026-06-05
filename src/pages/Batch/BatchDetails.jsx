@@ -542,7 +542,6 @@ export default function BatchDetails() {
         title="Delete Batch"
         message={`Are you sure you want to delete "${displayBatchName}"? This action cannot be undone and will remove all associated student records from this batch.`}
       />
-
       <ConfirmModal
         isOpen={!!studentToDelete}
         onClose={() => setStudentToDelete(null)}
@@ -551,7 +550,7 @@ export default function BatchDetails() {
         message={`Are you sure you want to remove ${studentToDelete?.name} from this batch?`}
         confirmText="Remove"
       />
-
+  
       <BackButton details={`Detailed view of the batch`} />
       <div className="p-8 rounded-3xl bg-card border border-border shadow-sm mb-8 mt-6 transition-colors">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -594,7 +593,9 @@ export default function BatchDetails() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        <div
+          className={`grid grid-cols-2 ${userRole !== "Student" ? "md:grid-cols-4" : ""} gap-4 mt-8`}
+        >
           <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
             <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
               <Calendar className="w-4 h-4" /> Day
@@ -611,306 +612,311 @@ export default function BatchDetails() {
               {currentBatch.startTime} - {currentBatch.endTime}
             </p>
           </div>
-          <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
-            <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-              <BookOpen className="w-4 h-4" /> Total Classes
-            </p>
-            <p className="font-semibold text-foreground text-lg">
-              {currentBatch.mainClasses?.length || 0}
-            </p>
-          </div>
-          <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
-            <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-              <Users className="w-4 h-4" /> Total Students
-            </p>
-            <p className="font-semibold text-foreground text-lg">
-              {currentBatch.students?.length || 0}
-            </p>
-          </div>
+          {userRole !== "Student" && (
+            <>
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  <BookOpen className="w-4 h-4" /> Total Classes
+                </p>
+                <p className="font-semibold text-foreground text-lg">
+                  {currentBatch.mainClasses?.length || 0}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  <Users className="w-4 h-4" /> Total Students
+                </p>
+                <p className="font-semibold text-foreground text-lg">
+                  {currentBatch.students?.length || 0}
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Associated Courses
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentBatch.mainClasses?.map((cls) => (
-                <div
-                  key={cls._id}
-                  onClick={() =>
-                    navigate(`/courses/${generateSlug(cls.name)}`, {
-                      state: { courseId: cls._id, courseName: cls.name },
-                    })
-                  }
-                  className="p-5 bg-card border border-border hover:border-primary/50 transition-colors rounded-2xl shadow-sm cursor-pointer"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-foreground">{cls.name}</h3>
-                    <span className="text-sm font-bold text-success bg-success/10 px-2 py-1 rounded-lg">
-                      ₹{cls.fees}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Instructor: {cls.teacherName || "TBA"}
-                  </p>
-                  <p className="text-xs text-muted-foreground/70">
-                    {new Date(cls.startDate).toLocaleDateString()} -{" "}
-                    {new Date(cls.endDate).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Batch Students
-            </h2>
-
-            <div className="relative mb-4">
-              <Search className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search students in this batch..."
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
-              />
-              {listSearch && (
-                <button
-                  onClick={() => setListSearch("")}
-                  className="absolute right-4 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-
-            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-              {paginatedStudents.length > 0 ? (
-                <>
-                  <ul className="divide-y divide-border">
-                    {/* Animated List Container */}
-                    <AnimatePresence initial={false}>
-                      {paginatedStudents.map((student) => (
-                        <StudentRow
-                          key={student._id}
-                          baseStudent={student}
-                          mainClassName={getStudentClassInfo(student._id)}
-                          isStaff={isStaff}
-                          onDelete={setStudentToDelete}
-                          getUserById={getUserById}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </ul>
-
-                  {totalPages > 1 && (
-                    <div className="px-6 py-4 border-t border-border bg-muted/20 flex items-center justify-between">
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        disabled={currentPage === 1}
-                        className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <ChevronLeft className="w-4 h-4" /> Prev
-                      </button>
-                      <span className="text-sm font-medium text-muted-foreground">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={currentPage === totalPages}
-                        className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Next <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="p-10 text-center flex flex-col items-center">
-                  <Users className="w-12 h-12 text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground font-medium">
-                    {listSearch
-                      ? "No matching students found."
-                      : "No students enrolled yet."}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {isStaff && (
-          <div className="space-y-6">
-            <div className="p-6 rounded-3xl bg-card border border-border shadow-sm sticky top-8">
-              <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  +
-                </span>
-                Add New Student
-              </h3>
-
-              <form onSubmit={handleAddStudent} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">
-                    1. Select Course
-                  </label>
-                  <select
-                    required
-                    value={mainClassId}
-                    onChange={(e) => {
-                      setMainClassId(e.target.value);
-                      setStudentEmail("");
-                      setSearchQuery("");
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm appearance-none cursor-pointer"
+      {userRole !== "Student" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                Associated Courses
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentBatch.mainClasses?.map((cls) => (
+                  <div
+                    key={cls._id}
+                    onClick={() =>
+                      navigate(`/courses/${generateSlug(cls.name)}`, {
+                        state: { courseId: cls._id, courseName: cls.name },
+                      })
+                    }
+                    className="p-5 bg-card border border-border hover:border-primary/50 transition-colors rounded-2xl shadow-sm cursor-pointer"
                   >
-                    <option value="" disabled>
-                      Select a Class...
-                    </option>
-                    {currentBatch.mainClasses?.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} (₹{cls.fees})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-foreground">{cls.name}</h3>
+                      <span className="text-sm font-bold text-success bg-success/10 px-2 py-1 rounded-lg">
+                        ₹{cls.fees}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Instructor: {cls.teacherName || "TBA"}
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      {new Date(cls.startDate).toLocaleDateString()} -{" "}
+                      {new Date(cls.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                <div ref={dropdownRef} className="relative">
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">
-                    2. Search & Select Student
-                  </label>
-                  <div className="relative">
-                    <div className="relative flex items-center">
-                      <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
-                      <input
-                        type="text"
-                        required
-                        disabled={!mainClassId}
-                        value={searchQuery}
-                        onChange={(e) => {
-                          setSearchQuery(e.target.value);
-                          setStudentEmail("");
-                          setIsDropdownOpen(true);
-                        }}
-                        onFocus={() => setIsDropdownOpen(true)}
-                        className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        placeholder={
-                          mainClassId
-                            ? "Search by name or email..."
-                            : "Please select a course first..."
-                        }
-                      />
-                      {studentEmail && (
-                        <div className="absolute right-3 w-7 h-7 rounded-full bg-muted overflow-hidden flex items-center justify-center border border-border">
-                          {availableStudentsToAdd.find(
-                            (u) => u.email === studentEmail,
-                          )?.profilePicture ||
-                          availableStudentsToAdd.find(
-                            (u) => u.email === studentEmail,
-                          )?.profilePic ? (
-                            <img
-                              src={
-                                availableStudentsToAdd.find(
-                                  (u) => u.email === studentEmail,
-                                ).profilePicture ||
-                                availableStudentsToAdd.find(
-                                  (u) => u.email === studentEmail,
-                                ).profilePic
-                              }
-                              alt="Avatar"
-                              className="w-full h-full object-cover"
-                            />
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                Batch Students
+              </h2>
+
+              <div className="relative mb-4">
+                <Search className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search students in this batch..."
+                  value={listSearch}
+                  onChange={(e) => setListSearch(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                />
+                {listSearch && (
+                  <button
+                    onClick={() => setListSearch("")}
+                    className="absolute right-4 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+                {paginatedStudents.length > 0 ? (
+                  <>
+                    <ul className="divide-y divide-border">
+                      {/* Animated List Container */}
+                      <AnimatePresence initial={false}>
+                        {paginatedStudents.map((student) => (
+                          <StudentRow
+                            key={student._id}
+                            baseStudent={student}
+                            mainClassName={getStudentClassInfo(student._id)}
+                            isStaff={isStaff}
+                            onDelete={setStudentToDelete}
+                            getUserById={getUserById}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </ul>
+
+                    {totalPages > 1 && (
+                      <div className="px-6 py-4 border-t border-border bg-muted/20 flex items-center justify-between">
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeft className="w-4 h-4" /> Prev
+                        </button>
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          disabled={currentPage === totalPages}
+                          className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-10 text-center flex flex-col items-center">
+                    <Users className="w-12 h-12 text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground font-medium">
+                      {listSearch
+                        ? "No matching students found."
+                        : "No students enrolled yet."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {isStaff && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl bg-card border border-border shadow-sm sticky top-8">
+                <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    +
+                  </span>
+                  Add New Student
+                </h3>
+
+                <form onSubmit={handleAddStudent} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">
+                      1. Select Course
+                    </label>
+                    <select
+                      required
+                      value={mainClassId}
+                      onChange={(e) => {
+                        setMainClassId(e.target.value);
+                        setStudentEmail("");
+                        setSearchQuery("");
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        Select a Class...
+                      </option>
+                      {currentBatch.mainClasses?.map((cls) => (
+                        <option key={cls._id} value={cls._id}>
+                          {cls.name} (₹{cls.fees})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div ref={dropdownRef} className="relative">
+                    <label className="block text-sm font-semibold text-foreground mb-1.5">
+                      2. Search & Select Student
+                    </label>
+                    <div className="relative">
+                      <div className="relative flex items-center">
+                        <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="text"
+                          required
+                          disabled={!mainClassId}
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setStudentEmail("");
+                            setIsDropdownOpen(true);
+                          }}
+                          onFocus={() => setIsDropdownOpen(true)}
+                          className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder={
+                            mainClassId
+                              ? "Search by name or email..."
+                              : "Please select a course first..."
+                          }
+                        />
+                        {studentEmail && (
+                          <div className="absolute right-3 w-7 h-7 rounded-full bg-muted overflow-hidden flex items-center justify-center border border-border">
+                            {availableStudentsToAdd.find(
+                              (u) => u.email === studentEmail,
+                            )?.profilePicture ||
+                            availableStudentsToAdd.find(
+                              (u) => u.email === studentEmail,
+                            )?.profilePic ? (
+                              <img
+                                src={
+                                  availableStudentsToAdd.find(
+                                    (u) => u.email === studentEmail,
+                                  ).profilePicture ||
+                                  availableStudentsToAdd.find(
+                                    (u) => u.email === studentEmail,
+                                  ).profilePic
+                                }
+                                alt="Avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Check className="w-4 h-4 text-success" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {isDropdownOpen && mainClassId && (
+                        <div className="absolute z-50 w-full mt-2 bg-card rounded-xl border border-border shadow-2xl max-h-60 overflow-y-auto">
+                          {searchFilteredAvailable.length > 0 ? (
+                            <ul className="py-2">
+                              {searchFilteredAvailable.map((student) => (
+                                <li
+                                  key={student._id}
+                                  onClick={() => handleSelectStudent(student)}
+                                  className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors ${
+                                    studentEmail === student.email
+                                      ? "bg-primary/10"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs overflow-hidden">
+                                    {student.profilePicture ||
+                                    student.profilePic ? (
+                                      <img
+                                        src={
+                                          student.profilePicture ||
+                                          student.profilePic
+                                        }
+                                        alt="pic"
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      (
+                                        student.name?.charAt(0) ||
+                                        student.email?.charAt(0) ||
+                                        "S"
+                                      ).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="overflow-hidden">
+                                    <p className="font-semibold text-sm text-foreground truncate">
+                                      {student.name || "Unknown Name"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {student.email}
+                                    </p>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
                           ) : (
-                            <Check className="w-4 h-4 text-success" />
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              {students?.length === 0
+                                ? "No students available."
+                                : "No available students match this search or all are already enrolled in this batch."}
+                            </div>
                           )}
                         </div>
                       )}
                     </div>
-
-                    {isDropdownOpen && mainClassId && (
-                      <div className="absolute z-50 w-full mt-2 bg-card rounded-xl border border-border shadow-2xl max-h-60 overflow-y-auto">
-                        {searchFilteredAvailable.length > 0 ? (
-                          <ul className="py-2">
-                            {searchFilteredAvailable.map((student) => (
-                              <li
-                                key={student._id}
-                                onClick={() => handleSelectStudent(student)}
-                                className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors ${
-                                  studentEmail === student.email
-                                    ? "bg-primary/10"
-                                    : ""
-                                }`}
-                              >
-                                <div className="w-8 h-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs overflow-hidden">
-                                  {student.profilePicture ||
-                                  student.profilePic ? (
-                                    <img
-                                      src={
-                                        student.profilePicture ||
-                                        student.profilePic
-                                      }
-                                      alt="pic"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    (
-                                      student.name?.charAt(0) ||
-                                      student.email?.charAt(0) ||
-                                      "S"
-                                    ).toUpperCase()
-                                  )}
-                                </div>
-                                <div className="overflow-hidden">
-                                  <p className="font-semibold text-sm text-foreground truncate">
-                                    {student.name || "Unknown Name"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {student.email}
-                                  </p>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            {students?.length === 0
-                              ? "No students available."
-                              : "No available students match this search or all are already enrolled in this batch."}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={!studentEmail || !mainClassId || isAdding}
-                  className="w-full py-3 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold rounded-xl transition-all shadow-md hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2"
-                >
-                  {isAdding ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Enrolling...
-                    </>
-                  ) : (
-                    "Enroll Student"
-                  )}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={!studentEmail || !mainClassId || isAdding}
+                    className="w-full py-3 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold rounded-xl transition-all shadow-md hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2"
+                  >
+                    {isAdding ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Enrolling...
+                      </>
+                    ) : (
+                      "Enroll Student"
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }

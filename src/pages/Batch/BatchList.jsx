@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, AlertTriangle, BookOpen } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  AlertTriangle,
+  BookOpen,
+  Clock,
+  User,
+} from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useAuthStore from "../../stores/useAuthStore";
 import useTradeStore from "../../stores/useTradeStore";
@@ -79,14 +86,31 @@ const BatchList = () => {
     fetchBatches();
   }, [fetchBatches]);
 
-  // Filter batches for teachers - now with userId support
-  const batchesForUser = filterBatchesForTeacher(
-    batches,
-    user?.batches || [],
-    userRole,
-    user?.email,
-    user?._id,
-  );
+  // Filter batches for teachers/students
+  const batchesForUser = useMemo(() => {
+    if (userRole === "Admin") return batches;
+    if (userRole === "Teacher") {
+      return filterBatchesForTeacher(
+        batches,
+        user?.batches || [],
+        userRole,
+        user?.email,
+        user?._id,
+      );
+    }
+    if (userRole === "Student") {
+      return batches.filter((batch) => {
+        const inStudents = batch.students?.some(
+          (s) => (s._id || s) === user?._id,
+        );
+        const inPairs = batch.mainClassStudentPairs?.some(
+          (p) => (p.student?._id || p.student) === user?._id,
+        );
+        return inStudents || inPairs;
+      });
+    }
+    return batches;
+  }, [batches, userRole, user]);
 
   const filteredBatches = batchesForUser.filter((batch) => {
     const query = searchQuery.toLowerCase();
@@ -248,35 +272,11 @@ const BatchList = () => {
 
                   <div className="space-y-3 text-sm text-muted-foreground">
                     <p className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4 shrink-0 text-muted-foreground/70"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                      <Clock className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                       {batch.startTime} - {batch.endTime}
                     </p>
                     <p className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4 shrink-0 text-muted-foreground/70"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
+                      <User className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                       <span className="truncate">
                         {Array.isArray(batch.teachers) &&
                         batch.teachers.length > 0

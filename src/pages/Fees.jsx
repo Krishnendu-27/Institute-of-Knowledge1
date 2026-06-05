@@ -495,7 +495,7 @@
 
 // export default Fees;
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import useFeesStore from "../stores/useFeesStore";
@@ -505,6 +505,7 @@ import StudentRow from "../components/UI/StudentRow";
 import DashboardCards from "../components/UI/DashboardCards";
 import StudentSearch from "../components/UI/StudentSearch";
 import DiscountToggleButton from "../components/UI/DiscountToggleButton";
+import useAuthStore from "../stores/useAuthStore";
 import { api } from "../api/api";
 
 const Fees = () => {
@@ -529,6 +530,9 @@ const Fees = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  const userRole = useAuthStore((state) => state.userRole);
+  const userData = useAuthStore((state) => state.user);
+
   // For Global Search
   const { students: allStudents, getStudents } = useUserStore();
   const [globalSearchResults, setGlobalSearchResults] = useState([]);
@@ -547,6 +551,18 @@ const Fees = () => {
     loadInitialData();
   }, []); // Empty dependency array prevents infinite loops on mount
 
+  // Memoized Main Classes to filter out unassigned courses for students
+  const displayedMainClasses = useMemo(() => {
+    if (!mainClasses) return [];
+    if (userRole === "Student") {
+      const studentClassIds = (userData?.mainClasses || []).map(
+        (c) => c._id || c,
+      );
+      return mainClasses.filter((mc) => studentClassIds.includes(mc._id));
+    }
+    return mainClasses;
+  }, [mainClasses, userRole, userData]);
+
   // Fetch students when main class is selected
   useEffect(() => {
     if (selectedMainClass) {
@@ -557,16 +573,30 @@ const Fees = () => {
         setClassFeesAmount(selectedClass.fees);
       }
 
-      const relevantBatches = batches?.filter((batch) =>
-        batch.mainClasses?.some(
-          (mc) => mc._id === selectedMainClass || mc === selectedMainClass,
-        ),
-      );
-      setFilteredBatches(relevantBatches || []);
+      let relevantBatches =
+        batches?.filter((batch) =>
+          batch.mainClasses?.some(
+            (mc) => mc._id === selectedMainClass || mc === selectedMainClass,
+          ),
+        ) || [];
+
+      if (userRole === "Student") {
+        relevantBatches = relevantBatches.filter((batch) => {
+          const inStudents = batch.students?.some(
+            (s) => (s._id || s) === userData?._id,
+          );
+          const inPairs = batch.mainClassStudentPairs?.some(
+            (p) => (p.student?._id || p.student) === userData?._id,
+          );
+          return inStudents || inPairs;
+        });
+      }
+
+      setFilteredBatches(relevantBatches);
     } else {
       setFilteredBatches([]);
     }
-  }, [selectedMainClass, mainClasses, batches]);
+  }, [selectedMainClass, mainClasses, batches, userRole, userData]);
 
   // Fetch students when batch is selected
   useEffect(() => {
@@ -582,8 +612,16 @@ const Fees = () => {
     setIsSearching(results.length > 0 || results.length === 0);
   };
 
-  // BUG FIX: Fallback to empty array to prevent mapping crashes
-  const displayedStudents = isSearching ? searchResults : students || [];
+  // BUG FIX: Fallback to empty array to prevent mapping crashes and restrict for students
+  const displayedStudents = useMemo(() => {
+    let result = isSearching ? searchResults : students || [];
+    if (userRole === "Student") {
+      result = result.filter(
+        (s) => (s._id || s.id || s.studentId) === userData?._id,
+      );
+    }
+    return result;
+  }, [isSearching, searchResults, students, userRole, userData]);
 
   const getMonthLabel = (date) =>
     date.toLocaleString("default", { month: "long", year: "numeric" });
@@ -750,45 +788,47 @@ const Fees = () => {
         isLoading={isLoading || pendingLoading}
       />
 
-      <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
-        <h2 className="text-xl font-bold text-foreground mb-4">
-          Global Student Search
-        </h2>
-        <StudentSearch
-          students={allStudents || []}
-          onSearch={(results) => setGlobalSearchResults(results)}
-          debounceMs={300}
-        />
-        {globalSearchResults.length > 0 && (
-          <div className="mt-4 border border-border rounded-xl overflow-hidden divide-y divide-border/50 max-h-60 overflow-y-auto">
-            {globalSearchResults.map((student) => (
-              <div
-                key={student._id}
-                className="flex items-center justify-between p-3 bg-muted/20 hover:bg-muted/50 transition-colors"
-              >
-                <div>
-                  <p className="font-semibold text-foreground">
-                    {student.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Phone: {student.phone} | Email: {student.email}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleAutoSelectStudent(student)}
-                  className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      {userRole !== "Student" && (
+        <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-4">
+            Global Student Search
+          </h2>
+          <StudentSearch
+            students={allStudents || []}
+            onSearch={(results) => setGlobalSearchResults(results)}
+            debounceMs={300}
+          />
+          {globalSearchResults.length > 0 && (
+            <div className="mt-4 border border-border rounded-xl overflow-hidden divide-y divide-border/50 max-h-60 overflow-y-auto">
+              {globalSearchResults.map((student) => (
+                <div
+                  key={student._id}
+                  className="flex items-center justify-between p-3 bg-muted/20 hover:bg-muted/50 transition-colors"
                 >
-                  Locate & Select
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {student.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Phone: {student.phone} | Email: {student.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleAutoSelectStudent(student)}
+                    className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Locate & Select
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div>
         <FilterPanel
-          mainClasses={mainClasses || []}
+          mainClasses={displayedMainClasses || []}
           batches={filteredBatches || []}
           selectedMainClass={selectedMainClass}
           selectedBatch={selectedBatch}
