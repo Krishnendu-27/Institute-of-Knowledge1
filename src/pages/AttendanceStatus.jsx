@@ -91,10 +91,10 @@ const AttendanceStatus = () => {
 
   // Enforce student selection constraints
   useEffect(() => {
-    if (userRole === "Student" && userId) {
-      setSelectedStudentId(userId);
+    if (userRole === "Student" && (userData?._id || userId)) {
+      setSelectedStudentId(userData?._id || userId);
     }
-  }, [userRole, userId]);
+  }, [userRole, userId, userData]);
 
   useEffect(() => {
     if (userRole !== "Student" && batchStudents.length > 0) {
@@ -336,7 +336,7 @@ const AttendanceStatus = () => {
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-4">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
                   key={day}
@@ -388,13 +388,11 @@ const AttendanceStatus = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.01 }}
-                    className={`flex flex-col items-center justify-center py-3 sm:py-4 px-1 rounded-xl border transition-all ${bgClass}`}
+                    className={`flex flex-col items-center justify-center py-2 sm:py-4 px-0.5 sm:px-1 rounded-xl border transition-all ${bgClass}`}
                   >
-                    <span className="text-base sm:text-lg font-bold">
-                      {day}
-                    </span>
+                    <span className="text-sm sm:text-lg font-bold">{day}</span>
                     {icon}
-                    <span className="text-[10px] font-semibold mt-1 hidden sm:block text-center leading-tight">
+                    <span className="text-[9px] sm:text-[10px] font-semibold mt-1 block text-center leading-tight">
                       {statusText}
                     </span>
                   </motion.div>

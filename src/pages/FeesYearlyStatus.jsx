@@ -625,12 +625,24 @@ const FeesYearlyStatus = () => {
         ),
       );
 
-      relevantBatches = filterBatchesForTeacher(
-        relevantBatches,
-        userData?.batches || [],
-        userRole,
-        userData?.email,
-      );
+      if (userRole === "Teacher") {
+        relevantBatches = filterBatchesForTeacher(
+          relevantBatches,
+          userData?.batches || [],
+          userRole,
+          userData?.email,
+        );
+      } else if (userRole === "Student") {
+        relevantBatches = relevantBatches.filter((batch) => {
+          const inStudents = batch.students?.some(
+            (s) => (s._id || s) === userData?._id,
+          );
+          const inPairs = batch.mainClassStudentPairs?.some(
+            (p) => (p.student?._id || p.student) === userData?._id,
+          );
+          return inStudents || inPairs;
+        });
+      }
 
       setFilteredBatches(relevantBatches);
     } else {
@@ -658,8 +670,24 @@ const FeesYearlyStatus = () => {
   };
 
   const filteredStudents = useMemo(() => {
+    if (userRole === "Student") {
+      return students.filter(
+        (s) => (s._id || s.id || s.studentId) === userData?._id,
+      );
+    }
     return students;
-  }, [students]);
+  }, [students, userRole, userData]);
+
+  const displayedMainClasses = useMemo(() => {
+    if (!mainClasses) return [];
+    if (userRole === "Student") {
+      const studentClassIds = (userData?.mainClasses || []).map(
+        (c) => c._id || c,
+      );
+      return mainClasses.filter((mc) => studentClassIds.includes(mc._id));
+    }
+    return mainClasses;
+  }, [mainClasses, userRole, userData]);
 
   useEffect(() => {
     const fetchAllFees = async () => {
@@ -880,21 +908,25 @@ const FeesYearlyStatus = () => {
           </div>
 
           {/* Action Controls */}
-          {selectedMainClass && selectedBatch && students?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm"
-              >
-                <Printer className="w-5 h-5" />
-                Print Landscape
-              </button>
-            </div>
-          )}
+          {userRole !== "Student" &&
+            selectedMainClass &&
+            selectedBatch &&
+            students?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+                >
+                  <Printer className="w-5 h-5" />
+                  Print Landscape
+                </button>
+              </div>
+            )}
         </div>
 
         {/* --- Interactive Print Customization Panel --- */}
         {showPrintOptions &&
+          userRole !== "Student" &&
           selectedMainClass &&
           selectedBatch &&
           students?.length > 0 && (
@@ -1017,7 +1049,7 @@ const FeesYearlyStatus = () => {
                   className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 >
                   <option value="">-- Select Main Class --</option>
-                  {mainClasses.map((mainClass) => (
+                  {displayedMainClasses.map((mainClass) => (
                     <option key={mainClass._id} value={mainClass._id}>
                       {mainClass.name} (₹{mainClass.fees})
                     </option>
@@ -1227,7 +1259,7 @@ const FeesYearlyStatus = () => {
             )}
 
             {/* Conditional Summary Stats */}
-            {students && students.length > 0 && (
+            {userRole !== "Student" && students && students.length > 0 && (
               <div
                 className={`mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 print:mt-4 print:border-t print:border-gray-300 print:pt-4 print:grid-cols-4 ${!printConfig.showStats ? "print:hidden" : ""}`}
               >
