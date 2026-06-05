@@ -95,12 +95,31 @@ const useBatchStore = create((set, get) => ({
 
       const response = await api.post("/batch/create", batchData);
       const processedBatch = processBatchForTrade(response.data);
+
+      // Enrich the batch with teacher information from the request
+      if (batchData.teachers && batchData.teachers.length > 0) {
+        processedBatch.teachers = batchData.teachers.map((teacherId, idx) => ({
+          _id: teacherId,
+          name: batchData.teacherName || "Teacher",
+          email: batchData.teacherEmail || `teacher-${idx}@institute.local`,
+        }));
+      }
+
       set((state) => ({
         batches: [...state.batches, processedBatch],
         isLoading: false,
       }));
+
       toast.success("Batch created successfully!");
+
+      // Refresh the batch list after a short delay to ensure backend has processed it
+      setTimeout(() => {
+        get().fetchBatches();
+      }, 500);
+
       if (navigate) navigate(-1);
+
+      return processedBatch;
     } catch (error) {
       const message = error.response?.data?.error || "Failed to create batch";
       set({ error: message, isLoading: false });

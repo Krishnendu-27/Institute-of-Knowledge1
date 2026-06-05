@@ -378,6 +378,7 @@ const CreateCourse = () => {
     duration: 3,
     fees: "",
     teacherEmail: "",
+    teacherName: "",
   });
 
   const [calculatedEndDate, setCalculatedEndDate] = useState(null);
@@ -579,12 +580,11 @@ const CreateCourse = () => {
                             <div
                               key={teacher._id}
                               onClick={() => {
-                                handleChange({
-                                  target: {
-                                    name: "teacherEmail",
-                                    value: teacher.email,
-                                  },
-                                });
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  teacherEmail: teacher.email,
+                                  teacherName: teacher.name,
+                                }));
                                 setIsTeacherDropdownOpen(false);
                               }}
                               className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 cursor-pointer transition-colors"

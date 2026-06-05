@@ -237,6 +237,7 @@ const AttendancePage = () => {
     userData?.batches || [],
     userRole,
     userData?.email,
+    userData?._id,
   );
 
   if (!userData) {

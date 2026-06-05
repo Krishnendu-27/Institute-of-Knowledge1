@@ -1217,7 +1217,6 @@
 
 // export default ProfilePage;
 
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1339,6 +1338,7 @@ const ProfilePage = () => {
           loggedInUser?.batches || [],
           loggedInUserRole,
           loggedInUser?.email,
+          loggedInUser?._id,
         );
         const canAccess = canTeacherAccessStudent(
           activeUserId,

@@ -277,7 +277,7 @@ const StudentRow = ({
 };
 
 // --- Main Component ---
-const BatchDetails = () => {
+export default function BatchDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const { batchName } = useParams();
@@ -353,6 +353,8 @@ const BatchDetails = () => {
           userRole,
           currentBatch.teacherEmail,
           authUser?.email,
+          currentBatch,
+          authUser?._id,
         );
 
         if (!hasAccess) {
@@ -561,7 +563,13 @@ const BatchDetails = () => {
             </div>
             <p className="text-lg text-muted-foreground font-medium flex items-center gap-2">
               <Users className="w-5 h-5 opacity-70" />
-              Instructor: {currentBatch.teacherEmail}
+              Instructor:{" "}
+              {Array.isArray(currentBatch.teachers) &&
+              currentBatch.teachers.length > 0
+                ? currentBatch.teachers
+                    .map((t) => t.name || t.email || "Unknown")
+                    .join(", ")
+                : currentBatch.teacherEmail || "TBA"}
             </p>
           </div>
 
@@ -905,6 +913,4 @@ const BatchDetails = () => {
       </div>
     </motion.div>
   );
-};
-
-export default BatchDetails;
+}

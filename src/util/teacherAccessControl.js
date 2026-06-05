@@ -66,16 +66,56 @@ export const canTeacherAccessBatch = (
   userRole,
   batchTeacherEmail = null,
   userEmail = null,
+  batch = null,
+  userId = null,
 ) => {
   if (userRole === "Admin") return true;
   if (userRole !== "Teacher") return true; // Students can view batches
 
+  // Check 1: Match by teacher email (legacy)
   if (userEmail && batchTeacherEmail && userEmail === batchTeacherEmail)
     return true;
 
-  if (!teacherBatches || teacherBatches.length === 0) return false;
+  // Check 2: Check if batch ID is in teacher's batches array
+  if (!teacherBatches || teacherBatches.length === 0) {
+    // If teacherBatches is empty, check the batch.teachers array
+    if (batch && Array.isArray(batch.teachers)) {
+      // Check by user ID
+      if (
+        userId &&
+        batch.teachers.some((t) => String(t._id || t) === String(userId))
+      ) {
+        return true;
+      }
+      // Check by email
+      if (userEmail && batch.teachers.some((t) => t.email === userEmail)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-  return teacherBatches.some((batch) => batch._id === batchId);
+  // Check 3: Check if batch is in teacher's batches list
+  if (teacherBatches.some((batch) => batch._id === batchId)) {
+    return true;
+  }
+
+  // Check 4: Check batch.teachers array if batch object is provided
+  if (batch && Array.isArray(batch.teachers)) {
+    // Check by user ID
+    if (
+      userId &&
+      batch.teachers.some((t) => String(t._id || t) === String(userId))
+    ) {
+      return true;
+    }
+    // Check by email
+    if (userEmail && batch.teachers.some((t) => t.email === userEmail)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -124,6 +164,7 @@ export const filterBatchesForTeacher = (
   teacherBatches,
   userRole,
   userEmail = null,
+  userId = null,
 ) => {
   if (userRole === "Admin") return batches;
   if (userRole !== "Teacher") return batches;
@@ -133,8 +174,22 @@ export const filterBatchesForTeacher = (
   );
 
   return batches.filter((batch) => {
+    // Check 1: Batch is in user's batches array
     if (teacherBatchIds.has(batch._id)) return true;
+
+    // Check 2: Match by teacher email (if available in batch response)
     if (userEmail && batch.teacherEmail === userEmail) return true;
+
+    // Check 3: Match by teacher ID in the populated teachers array
+    if (Array.isArray(batch.teachers)) {
+      const teacherIds = batch.teachers.map((t) => t._id || t).map(String);
+      if (userId && teacherIds.includes(String(userId))) return true;
+
+      // Also check by email in populated teachers
+      if (userEmail && batch.teachers.some((t) => t.email === userEmail))
+        return true;
+    }
+
     return false;
   });
 };

@@ -79,12 +79,13 @@ const BatchList = () => {
     fetchBatches();
   }, [fetchBatches]);
 
-  // Filter batches for teachers
+  // Filter batches for teachers - now with userId support
   const batchesForUser = filterBatchesForTeacher(
     batches,
     user?.batches || [],
     userRole,
     user?.email,
+    user?._id,
   );
 
   const filteredBatches = batchesForUser.filter((batch) => {
@@ -92,7 +93,13 @@ const BatchList = () => {
     const matchesSearch =
       batch.name?.toLowerCase().includes(query) ||
       batch.weekday?.toLowerCase().includes(query) ||
-      batch.teacherEmail?.toLowerCase().includes(query);
+      batch.teacherEmail?.toLowerCase().includes(query) ||
+      (Array.isArray(batch.teachers) &&
+        batch.teachers.some(
+          (t) =>
+            t.name?.toLowerCase().includes(query) ||
+            t.email?.toLowerCase().includes(query),
+        ));
 
     const tradeId = batchTradeMap[batch._id] || "";
     const matchesTrade =
@@ -270,7 +277,14 @@ const BatchList = () => {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      <span className="truncate">{batch.teacherEmail}</span>
+                      <span className="truncate">
+                        {Array.isArray(batch.teachers) &&
+                        batch.teachers.length > 0
+                          ? batch.teachers
+                              .map((t) => t.name || t.email || "Unknown")
+                              .join(", ")
+                          : batch.teacherEmail || "TBA"}
+                      </span>
                     </p>
                   </div>
                 </div>

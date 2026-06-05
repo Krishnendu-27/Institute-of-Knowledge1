@@ -138,6 +138,8 @@ const CreateBatch = () => {
       startTime,
       endTime,
       teacherEmail: selectedTeacher.email,
+      teacherName: selectedTeacher.name || selectedTeacher.email,
+      teachers: [selectedTeacher._id],
       mainClasses: Array.from(mainClassesSet),
       students: Array.from(studentsSet),
       mainClassStudentPairs,
