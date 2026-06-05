@@ -100,7 +100,7 @@ const FilterPanel = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col">
           <label className="text-sm font-semibold text-foreground/80 mb-2">
-            Main Class
+            Courses
           </label>
           <div className="relative">
             <select

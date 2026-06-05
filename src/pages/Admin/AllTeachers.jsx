@@ -4,7 +4,6 @@ import {
   Search,
   ChevronRight,
   ChevronLeft,
-  Loader2,
   Mail,
   Phone,
   User,
@@ -12,6 +11,36 @@ import {
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import { useNavigate } from "react-router-dom";
+
+// --- Skeleton Loader Component ---
+const TeacherCardSkeleton = () => (
+  <div className="bg-card rounded-2xl border border-border/60 shadow-sm animate-pulse">
+    <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Left side: Avatar and Info */}
+      <div className="flex-1">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-muted rounded-full shrink-0" />
+          <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+            <div className="h-5 w-48 bg-muted rounded" />
+            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-1">
+              <div className="h-4 w-32 bg-muted/70 rounded" />
+              <div className="h-4 w-24 bg-muted/70 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side: Classes count and chevron */}
+      <div className="flex items-center justify-end gap-4 sm:ml-4 border-t sm:border-t-0 border-border/50 pt-4 sm:pt-0">
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="h-7 w-8 bg-muted rounded" />
+          <div className="h-3 w-14 bg-muted/70 rounded" />
+        </div>
+        <div className="w-6 h-6 bg-muted rounded shrink-0" />
+      </div>
+    </div>
+  </div>
+);
 
 const AllTeachers = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -105,7 +134,7 @@ const AllTeachers = () => {
     >
       <div className="max-w-7xl mx-auto w-full flex flex-col h-full gap-6">
         {/* HEADER SECTION - Fixed at the top */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0 relative">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">
               Teachers Directory
@@ -115,27 +144,29 @@ const AllTeachers = () => {
             </p>
           </div>
 
-          {/* SEARCH BOX */}
-          <div className="relative group w-full md:max-w-md shrink-0">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          {/* SEARCH BOX - Sticky on Mobile */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md py-2 md:py-0 w-full md:max-w-md shrink-0 md:relative md:z-auto">
+            <div className="relative group w-full">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-11 pr-12 py-3.5 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
+              />
+              {/* INSTANT CLEAR BUTTON */}
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-12 py-3.5 bg-background border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-base"
-            />
-            {/* INSTANT CLEAR BUTTON */}
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -147,11 +178,12 @@ const AllTeachers = () => {
         )}
 
         {/* LIST SECTION - Independent Scrollbar */}
-        <div className="flex-1 overflow-y-auto pr-2 pb-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-2 pb-4 custom-scrollbar relative">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-              <p>Loading Teachers...</p>
+            <div className="flex flex-col gap-4">
+              {[1, 2, 3, 4, 5].map((index) => (
+                <TeacherCardSkeleton key={index} />
+              ))}
             </div>
           ) : filteredTeachers.length === 0 ? (
             <div className="bg-card rounded-2xl border border-border border-dashed p-12 text-center h-full flex flex-col items-center justify-center">
@@ -188,15 +220,15 @@ const AllTeachers = () => {
                             <img
                               src={teacher.profilePic}
                               alt={teacher.name}
-                              className="w-14 h-14 rounded-full object-cover bg-muted shrink-0"
+                              className="w-14 h-14 rounded-full object-cover bg-muted shrink-0 border-2 border-transparent group-hover:border-primary/20 transition-colors"
                             />
                           ) : (
-                            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0">
+                            <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0 group-hover:bg-primary/20 transition-colors">
                               {teacher.name.charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-foreground truncate">
+                            <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                               {teacher.name}
                             </h3>
                             <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm text-muted-foreground">
@@ -223,16 +255,16 @@ const AllTeachers = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-end gap-4 sm:ml-4 border-t sm:border-t-0 pt-4 sm:pt-0">
+                      <div className="flex items-center justify-end gap-4 sm:ml-4 border-t sm:border-t-0 border-border/50 pt-4 sm:pt-0">
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-primary">
+                          <p className="text-2xl font-bold text-primary leading-none mb-1">
                             {teacher.mainClasses?.length || 0}
                           </p>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                             Classes
                           </p>
                         </div>
-                        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-transform shrink-0" />
                       </div>
                     </div>
                   </motion.div>
@@ -265,7 +297,7 @@ const AllTeachers = () => {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -275,10 +307,10 @@ const AllTeachers = () => {
                   <button
                     key={number}
                     onClick={() => setCurrentPage(number)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors shadow-sm ${
                       currentPage === number
                         ? "bg-primary text-primary-foreground"
-                        : "border border-border text-foreground hover:bg-muted"
+                        : "bg-card border border-border text-foreground hover:bg-muted"
                     }`}
                   >
                     {number}
@@ -291,7 +323,7 @@ const AllTeachers = () => {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>

@@ -12,6 +12,10 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  MapPin,
+  Phone,
+  Hash,
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
@@ -24,7 +28,53 @@ import {
 } from "../../util/teacherAccessControl";
 import { useNavigate } from "react-router-dom";
 
-const StudentRow = ({
+// --- Skeleton Loader Component ---
+const StudentCardSkeleton = () => (
+  <div className="bg-card rounded-2xl p-5 border border-border/60 shadow-sm flex flex-col gap-5 animate-pulse">
+    {/* Top Header */}
+    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-muted shrink-0" />
+        <div className="flex flex-col gap-2 w-full">
+          <div className="h-5 w-32 bg-muted rounded" />
+          <div className="h-4 w-48 bg-muted/60 rounded" />
+        </div>
+      </div>
+      <div className="w-24 h-8 bg-muted rounded-md shrink-0 hidden sm:block" />
+    </div>
+
+    {/* Middle Section */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-muted/20 p-4 rounded-xl border border-border/30">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-start gap-3">
+          <div className="w-4 h-4 bg-muted rounded shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-1.5 w-full">
+            <div className="h-3 w-16 bg-muted/80 rounded" />
+            <div className="h-4 w-24 bg-muted rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Bottom Section */}
+    <div className="pt-4 border-t border-border/50">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-5 h-5 bg-muted rounded" />
+        <div className="h-4 w-40 bg-muted rounded" />
+      </div>
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-[72px] bg-muted/30 rounded-xl w-full border border-border/50"
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const StudentCard = ({
   student,
   index,
   classMap,
@@ -46,12 +96,11 @@ const StudentRow = ({
     (cls) => cls._id || cls,
   );
 
-  const assignedClassIds = allEnrolledClassIds.filter(
-    (clsId) => progressMap[`${student._id}_${clsId}`],
-  );
+  // Use all assigned classes to ensure missing progress docs still render UI
+  const assignedClassIds = allEnrolledClassIds;
 
-  // --- Row Click Navigation Handler ---
-  const handleRowClick = () => {
+  // --- Card Click Navigation Handler ---
+  const handleCardClick = () => {
     navigate("/studentprofile", {
       state: {
         userId: student._id,
@@ -153,21 +202,27 @@ const StudentRow = ({
     );
   };
 
+  const fatherName =
+    student.fatherName ||
+    student.fathersName ||
+    student.father_name ||
+    student.fathername ||
+    student.parentName ||
+    "-";
+
   return (
-    <tr
-      onClick={handleRowClick}
-      className="hover:bg-muted/40 transition-colors group cursor-pointer border-b border-border/50 last:border-0 bg-card"
+    <div
+      onClick={handleCardClick}
+      className="bg-card hover:bg-muted/10 border border-border/60 hover:border-primary/40 rounded-2xl p-5 transition-all shadow-sm group cursor-pointer flex flex-col gap-5"
     >
-      <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
-        {index + 1}
-      </td>
-      <td className="px-4 py-4 font-medium text-foreground whitespace-nowrap">
-        <div className="flex items-center gap-3">
+      {/* Top Header: Avatar & Main Info */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
           {student.profilePic ? (
             <img
               src={student.profilePic}
               alt={student.name}
-              className="w-10 h-10 rounded-full object-cover border border-border bg-muted shrink-0 group-hover:border-primary/50 transition-colors"
+              className="w-14 h-14 rounded-full object-cover border-2 border-muted bg-muted shrink-0 group-hover:border-primary/50 transition-colors"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src =
@@ -177,78 +232,150 @@ const StudentRow = ({
               }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 font-bold text-sm uppercase group-hover:bg-primary/20 transition-colors">
-              {student.name ? student.name.charAt(0) : <User size={18} />}
+            <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/20 text-primary flex items-center justify-center shrink-0 font-bold text-lg uppercase group-hover:bg-primary/20 transition-colors">
+              {student.name ? student.name.charAt(0) : <User size={24} />}
             </div>
           )}
 
           <div className="flex flex-col">
-            <span className="group-hover:text-primary transition-colors">
-              {student.name || "Unnamed"}
-            </span>
-            <span className="text-xs text-muted-foreground font-normal mt-0.5">
+            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+              {student.name || "Unnamed Student"}
+            </h3>
+            <p className="text-sm text-muted-foreground break-all">
               {student.email}
-            </span>
+            </p>
           </div>
         </div>
-      </td>
-      <td className="px-4 py-4 text-muted-foreground font-mono whitespace-nowrap">
-        {studentId || "-"}
-      </td>
-      <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
-        {student.fatherName ||
-          student.fathersName ||
-          student.father_name ||
-          student.fathername ||
-          student.parentName ||
-          "-"}
-      </td>
-      <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
-        {student.address || "-"}
-      </td>
-      <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">
-        {student.phone || "-"}
-      </td>
-      <td className="px-4 py-4">
+
+        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 bg-muted/30 sm:bg-transparent p-3 sm:p-0 rounded-lg">
+          <div className="flex items-center gap-1.5 text-sm font-mono text-muted-foreground bg-background sm:bg-muted/50 px-2.5 py-1 rounded-md border border-border/50">
+            <span>ID : {studentId || "N/A"}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Middle Section: Personal Details */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-muted/20 p-4 rounded-xl border border-border/30">
+        <div className="flex items-start gap-3">
+          <User className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground mb-0.5">
+              Father's Name
+            </p>
+            <p className="text-sm font-medium text-foreground truncate">
+              {fatherName}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <Phone className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground mb-0.5">Mobile</p>
+            <p className="text-sm font-medium text-foreground truncate">
+              {student.phone || "-"}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <MapPin className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground mb-0.5">Address</p>
+            <p className="text-sm font-medium text-foreground truncate">
+              {student.address || "-"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section: Progress Tracker */}
+      <div className="pt-2 border-t border-border/50">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <h4 className="text-sm font-semibold text-foreground">
+            Course Progress Tracker
+          </h4>
+        </div>
+
         {isBuildingMap ? (
-          <div className="flex items-center gap-2 text-muted-foreground text-xs italic">
-            <Loader2 className="w-3 h-3 animate-spin text-primary" />
-            Loading progress...
+          <div className="space-y-3 animate-pulse">
+            {/* Skeleton Desktop Header */}
+            <div className="hidden lg:grid grid-cols-4 gap-4 px-3 mb-2">
+              <div className="h-3 bg-muted rounded w-20" />
+              <div className="h-3 bg-muted rounded w-20 mx-auto" />
+              <div className="h-3 bg-muted rounded w-20 mx-auto" />
+              <div className="h-3 bg-muted rounded w-24 mx-auto" />
+            </div>
+
+            {/* Skeleton Tracker Rows */}
+            {assignedClassIds.length > 0
+              ? assignedClassIds.map((clsId, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+                  >
+                    <div className="h-4 bg-muted rounded w-32" />
+                    <div className="grid grid-cols-3 gap-2 lg:col-span-3">
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                    </div>
+                  </div>
+                ))
+              : // Fallback skeleton if assignedClassIds length is 0 while fetching
+                [1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+                  >
+                    <div className="h-4 bg-muted rounded w-32" />
+                    <div className="grid grid-cols-3 gap-2 lg:col-span-3">
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                    </div>
+                  </div>
+                ))}
           </div>
         ) : assignedClassIds.length === 0 ? (
-          <div className="text-muted-foreground text-xs italic">
-            No active batches assigned
+          <div className="text-muted-foreground text-sm italic py-4 bg-muted/10 rounded-xl flex justify-center border border-dashed border-border">
+            No active courses assigned
           </div>
         ) : (
-          <div className="min-w-[420px]">
-            <div className="grid grid-cols-4 gap-3 text-xs font-semibold text-muted-foreground mb-3 px-2">
+          <div className="space-y-3">
+            {/* Desktop Header for Tracker Grid */}
+            <div className="hidden lg:grid grid-cols-4 gap-4 px-3 text-xs font-semibold text-muted-foreground">
               <span>Course Name</span>
-              <span className="text-center">Course</span>
-              <span className="text-center">Exam</span>
-              <span className="text-center">Certificate</span>
+              <span className="text-center">Course Status</span>
+              <span className="text-center">Exam Status</span>
+              <span className="text-center">Certificate Status</span>
             </div>
-            <div className="space-y-3">
-              {assignedClassIds.map((clsId) => (
-                <div
-                  key={clsId}
-                  className="grid grid-cols-4 gap-3 items-center bg-muted/30 p-2 rounded-xl border border-border/50"
-                >
+
+            {/* Tracker Items */}
+            {assignedClassIds.map((clsId) => (
+              <div
+                key={clsId}
+                className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+              >
+                <div className="flex items-center gap-2 lg:pr-2">
+                  <div className="w-2 h-2 rounded-full bg-primary/50 shrink-0 lg:hidden" />
                   <span
-                    className="text-xs font-medium text-foreground truncate pr-2"
+                    className="text-sm font-medium text-foreground truncate"
                     title={classMap.get(clsId)}
                   >
-                    {classMap.get(clsId) || "Unknown"}
+                    {classMap.get(clsId) || "Unknown Course"}
                   </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 lg:col-span-3 lg:grid-cols-3">
                   {renderStatusToggle(clsId, "batchcompletion", "Course")}
                   {renderStatusToggle(clsId, "examcompletion", "Exam")}
                   {renderStatusToggle(clsId, "certificateIssued", "Issued")}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 };
 
@@ -260,7 +387,7 @@ const AllStudents = () => {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Change to adjust how many rows appear per page
+  const itemsPerPage = 10;
 
   // User Store
   const students = useUserStore((state) => state.students);
@@ -347,7 +474,7 @@ const AllStudents = () => {
 
   const handleProgressUpdate = (studentId, classId, updatedFields) => {
     setProgressMap((prev) => {
-      const key = `${studentId}_classId`;
+      const key = `${studentId}_${classId}`;
       return {
         ...prev,
         [key]: { ...prev[key], ...updatedFields },
@@ -405,7 +532,6 @@ const AllStudents = () => {
       animate="in"
       variants={pageVariants}
       transition={{ duration: 0.3 }}
-      // Changed to h-full flex flex-col to solve scrollbar issue
       className="h-full bg-background p-4 md:p-8 relative flex flex-col"
     >
       {/* Interactive Toast Notification */}
@@ -442,8 +568,8 @@ const AllStudents = () => {
       </AnimatePresence>
 
       <div className="max-w-[1600px] mx-auto w-full h-full flex flex-col gap-6">
-        {/* HEADER SECTION - shrink-0 to prevent collapsing */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 relative">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
               Student Directory
@@ -453,26 +579,29 @@ const AllStudents = () => {
             </p>
           </div>
 
-          <div className="relative group w-full md:max-w-md shrink-0">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          {/* Sticky Search Bar (Mobile specific sticky styling) */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md py-2 md:py-0 w-full md:max-w-md shrink-0 md:relative md:z-auto">
+            <div className="relative group w-full">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-11 pr-12 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+              />
+              {/* INSTANT CLEAR BUTTON */}
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              placeholder="Search by name, email, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-11 pr-12 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-            />
-            {/* INSTANT CLEAR BUTTON */}
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -483,10 +612,14 @@ const AllStudents = () => {
           </div>
         )}
 
+        {/* LOADING & DATA DISPLAY */}
         {isLoadingStudents ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-32 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-            <p className="font-medium">Loading Student Database...</p>
+          <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 pb-4">
+            <div className="flex flex-col gap-4">
+              {[1, 2, 3].map((skeletonIndex) => (
+                <StudentCardSkeleton key={skeletonIndex} />
+              ))}
+            </div>
           </div>
         ) : filteredStudents.length === 0 ? (
           <div className="flex-1 bg-card rounded-2xl border border-border border-dashed p-16 flex flex-col items-center justify-center text-muted-foreground">
@@ -501,65 +634,35 @@ const AllStudents = () => {
             </p>
           </div>
         ) : (
-          /* TABLE SECTION - flex-1 min-h-0 makes it fill remaining space but scroll internally */
-          <div className="flex-1 flex flex-col min-h-0 bg-card border border-border rounded-2xl shadow-sm overflow-hidden relative">
+          /* CARD LIST SECTION - Scrollable Y-axis only */
+          <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 pb-4">
             {isBuildingMap && (
-              <div className="absolute top-0 left-0 right-0 h-1 bg-primary/10 overflow-hidden z-20">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-primary/10 overflow-hidden z-20 rounded-full mb-4">
                 <div className="h-full bg-primary w-1/3 animate-[slide_1.5s_ease-in-out_infinite]" />
               </div>
             )}
 
-            <div className="flex-1 overflow-auto custom-scrollbar">
-              <table className="w-full text-sm text-left">
-                {/* sticky top-0 ensures header stays visible while scrolling rows */}
-                <thead className="sticky top-0 z-10 bg-muted border-b border-border text-muted-foreground shadow-sm">
-                  <tr>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      #
-                    </th>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      Student Identity
-                    </th>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      Student ID
-                    </th>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      Father Name
-                    </th>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      Address
-                    </th>
-                    <th className="px-4 py-4 font-semibold whitespace-nowrap">
-                      Mobile
-                    </th>
-                    <th className="px-4 py-4 font-semibold">
-                      Course Progress Tracker
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {paginatedStudents.map((student, index) => (
-                    <StudentRow
-                      key={student._id || index}
-                      student={student}
-                      index={startIndex + index} // Adjusted to show correct row numbers across pages
-                      classMap={classMap}
-                      progressMap={progressMap}
-                      allStudents={students}
-                      onProgressUpdate={handleProgressUpdate}
-                      onShowToast={triggerToast}
-                      isBuildingMap={isBuildingMap}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex flex-col gap-4">
+              {paginatedStudents.map((student, index) => (
+                <StudentCard
+                  key={student._id || index}
+                  student={student}
+                  index={startIndex + index}
+                  classMap={classMap}
+                  progressMap={progressMap}
+                  allStudents={students}
+                  onProgressUpdate={handleProgressUpdate}
+                  onShowToast={triggerToast}
+                  isBuildingMap={isBuildingMap}
+                />
+              ))}
             </div>
           </div>
         )}
 
-        {/* PAGINATION SECTION - shrink-0 to stay anchored at bottom */}
+        {/* PAGINATION SECTION */}
         {!isLoadingStudents && totalPages > 1 && (
-          <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
+          <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 py-2 border-t border-border mt-2 pt-4">
             <p className="text-sm text-muted-foreground order-2 sm:order-1">
               Showing{" "}
               <span className="font-medium text-foreground">

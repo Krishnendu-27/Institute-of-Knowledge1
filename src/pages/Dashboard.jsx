@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Bell,
   Download,
-  Loader2,
 } from "lucide-react";
 import useAuthStore from "../stores/useAuthStore";
 import useUserStore from "../stores/useUserStore";
@@ -26,7 +25,7 @@ import { getStudentId } from "../util/getStudentId";
 import { api } from "../api/api";
 
 // ==========================================
-// REUSABLE UI COMPONENTS (CARDS)
+// REUSABLE UI COMPONENTS (CARDS & SKELETONS)
 // ==========================================
 
 const KpiCard = ({
@@ -105,6 +104,94 @@ const SectionCard = ({ title, icon: Icon, children, action }) => (
       {action && action}
     </div>
     <div className="p-5 flex-1 overflow-auto custom-scrollbar">{children}</div>
+  </div>
+);
+
+// --- Skeleton Loaders ---
+
+const TableSkeleton = () => (
+  <div className="overflow-x-auto rounded-md border border-border/50">
+    <table className="w-full text-sm text-left border-collapse">
+      <thead className="text-muted-foreground bg-muted/30 border-b border-border/50">
+        <tr>
+          {[
+            "#",
+            "Student Name",
+            "Student ID",
+            "Address",
+            "Course",
+            "Admission Date",
+          ].map((th) => (
+            <th key={th} className="py-3 px-4 font-semibold whitespace-nowrap">
+              {th}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border/50">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <tr key={i} className="animate-pulse">
+            <td className="py-3 px-4">
+              <div className="h-4 w-4 bg-muted rounded"></div>
+            </td>
+            <td className="py-3 px-4">
+              <div className="h-4 w-32 bg-muted rounded"></div>
+            </td>
+            <td className="py-3 px-4">
+              <div className="h-4 w-20 bg-muted rounded"></div>
+            </td>
+            <td className="py-3 px-4">
+              <div className="h-4 w-40 bg-muted rounded"></div>
+            </td>
+            <td className="py-3 px-4">
+              <div className="h-4 w-24 bg-muted rounded"></div>
+            </td>
+            <td className="py-3 px-4">
+              <div className="h-4 w-24 bg-muted rounded"></div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const TeacherBatchSkeleton = () => (
+  <div className="space-y-3">
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="p-4 border border-border rounded-xl shadow-sm animate-pulse"
+      >
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex flex-col gap-2">
+            <div className="h-5 w-32 bg-muted rounded"></div>
+            <div className="h-3 w-40 bg-muted/70 rounded"></div>
+          </div>
+          <div className="h-6 w-20 bg-muted rounded-md shrink-0"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const StudentScheduleSkeleton = () => (
+  <div className="space-y-3">
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/30 border border-border rounded-xl shadow-sm animate-pulse"
+      >
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-muted border border-border/50 shrink-0"></div>
+          <div className="flex flex-col gap-2">
+            <div className="h-5 w-40 bg-muted rounded"></div>
+            <div className="h-3 w-32 bg-muted/70 rounded"></div>
+          </div>
+        </div>
+        <div className="mt-3 sm:mt-0 h-6 w-32 bg-muted rounded-lg shrink-0"></div>
+      </div>
+    ))}
   </div>
 );
 
@@ -191,9 +278,7 @@ const AdminDashboard = ({
         <div className="lg:col-span-2">
           <SectionCard title="Recent Enrollments" icon={Users}>
             {isLoading || isMetricsLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="animate-spin text-primary w-8 h-8" />
-              </div>
+              <TableSkeleton />
             ) : recentStudents.length > 0 ? (
               <div className="overflow-x-auto rounded-md border border-border/50">
                 <table className="w-full text-sm text-left border-collapse">
@@ -314,9 +399,7 @@ const TeacherDashboard = ({ navigate, user, batches, isLoading }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard title="Quick Batch Access" icon={BookOpen}>
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="animate-spin text-primary w-8 h-8" />
-            </div>
+            <TeacherBatchSkeleton />
           ) : myBatches.length > 0 ? (
             <div className="space-y-3">
               {myBatches.map((batch) => (
@@ -339,7 +422,7 @@ const TeacherDashboard = ({ navigate, user, batches, isLoading }) => {
                         - {batch.endTime}
                       </p>
                     </div>
-                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md border border-primary/20">
+                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md border border-primary/20 shrink-0">
                       {batch.students?.length || 0} Students
                     </span>
                   </div>
@@ -405,9 +488,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
         <div className="lg:col-span-2">
           <SectionCard title="My Class Schedule" icon={Calendar}>
             {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="animate-spin text-primary w-8 h-8" />
-              </div>
+              <StudentScheduleSkeleton />
             ) : myBatches.length > 0 ? (
               <div className="space-y-3">
                 {myBatches.map((batch) => (
@@ -416,7 +497,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
                     className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/30 border border-border rounded-xl shadow-sm"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex flex-col items-center justify-center font-bold border border-primary/20">
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex flex-col items-center justify-center font-bold border border-primary/20 shrink-0">
                         <Calendar size={20} />
                       </div>
                       <div>
@@ -429,7 +510,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
                         </p>
                       </div>
                     </div>
-                    <span className="mt-3 sm:mt-0 px-3 py-1 bg-background border border-border text-foreground text-xs font-bold rounded-lg text-center">
+                    <span className="mt-3 sm:mt-0 px-3 py-1 bg-background border border-border text-foreground text-xs font-bold rounded-lg text-center shrink-0">
                       Instructor: {batch.teacherEmail?.split("@")[0]}
                     </span>
                   </div>
