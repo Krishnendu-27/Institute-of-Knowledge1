@@ -83,6 +83,7 @@ const StudentCard = ({
   onProgressUpdate,
   onShowToast,
   isBuildingMap,
+  userRole,
 }) => {
   const navigate = useNavigate();
   const [loadingToggles, setLoadingToggles] = useState({});
@@ -101,6 +102,8 @@ const StudentCard = ({
 
   // --- Card Click Navigation Handler ---
   const handleCardClick = () => {
+    if (userRole === "Teacher") return;
+
     navigate("/studentprofile", {
       state: {
         userId: student._id,
@@ -156,11 +159,27 @@ const StudentCard = ({
     const isMissingData = !progressDoc;
     const isCertificate = fieldName === "certificateIssued";
 
+    // --- Teacher Access Control ---
+    // Teachers can only toggle 'batchcompletion' (Course End)
+    const isTeacher = userRole === "Teacher";
+    const isAllowedForTeacher = fieldName === "batchcompletion";
+    const isDisabledByRole = isTeacher && !isAllowedForTeacher;
+
+    const isDisabled = isMissingData || isUpdating || isDisabledByRole;
+
     return (
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          if (isDisabledByRole) {
+            if (onShowToast)
+              onShowToast(
+                "Teachers can only update the Course End status.",
+                "error",
+              );
+            return;
+          }
           if (isMissingData) {
             if (onShowToast)
               onShowToast("The batch is not assigned yet.", "error");
@@ -170,7 +189,7 @@ const StudentCard = ({
           handleToggle(clsId, fieldName, isChecked, label);
         }}
         className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-          isMissingData || isUpdating
+          isDisabled
             ? "opacity-50 cursor-not-allowed border-border bg-background"
             : isCertificate && isChecked
               ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-sm"
@@ -654,6 +673,7 @@ const AllStudents = () => {
                   onProgressUpdate={handleProgressUpdate}
                   onShowToast={triggerToast}
                   isBuildingMap={isBuildingMap}
+                  userRole={userRole}
                 />
               ))}
             </div>
