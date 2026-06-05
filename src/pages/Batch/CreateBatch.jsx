@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,20 +13,20 @@ import {
   Users,
   GraduationCap,
   Briefcase,
-  ArrowLeft,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
-import { getReadableError } from "../../util/Error/Error";
 import { TRADES } from "../../constants/trades";
 import useTradeStore from "../../stores/useTradeStore";
 
 const CreateBatch = () => {
   const navigate = useNavigate();
-  const { createBatch, isLoading, error } = useBatchStore();
+  const { createBatch, isLoading } = useBatchStore();
 
   // Store connections
   const { teachers, students, getTeachers, getStudents } = useUserStore();
@@ -37,13 +37,16 @@ const CreateBatch = () => {
   const [weekday, setWeekday] = useState("Monday");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [selectedTradeId, setSelectedTradeId] = useState("");
 
   // Relational Data State
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [selectedClasses, setSelectedClasses] = useState([]);
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [selectedTradeId, setSelectedTradeId] = useState("");
   const assignTradeToBatch = useTradeStore((state) => state.assignTradeToBatch);
+
+  // Pairs State: [{ id, mainClass, student }]
+  const [pairs, setPairs] = useState([
+    { id: Date.now(), mainClass: null, student: null },
+  ]);
 
   // UI / Search State
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -53,39 +56,16 @@ const CreateBatch = () => {
     student: "",
   });
 
-  // Isolated Refs for accurate click-outside detection
-  const teacherRef = useRef(null);
-  const classRef = useRef(null);
-  const studentRef = useRef(null);
-
   useEffect(() => {
     getTeachers();
     getStudents();
     getClasses();
   }, [getTeachers, getStudents, getClasses]);
 
-  // Handle clicking outside to close specific dropdowns
+  // Handle clicking outside to close active dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        activeDropdown === "teacher" &&
-        teacherRef.current &&
-        !teacherRef.current.contains(event.target)
-      ) {
-        setActiveDropdown(null);
-      }
-      if (
-        activeDropdown === "class" &&
-        classRef.current &&
-        !classRef.current.contains(event.target)
-      ) {
-        setActiveDropdown(null);
-      }
-      if (
-        activeDropdown === "student" &&
-        studentRef.current &&
-        !studentRef.current.contains(event.target)
-      ) {
+      if (activeDropdown && !event.target.closest(".dropdown-container")) {
         setActiveDropdown(null);
       }
     };
@@ -93,30 +73,64 @@ const CreateBatch = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
 
+  // Handle Teacher Selection
+  const handleTeacherSelect = (teacher) => {
+    setSelectedTeacher(teacher);
+    // Reset pairs when teacher changes to clear invalid classes
+    setPairs([{ id: Date.now(), mainClass: null, student: null }]);
+    setActiveDropdown(null);
+    setSearchQueries({ teacher: "", class: "", student: "" });
+  };
+
+  // Pair Management Functions
+  const addPair = () => {
+    setPairs([...pairs, { id: Date.now(), mainClass: null, student: null }]);
+  };
+
+  const removePair = (id) => {
+    if (pairs.length > 1) {
+      setPairs(pairs.filter((p) => p.id !== id));
+    }
+  };
+
+  const updatePair = (id, field, value) => {
+    setPairs(
+      pairs.map((p) => {
+        if (p.id === id) {
+          const newPair = { ...p, [field]: value };
+          // If class changes, reset the student since they must match the new class
+          if (field === "mainClass") {
+            newPair.student = null;
+          }
+          return newPair;
+        }
+        return p;
+      }),
+    );
+    setActiveDropdown(null);
+    setSearchQueries({ teacher: "", class: "", student: "" });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !selectedTeacher ||
-      selectedClasses.length === 0 ||
-      selectedStudents.length === 0
-    ) {
+    const validPairs = pairs.filter((p) => p.mainClass && p.student);
+
+    if (!selectedTeacher || validPairs.length === 0) {
       toast.error(
-        "Please select a teacher, at least one class, and at least one student.",
+        "Please select a teacher and create at least one valid course-student pair.",
       );
       return;
     }
 
-    const mainClassStudentPairs = [];
+    // Extract unique classes and students from the valid pairs
+    const mainClassesSet = new Set(validPairs.map((p) => p.mainClass._id));
+    const studentsSet = new Set(validPairs.map((p) => p.student._id));
 
-    selectedClasses.forEach((cls) => {
-      selectedStudents.forEach((std) => {
-        mainClassStudentPairs.push({
-          mainClass: cls._id,
-          student: std._id,
-        });
-      });
-    });
+    const mainClassStudentPairs = validPairs.map((p) => ({
+      mainClass: p.mainClass._id,
+      student: p.student._id,
+    }));
 
     const payload = {
       name,
@@ -124,8 +138,8 @@ const CreateBatch = () => {
       startTime,
       endTime,
       teacherEmail: selectedTeacher.email,
-      mainClasses: selectedClasses.map((c) => c._id),
-      students: selectedStudents.map((s) => s._id),
+      mainClasses: Array.from(mainClassesSet),
+      students: Array.from(studentsSet),
       mainClassStudentPairs,
       tradeId: selectedTradeId || undefined,
     };
@@ -144,7 +158,7 @@ const CreateBatch = () => {
     }
   };
 
-  // --- Helper Components & Functions ---
+  // --- Helpers & Derivations ---
 
   const getInitials = (nameStr) =>
     nameStr ? nameStr.charAt(0).toUpperCase() : "U";
@@ -169,20 +183,43 @@ const CreateBatch = () => {
     </div>
   );
 
-  const handleSearchChange = (field, value) => {
+  const handleSearchChange = (field, value, activeKey) => {
     setSearchQueries((prev) => ({ ...prev, [field]: value }));
-    setActiveDropdown(field); // Auto-open dropdown when typing
+    setActiveDropdown(activeKey);
   };
 
-  // Derived filtered lists (excludes already selected items)
+  // Filter classes based on selected teacher's assigned classes
+  const getAvailableClasses = () => {
+    if (!selectedTeacher || !selectedTeacher.mainClasses) return [];
+    return mainClasses.filter((cls) =>
+      selectedTeacher.mainClasses.some((tc) => (tc._id || tc) === cls._id),
+    );
+  };
+
+  // Filter students based on the selected class AND exclude those already selected in other pairs
+  const getAvailableStudents = (selectedClassId, currentPairId) => {
+    if (!selectedClassId) return [];
+
+    // Get an array of student IDs already selected in OTHER pairs
+    const alreadySelectedStudentIds = pairs
+      .filter((p) => p.id !== currentPairId && p.student)
+      .map((p) => p.student._id);
+
+    return students?.filter((std) => {
+      // 1. Check if the student belongs to the selected class
+      const belongsToClass = std.mainClasses?.some(
+        (sc) => (sc._id || sc) === selectedClassId,
+      );
+      // 2. Check if the student is NOT already selected in another pair
+      const isNotSelectedYet = !alreadySelectedStudentIds.includes(std._id);
+
+      return belongsToClass && isNotSelectedYet;
+    });
+  };
+
+  const availableClasses = getAvailableClasses();
   const availableTeachers = teachers?.filter(
     (t) => t._id !== selectedTeacher?._id,
-  );
-  const availableClasses = mainClasses?.filter(
-    (c) => !selectedClasses.some((sc) => sc._id === c._id),
-  );
-  const availableStudents = students?.filter(
-    (s) => !selectedStudents.some((ss) => ss._id === s._id),
   );
 
   return (
@@ -194,7 +231,7 @@ const CreateBatch = () => {
       <div className="p-5 sm:p-8 rounded-3xl bg-card border border-border shadow-2xl transition-colors duration-300">
         <BackButton
           details={`Set up core details, schedule, and enroll members to provision a
-              new learning batch.`}
+            new learning batch.`}
         />
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 mt-6">
           {/* SECTION 1: Core Details */}
@@ -221,7 +258,7 @@ const CreateBatch = () => {
               </div>
 
               {/* Teacher Assignment */}
-              <div className="md:col-span-1 relative" ref={teacherRef}>
+              <div className="md:col-span-1 relative dropdown-container">
                 <label className="block text-sm font-semibold text-foreground mb-2">
                   Assign Lead Teacher
                 </label>
@@ -242,7 +279,7 @@ const CreateBatch = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedTeacher(null);
+                          handleTeacherSelect(null);
                         }}
                         className="text-primary/70 hover:text-primary ml-1 p-1 transition-colors"
                       >
@@ -260,7 +297,11 @@ const CreateBatch = () => {
                         placeholder="Search teacher by name or email..."
                         value={searchQueries.teacher}
                         onChange={(e) =>
-                          handleSearchChange("teacher", e.target.value)
+                          handleSearchChange(
+                            "teacher",
+                            e.target.value,
+                            "teacher",
+                          )
                         }
                         className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate"
                       />
@@ -295,14 +336,7 @@ const CreateBatch = () => {
                         .map((teacher) => (
                           <div
                             key={teacher._id || teacher.email}
-                            onClick={() => {
-                              setSelectedTeacher(teacher);
-                              setSearchQueries((prev) => ({
-                                ...prev,
-                                teacher: "",
-                              }));
-                              setActiveDropdown(null);
-                            }}
+                            onClick={() => handleTeacherSelect(teacher)}
                             className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                           >
                             <Avatar
@@ -355,7 +389,8 @@ const CreateBatch = () => {
               </div>
             </div>
           </div>
-          {/* SECTION 3: Schedule */}
+
+          {/* SECTION 2: Schedule */}
           <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6">
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
               <Calendar size={20} className="text-primary" />
@@ -421,245 +456,303 @@ const CreateBatch = () => {
               </div>
             </div>
           </div>
-          {/* SECTION 2: Enrollments */}
-          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-8">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-2">
-              <Users size={20} className="text-primary" />
-              Courses and Students
-            </h2>
 
-            {/* MAIN CLASSES (Multi Select) */}
-            <div className="relative" ref={classRef}>
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                Select Courses
-              </label>
+          {/* SECTION 3: Enrollments (Paired System) */}
+          <div
+            className={`bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6 transition-opacity ${
+              !selectedTeacher
+                ? "opacity-50 pointer-events-none"
+                : "opacity-100"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Users size={20} className="text-primary" />
+                Courses and Students
+              </h2>
+              {!selectedTeacher && (
+                <span className="text-xs text-destructive bg-destructive/10 px-3 py-1 rounded-full font-medium">
+                  Select a teacher first
+                </span>
+              )}
+            </div>
 
-              <div
-                className="w-full min-h-[52px] p-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
-                onClick={() => setActiveDropdown("class")}
-              >
-                <AnimatePresence>
-                  {selectedClasses.map((cls, index) => (
-                    <motion.span
-                      layout
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      key={cls._id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium"
-                    >
-                      <BookOpen size={14} />
-                      {index + 1}. {cls.name}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedClasses((prev) =>
-                            prev.filter((i) => i._id !== cls._id),
-                          );
-                        }}
-                        className="hover:text-primary p-0.5 rounded-full hover:bg-primary/20 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
-                    </motion.span>
-                  ))}
-                </AnimatePresence>
-
-                <div className="flex-1 min-w-[150px] flex items-center ml-2">
-                  <Search
-                    size={16}
-                    className="text-muted-foreground mr-2 shrink-0"
-                  />
-                  <input
-                    type="text"
-                    placeholder={
-                      selectedClasses.length === 0
-                        ? "Search and map classes..."
-                        : "Add another class..."
-                    }
-                    value={searchQueries.class}
-                    onChange={(e) =>
-                      handleSearchChange("class", e.target.value)
-                    }
-                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm truncate"
-                  />
-                </div>
-              </div>
-
+            <div className="space-y-4">
               <AnimatePresence>
-                {activeDropdown === "class" && (
+                {pairs.map((pair, index) => (
                   <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                    key={pair.id}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-start"
                   >
-                    {availableClasses
-                      ?.filter((c) =>
-                        c.name
-                          ?.toLowerCase()
-                          .includes(searchQueries.class.toLowerCase()),
-                      )
-                      .map((cls, index) => (
-                        <div
-                          key={cls._id}
-                          onClick={() => {
-                            setSelectedClasses([...selectedClasses, cls]);
-                            setSearchQueries((prev) => ({
-                              ...prev,
-                              class: "",
-                            }));
-                            setActiveDropdown(null);
-                          }}
-                          className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
-                        >
-                          <Avatar
-                            icon={BookOpen}
-                            bgColor="bg-primary/20"
-                            textColor="text-primary"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                              {index + 1}. {cls.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {cls.code}
-                            </p>
+                    {/* Course Selection for Pair */}
+                    <div className="relative dropdown-container">
+                      <div
+                        className="relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm cursor-text"
+                        onClick={() => setActiveDropdown(`class-${pair.id}`)}
+                      >
+                        {pair.mainClass ? (
+                          <div className="flex items-center gap-2 bg-primary/10 px-2 py-1.5 rounded-lg w-full">
+                            <Avatar
+                              icon={BookOpen}
+                              bgColor="bg-primary/20"
+                              textColor="text-primary"
+                            />
+                            <span className="text-sm font-medium text-primary truncate flex-1">
+                              {pair.mainClass.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updatePair(pair.id, "mainClass", null);
+                              }}
+                              className="text-primary/70 hover:text-primary ml-1 p-1 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
                           </div>
-                        </div>
-                      ))}
-                    {availableClasses?.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                        All classes selected or none found.
+                        ) : (
+                          <>
+                            <Search
+                              size={16}
+                              className="text-muted-foreground mr-2 shrink-0"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Select Class..."
+                              value={
+                                activeDropdown === `class-${pair.id}`
+                                  ? searchQueries.class
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                handleSearchChange(
+                                  "class",
+                                  e.target.value,
+                                  `class-${pair.id}`,
+                                )
+                              }
+                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate"
+                            />
+                          </>
+                        )}
+                        {!pair.mainClass && (
+                          <ChevronDown
+                            className="absolute right-4 text-muted-foreground pointer-events-none"
+                            size={18}
+                          />
+                        )}
                       </div>
-                    )}
+
+                      <AnimatePresence>
+                        {activeDropdown === `class-${pair.id}` &&
+                          !pair.mainClass && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                            >
+                              {availableClasses
+                                .filter((c) =>
+                                  c.name
+                                    ?.toLowerCase()
+                                    .includes(
+                                      searchQueries.class.toLowerCase(),
+                                    ),
+                                )
+                                .map((cls) => (
+                                  <div
+                                    key={cls._id}
+                                    onClick={() =>
+                                      updatePair(pair.id, "mainClass", cls)
+                                    }
+                                    className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
+                                  >
+                                    <Avatar
+                                      icon={BookOpen}
+                                      bgColor="bg-primary/20"
+                                      textColor="text-primary"
+                                    />
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-foreground">
+                                        {cls.name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {cls.code}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              {availableClasses.length === 0 && (
+                                <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+                                  No matching classes for this teacher.
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Student Selection for Pair */}
+                    <div className="relative dropdown-container">
+                      <div
+                        className={`relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border transition-all shadow-sm ${
+                          pair.mainClass
+                            ? "bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary cursor-text"
+                            : "bg-muted/50 cursor-not-allowed"
+                        }`}
+                        onClick={() => {
+                          if (pair.mainClass)
+                            setActiveDropdown(`student-${pair.id}`);
+                        }}
+                      >
+                        {pair.student ? (
+                          <div className="flex items-center gap-2 bg-muted px-2 py-1.5 rounded-lg w-full border border-border shadow-sm">
+                            <img
+                              src={
+                                pair.student.profilePic ||
+                                `https://ui-avatars.com/api/?name=${pair.student.name || "S"}&background=random`
+                              }
+                              alt={pair.student.name}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                            <span className="text-sm font-medium text-foreground truncate flex-1">
+                              {pair.student.name ||
+                                pair.student.email.split("@")[0]}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updatePair(pair.id, "student", null);
+                              }}
+                              className="text-muted-foreground hover:text-destructive ml-1 p-1 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Search
+                              size={16}
+                              className="text-muted-foreground mr-2 shrink-0"
+                            />
+                            <input
+                              type="text"
+                              disabled={!pair.mainClass}
+                              placeholder={
+                                pair.mainClass
+                                  ? "Select Student..."
+                                  : "Select Class first"
+                              }
+                              value={
+                                activeDropdown === `student-${pair.id}`
+                                  ? searchQueries.student
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                handleSearchChange(
+                                  "student",
+                                  e.target.value,
+                                  `student-${pair.id}`,
+                                )
+                              }
+                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate disabled:cursor-not-allowed"
+                            />
+                          </>
+                        )}
+                        {!pair.student && (
+                          <ChevronDown
+                            className="absolute right-4 text-muted-foreground pointer-events-none"
+                            size={18}
+                          />
+                        )}
+                      </div>
+
+                      <AnimatePresence>
+                        {activeDropdown === `student-${pair.id}` &&
+                          !pair.student &&
+                          pair.mainClass && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                            >
+                              {getAvailableStudents(pair.mainClass._id, pair.id)
+                                .filter(
+                                  (s) =>
+                                    s.name
+                                      ?.toLowerCase()
+                                      .includes(
+                                        searchQueries.student.toLowerCase(),
+                                      ) ||
+                                    s.email
+                                      ?.toLowerCase()
+                                      .includes(
+                                        searchQueries.student.toLowerCase(),
+                                      ),
+                                )
+                                .map((student) => (
+                                  <div
+                                    key={student._id}
+                                    onClick={() =>
+                                      updatePair(pair.id, "student", student)
+                                    }
+                                    className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
+                                  >
+                                    <Avatar
+                                      src={student.profilePic}
+                                      name={student.name || student.email}
+                                      icon={GraduationCap}
+                                    />
+                                    <div className="flex-1 overflow-hidden">
+                                      <p className="text-sm font-medium text-foreground truncate">
+                                        {student.name || "Unknown Student"}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {student.email}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              {getAvailableStudents(pair.mainClass._id, pair.id)
+                                .length === 0 && (
+                                <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+                                  No available students (or all are already
+                                  assigned).
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Remove Pair Button */}
+                    <button
+                      type="button"
+                      onClick={() => removePair(pair.id)}
+                      disabled={pairs.length === 1}
+                      className="mt-1 sm:mt-0 p-3.5 rounded-xl border border-border bg-background text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </motion.div>
-                )}
+                ))}
               </AnimatePresence>
             </div>
 
-            {/* STUDENTS (Multi Select) */}
-            <div className="relative" ref={studentRef}>
-              <label className="block text-sm font-semibold text-foreground mb-2">
-                Select Enroll Students
-              </label>
-
-              <div
-                className="w-full min-h-[52px] p-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm flex flex-wrap gap-2 items-center cursor-text"
-                onClick={() => setActiveDropdown("student")}
-              >
-                <AnimatePresence>
-                  {selectedStudents.map((std, index) => (
-                    <motion.span
-                      layout
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      key={std._id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-muted text-foreground text-sm font-medium border border-border shadow-sm"
-                    >
-                      <img
-                        src={
-                          std.profilePic ||
-                          `https://ui-avatars.com/api/?name=${std.name || "S"}&background=random`
-                        }
-                        alt={std.name}
-                        className="w-5 h-5 rounded-full object-cover"
-                      />
-                      {index + 1}. {std.name || std.email.split("@")[0]}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedStudents((prev) =>
-                            prev.filter((i) => i._id !== std._id),
-                          );
-                        }}
-                        className="hover:text-destructive ml-1 p-0.5 rounded-full hover:bg-destructive/10 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
-                    </motion.span>
-                  ))}
-                </AnimatePresence>
-
-                <div className="flex-1 min-w-[150px] flex items-center ml-2">
-                  <Search
-                    size={16}
-                    className="text-muted-foreground mr-2 shrink-0"
-                  />
-                  <input
-                    type="text"
-                    placeholder={
-                      selectedStudents.length === 0
-                        ? "Search students..."
-                        : "Add another student..."
-                    }
-                    value={searchQueries.student}
-                    onChange={(e) =>
-                      handleSearchChange("student", e.target.value)
-                    }
-                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm truncate"
-                  />
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {activeDropdown === "student" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
-                  >
-                    {availableStudents
-                      ?.filter(
-                        (s) =>
-                          s.name
-                            ?.toLowerCase()
-                            .includes(searchQueries.student.toLowerCase()) ||
-                          s.email
-                            ?.toLowerCase()
-                            .includes(searchQueries.student.toLowerCase()),
-                      )
-                      .map((student, index) => (
-                        <div
-                          key={student._id}
-                          onClick={() => {
-                            setSelectedStudents([...selectedStudents, student]);
-                            setSearchQueries((prev) => ({
-                              ...prev,
-                              student: "",
-                            }));
-                            setActiveDropdown(null);
-                          }}
-                          className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
-                        >
-                          <Avatar
-                            src={student.profilePic}
-                            name={student.name || student.email}
-                            icon={GraduationCap}
-                          />
-                          <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {index + 1}. {student.name || "Unknown Student"}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {student.email}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    {availableStudents?.length === 0 && (
-                      <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                        All students enrolled or none found.
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <button
+              type="button"
+              onClick={addPair}
+              className="mt-4 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
+            >
+              <Plus size={16} /> Add More
+            </button>
           </div>
 
           <div className="pt-4 sm:pt-6 border-t border-border">
