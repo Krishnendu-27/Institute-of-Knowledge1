@@ -577,14 +577,14 @@ export const NavigationLayout = () => {
     student: [
       { path: "/", icon: Home, label: "Dashboard" },
       { path: "/batches", icon: Layers, label: "My Batches" },
-      { path: "/idcard", icon: IdCard, label: "ID Card" },
-      { path: "/admit-card", icon: BookCheck, label: "Admit card" },
-      { path: "/registration-form", icon: Form, label: "Registration form" },
-      {
-        path: "/course-certificate",
-        icon: Newspaper,
-        label: "Course Certificate",
-      },
+      // { path: "/idcard", icon: IdCard, label: "ID Card" },
+      // { path: "/admit-card", icon: BookCheck, label: "Admit card" },
+      // { path: "/registration-form", icon: Form, label: "Registration form" },
+      // {
+      //   path: "/course-certificate",
+      //   icon: Newspaper,
+      //   label: "Course Certificate",
+      // },
       {
         path: "/attendance-status",
         icon: BarChart3,

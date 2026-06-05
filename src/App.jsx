@@ -97,6 +97,16 @@ const App = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/profile/:username" element={<ProfilePage />} />
 
+                {/* SHARED ROUTES NOW PLACED HERE */}
+                <Route
+                  path="/attendance-status"
+                  element={<AttendanceStatus />}
+                />
+                <Route
+                  path="/fees-yearly-status"
+                  element={<FeesYearlyStatus />}
+                />
+
                 {/* BATCH VIEWING ROUTES */}
                 <Route path="/batches" element={<BatchList />} />
                 <Route path="/batches/:batchName" element={<BatchDetails />} />
@@ -114,15 +124,6 @@ const App = () => {
               >
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/students" element={<AllStudents />} />
-                <Route
-                  path="/attendance-status"
-                  element={<AttendanceStatus />}
-                />
-
-                <Route
-                  path="/fees-yearly-status"
-                  element={<FeesYearlyStatus />}
-                />
               </Route>
 
               {/* ==========================================
@@ -174,9 +175,10 @@ const App = () => {
                 element={<ProtectedRouteRoleBased allowedRoles={["Student"]} />}
               >
                 <Route path="/student-profile" element={<StudentProfile />} />
-                <Route path="/course-certificate" />
-                <Route path="/admit-card" />
-                <Route path="/registration-form" />
+
+                {/* <Route path="/course-certificate" /> */}
+                {/* <Route path="/admit-card" /> */}
+                {/* <Route path="/registration-form" /> */}
               </Route>
             </Route>
           </Route>
