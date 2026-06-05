@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import { generateSlug } from "../../util/generateSlug";
 import useTradeStore from "../../stores/useTradeStore";
 import { TRADES, getTradeLabel } from "../../constants/trades";
+import { getStudentId } from "../../util/getStudentId";
 
 const CourseDetails = () => {
   const location = useLocation();
@@ -569,7 +570,7 @@ const CourseDetails = () => {
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-muted/50 text-muted-foreground border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 font-semibold w-16">Roll No</th>
+                    <th className="px-6 py-4 font-semibold w-16">Student Id</th>
                     <th className="px-6 py-4 font-semibold">Student Info</th>
                     <th className="px-6 py-4 font-semibold">Join Date</th>
                     <th className="px-6 py-4 font-semibold text-center">
@@ -616,7 +617,7 @@ const CourseDetails = () => {
                       >
                         <td className="px-6 py-4">
                           <span className="font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">
-                            #{record?.rollno || "N/A"}
+                            {getStudentId(record) || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
