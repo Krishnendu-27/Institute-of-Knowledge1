@@ -54,6 +54,8 @@ const AttendancePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBatchSelection, setShowBatchSelection] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isTimeValid, setIsTimeValid] = useState(true);
+  const [timeMessage, setTimeMessage] = useState("");
 
   // Load user and batches on mount
   useEffect(() => {
@@ -66,9 +68,92 @@ const AttendancePage = () => {
     }
   }, [userId, userRole, getTeacherBatches, getAllBatches]);
 
+  // Real-time Batch Schedule Validation for Teachers
+  useEffect(() => {
+    if (!selectedBatch) return;
+
+    if (userRole === "Admin") {
+      setIsTimeValid(true);
+      setTimeMessage("");
+      return;
+    }
+
+    const checkBatchTime = () => {
+      const now = new Date();
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const currentDayName = days[now.getDay()];
+
+      // Check Day
+      if (
+        selectedBatch.weekday &&
+        currentDayName.toLowerCase() !== selectedBatch.weekday.toLowerCase()
+      ) {
+        setIsTimeValid(false);
+        setTimeMessage(
+          `This batch runs on ${selectedBatch.weekday}s. Today is ${currentDayName}, attendance is locked.`,
+        );
+        return;
+      }
+
+      // Parse and Check Time
+      const parseTime = (t) => {
+        if (!t) return null;
+        const match = t.match(/(\d+):(\d+)\s*(AM|PM|am|pm)?/);
+        if (!match) return null;
+        let [_, h, m, modifier] = match;
+        h = parseInt(h, 10);
+        m = parseInt(m, 10);
+        if (modifier) {
+          modifier = modifier.toLowerCase();
+          if (modifier === "pm" && h < 12) h += 12;
+          if (modifier === "am" && h === 12) h = 0;
+        }
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d;
+      };
+
+      const startTime = parseTime(selectedBatch.startTime);
+      const endTime = parseTime(selectedBatch.endTime);
+
+      if (startTime && endTime) {
+        if (now >= startTime && now <= endTime) {
+          setIsTimeValid(true);
+          setTimeMessage("");
+        } else {
+          setIsTimeValid(false);
+          setTimeMessage(
+            `Attendance can only be modified during batch hours (${selectedBatch.startTime} - ${selectedBatch.endTime}).`,
+          );
+        }
+      } else {
+        setIsTimeValid(true);
+        setTimeMessage("");
+      }
+    };
+
+    checkBatchTime();
+    const interval = setInterval(checkBatchTime, 60000); // Re-check every minute
+    return () => clearInterval(interval);
+  }, [selectedBatch, userRole]);
+
   const handleSelectBatch = async (batch) => {
     try {
       await selectBatch(batch);
+
+      // Force lock attendance date to 'Today' for Teachers
+      if (userRole === "Teacher") {
+        setAttendanceDate(new Date().toISOString().split("T")[0]);
+      }
+
       setShowBatchSelection(false);
       setIsBatchDropdownOpen(false);
       toast.success(`Batch "${batch.name}" selected`);
@@ -151,7 +236,7 @@ const AttendancePage = () => {
     batches,
     userData?.batches || [],
     userRole,
-    userData?.email
+    userData?.email,
   );
 
   if (!userData) {
@@ -336,6 +421,14 @@ const AttendancePage = () => {
                   Mark Attendance
                 </h2>
 
+                {/* Schedule Access Warning */}
+                {timeMessage && (
+                  <div className="mb-6 p-4 rounded-xl flex items-start gap-3 border bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400">
+                    <Clock className="w-5 h-5 shrink-0 mt-0.5" />
+                    <p className="font-medium text-sm">{timeMessage}</p>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmitAttendance} className="space-y-6">
                   {/* Date Selection */}
                   <div className="space-y-2">
@@ -350,8 +443,9 @@ const AttendancePage = () => {
                       type="date"
                       id="attendanceDate"
                       value={attendanceDate}
+                      disabled={userRole === "Teacher"}
                       onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -378,14 +472,16 @@ const AttendancePage = () => {
                     <button
                       type="button"
                       onClick={markAllPresent}
-                      className="flex-1 px-4 py-2.5 rounded-lg bg-success/20 text-success font-medium hover:bg-success/30 transition-colors"
+                      disabled={!isTimeValid}
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-success/20 text-success font-medium hover:bg-success/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Mark All Present
                     </button>
                     <button
                       type="button"
                       onClick={markAllAbsent}
-                      className="flex-1 px-4 py-2.5 rounded-lg bg-destructive/20 text-destructive font-medium hover:bg-destructive/30 transition-colors"
+                      disabled={!isTimeValid}
+                      className="flex-1 px-4 py-2.5 rounded-lg bg-destructive/20 text-destructive font-medium hover:bg-destructive/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Mark All Absent
                     </button>
@@ -401,8 +497,10 @@ const AttendancePage = () => {
                       filteredStudents.map((student) => (
                         <motion.div
                           key={student._id}
-                          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-muted/50 transition-all cursor-pointer"
-                          onClick={() => toggleAttendance(student._id)}
+                          className={`flex items-center gap-4 p-4 rounded-xl border border-border transition-all ${isTimeValid ? "hover:border-primary/50 hover:bg-muted/50 cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
+                          onClick={() => {
+                            if (isTimeValid) toggleAttendance(student._id);
+                          }}
                         >
                           <img
                             src={
@@ -445,7 +543,9 @@ const AttendancePage = () => {
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting || students.length === 0}
+                    disabled={
+                      isSubmitting || students.length === 0 || !isTimeValid
+                    }
                     className="w-full py-3 px-6 bg-primary hover:opacity-90 text-primary-foreground font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm shadow-primary/20"
                   >
                     {isSubmitting ? (

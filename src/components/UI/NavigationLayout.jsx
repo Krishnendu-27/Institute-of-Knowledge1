@@ -585,6 +585,11 @@ export const NavigationLayout = () => {
         icon: Newspaper,
         label: "Course Certificate",
       },
+      {
+        path: "/attendance-status",
+        icon: BarChart3,
+        label: "Attendance Status",
+      },
       { path: "/fees-yearly-status", icon: HandCoins, label: "Fees Status" },
       {
         path: `/profile/${generateSlug(user?.name || "user")}`,
