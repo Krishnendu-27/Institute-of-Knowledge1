@@ -16,6 +16,8 @@ import {
   Users,
   Search,
   Check,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import BackButton from "../../components/UI/Button";
@@ -80,6 +82,200 @@ const ConfirmModal = ({
   );
 };
 
+// --- Page Level Skeleton Loader ---
+const BatchSkeleton = () => (
+  <div className="container mx-auto px-4 py-8 max-w-6xl min-h-screen">
+    <div className="w-24 h-10 bg-muted animate-pulse rounded-xl mb-6 mt-2"></div>
+    <div className="p-8 rounded-3xl bg-card border border-border shadow-sm mb-8 mt-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="w-full md:w-1/2">
+          <div className="h-10 w-3/4 bg-muted animate-pulse rounded-xl mb-3"></div>
+          <div className="h-6 w-1/2 bg-muted animate-pulse rounded-lg"></div>
+        </div>
+        <div className="flex gap-3">
+          <div className="w-20 h-10 bg-muted animate-pulse rounded-lg"></div>
+          <div className="w-28 h-10 bg-muted animate-pulse rounded-xl"></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-24 bg-muted animate-pulse rounded-2xl"
+          ></div>
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2 space-y-8">
+        <div>
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-32 bg-muted animate-pulse rounded-2xl"
+              ></div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-4"></div>
+          <div className="h-12 w-full bg-muted animate-pulse rounded-xl mb-4"></div>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="p-4 flex items-center gap-4 border-b border-border last:border-0"
+              >
+                <div className="w-12 h-12 shrink-0 rounded-full bg-muted animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/3 bg-muted animate-pulse rounded"></div>
+                  <div className="h-3 w-1/2 bg-muted animate-pulse rounded"></div>
+                  <div className="h-3 w-1/4 bg-muted animate-pulse rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="h-[400px] bg-card border border-border shadow-sm rounded-3xl animate-pulse sticky top-8"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// --- Student Row Sub-component ---
+const StudentRow = ({
+  baseStudent,
+  mainClassName,
+  isStaff,
+  onDelete,
+  getUserById,
+}) => {
+  const navigate = useNavigate();
+  const [details, setDetails] = useState(baseStudent);
+  const [isFetching, setIsFetching] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDetails = async () => {
+      setIsFetching(true);
+      try {
+        const data = await getUserById(baseStudent._id);
+        if (isMounted && data) {
+          setDetails((prev) => ({ ...prev, ...data }));
+        }
+      } catch (e) {
+        console.error("Failed to fetch student details", e);
+      } finally {
+        if (isMounted) setIsFetching(false);
+      }
+    };
+
+    if (baseStudent._id) {
+      fetchDetails();
+    } else {
+      setIsFetching(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [baseStudent._id, getUserById]);
+
+  // Navigation Function
+  const handleViewProfile = () => {
+    navigate("/studentprofile", {
+      state: {
+        userId: details._id,
+        studentId: details._id,
+        userData: details, // Using the freshly fetched details
+      },
+    });
+  };
+
+  if (isFetching) {
+    return (
+      <motion.li
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-4 w-full">
+          <div className="w-12 h-12 shrink-0 rounded-full bg-muted animate-pulse border border-border"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-40 max-w-[50%] bg-muted animate-pulse rounded"></div>
+            <div className="h-3 w-56 max-w-[70%] bg-muted animate-pulse rounded"></div>
+            <div className="h-3 w-32 max-w-[40%] bg-muted animate-pulse rounded"></div>
+          </div>
+        </div>
+      </motion.li>
+    );
+  }
+
+  return (
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: -10, height: 0 }}
+      animate={{ opacity: 1, y: 0, height: "auto" }}
+      exit={{ opacity: 0, x: -20, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors overflow-hidden group"
+    >
+      {/* Clickable Area for Profile Navigation */}
+      <div
+        className="flex items-center gap-4 flex-1 cursor-pointer"
+        onClick={handleViewProfile}
+        title="View Student Profile"
+      >
+        <div className="w-12 h-12 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-border group-hover:ring-2 ring-primary/30 transition-all">
+          {details?.profilePic || details?.profilePicture ? (
+            <img
+              src={details.profilePic || details.profilePicture}
+              alt={details.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            (
+              details.name?.charAt(0) ||
+              details.email?.charAt(0) ||
+              "S"
+            ).toUpperCase()
+          )}
+        </div>
+        <div>
+          <p className="font-bold text-foreground group-hover:text-primary transition-colors">
+            {details.name || "Unknown Student"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {details.email} {details.phone ? `• ${details.phone}` : ""}
+          </p>
+          <p className="text-xs font-medium text-primary mt-1">
+            Course: {mainClassName}
+          </p>
+        </div>
+      </div>
+
+      {/* Delete Button (Separate from clickable profile area) */}
+      {isStaff && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevents click from bubbling to the profile navigation
+            onDelete(baseStudent);
+          }}
+          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors ml-4 shrink-0"
+          title="Remove Student"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      )}
+    </motion.li>
+  );
+};
+
 // --- Main Component ---
 const BatchDetails = () => {
   const navigate = useNavigate();
@@ -104,12 +300,17 @@ const BatchDetails = () => {
   const { user: authUser } = useAuthStore();
   const userRole = useAuthStore((state) => state.userRole);
 
-  const { students, getStudents } = useUserStore();
-  const { addStudentInClass } = useClassStore();
+  const { students, getStudents, getUserById } = useUserStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [studentEmail, setStudentEmail] = useState("");
+  const [mainClassId, setMainClassId] = useState("");
+
+  const [listSearch, setListSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   useEffect(() => {
     getStudents();
@@ -125,35 +326,12 @@ const BatchDetails = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredStudents =
-    students?.filter((student) => {
-      const searchLower = searchQuery.toLowerCase();
-      return (
-        student.name?.toLowerCase().includes(searchLower) ||
-        student.email?.toLowerCase().includes(searchLower)
-      );
-    }) || [];
-
-  const handleSelectStudent = (student) => {
-    setStudentEmail(student.email);
-    setSearchQuery(`${student.name} (${student.email})`);
-    setIsDropdownOpen(false);
-  };
-
-  const [studentEmail, setStudentEmail] = useState("");
-  const [mainClassId, setMainClassId] = useState("");
-  const [admissionDate, setAdmissionDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
-
-  // Auto-select the first main class since the course selection UI is commented out
   useEffect(() => {
     if (currentBatch?.mainClasses?.length > 0 && !mainClassId) {
       setMainClassId(currentBatch.mainClasses[0]._id);
     }
   }, [currentBatch, mainClassId]);
 
-  // Modal States
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
 
@@ -185,43 +363,93 @@ const BatchDetails = () => {
     }
   }, [currentBatch, id, userRole, authUser, navigate]);
 
+  // --- Filtering & Pagination ---
+  const filteredBatchStudents =
+    currentBatch?.students?.filter((student) => {
+      const term = listSearch.toLowerCase();
+      return (
+        student.name?.toLowerCase().includes(term) ||
+        student.email?.toLowerCase().includes(term)
+      );
+    }) || [];
+
+  const totalPages = Math.ceil(filteredBatchStudents.length / pageSize) || 1;
+  const paginatedStudents = filteredBatchStudents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [listSearch]);
+
+  const batchStudentEmails = new Set(
+    currentBatch?.students?.map((s) => s.email) || [],
+  );
+
+  const availableStudentsToAdd =
+    students?.filter((student) => {
+      if (batchStudentEmails.has(student.email)) return false;
+      if (!mainClassId) return false;
+      return student.mainClasses?.some((sc) => (sc._id || sc) === mainClassId);
+    }) || [];
+
+  const searchFilteredAvailable = availableStudentsToAdd.filter(
+    (student) =>
+      student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const handleSelectStudent = (student) => {
+    setStudentEmail(student.email);
+    setSearchQuery(`${student.name || "Unknown"} (${student.email})`);
+    setIsDropdownOpen(false);
+  };
+
+  // --- OPTIMIZED ADD STUDENT ---
   const handleAddStudent = async (e) => {
     e.preventDefault();
 
-    // Teachers cannot add students to batches
     if (userRole === "Teacher") {
       toast.error("Teachers cannot modify batch students");
       return;
     }
 
-    if (!studentEmail || !mainClassId || !admissionDate) {
-      toast.error("Please fill in all fields");
+    if (!studentEmail || !mainClassId) {
+      toast.error("Please select a student and a class");
       return;
     }
 
     setIsAdding(true);
     try {
-      // First try to enroll the student in the main class
-      try {
-        await addStudentInClass({
-          mainClassId,
-          studentEmail,
-          admissionDate,
-        });
-      } catch (err) {
-        // If the student is already enrolled in the main class, we can safely proceed
-        const msg = err.response?.data?.message || err.message;
-        if (msg !== "Student is already added to this main class") {
-          throw err;
-        }
+      await addStudentToBatch(id, { studentEmail, mainClassId });
+
+      // Direct local state update (Optimistic UI)
+      const newlyAddedStudent = students.find((s) => s.email === studentEmail);
+      const associatedClass = currentBatch.mainClasses?.find(
+        (c) => c._id === mainClassId,
+      );
+
+      if (newlyAddedStudent && associatedClass) {
+        useBatchStore.setState((state) => ({
+          currentBatch: {
+            ...state.currentBatch,
+            students: [
+              ...(state.currentBatch.students || []),
+              newlyAddedStudent,
+            ],
+            mainClassStudentPairs: [
+              ...(state.currentBatch.mainClassStudentPairs || []),
+              { mainClass: associatedClass, student: newlyAddedStudent },
+            ],
+          },
+        }));
       }
 
-      await addStudentToBatch(id, { studentEmail, mainClassId });
       setStudentEmail("");
-      setMainClassId("");
       setSearchQuery("");
-      setAdmissionDate(new Date().toISOString().split("T")[0]);
     } catch (err) {
+      // Only show error if it fails
       toast.error(
         err.response?.data?.message ||
           err.message ||
@@ -233,7 +461,6 @@ const BatchDetails = () => {
   };
 
   const handleDeleteBatch = async () => {
-    // Teachers cannot delete batches
     if (userRole === "Teacher") {
       toast.error("Teachers cannot delete batches");
       return;
@@ -241,10 +468,9 @@ const BatchDetails = () => {
     await deleteBatch(id, navigate);
   };
 
-  // UPDATED handleRemoveStudent Function
+  // --- OPTIMIZED REMOVE STUDENT ---
   const handleRemoveStudent = async () => {
     if (studentToDelete) {
-      // Find the student's assigned mainClassId from the batch's relationships
       const pair = currentBatch.mainClassStudentPairs?.find(
         (p) => p.student?._id === studentToDelete._id,
       );
@@ -258,18 +484,36 @@ const BatchDetails = () => {
         return;
       }
 
-      await removeStudentFromBatch(id, studentToDelete._id, studentMainClassId);
-      setStudentToDelete(null);
+      try {
+        await removeStudentFromBatch(
+          id,
+          studentToDelete._id,
+          studentMainClassId,
+        );
+
+        // Direct local state update (Optimistic UI)
+        useBatchStore.setState((state) => ({
+          currentBatch: {
+            ...state.currentBatch,
+            students: state.currentBatch.students.filter(
+              (s) => s._id !== studentToDelete._id,
+            ),
+            mainClassStudentPairs:
+              state.currentBatch.mainClassStudentPairs.filter(
+                (p) => p.student?._id !== studentToDelete._id,
+              ),
+          },
+        }));
+      } catch (error) {
+        toast.error("Failed to remove student.");
+      } finally {
+        setStudentToDelete(null);
+      }
     }
   };
 
   if (!id || (isLoading && !isAdding) || !currentBatch) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-lg capitalize">Loading {fallbackName}...</p>
-      </div>
-    );
+    return <BatchSkeleton />;
   }
 
   const isStaff = authUser?.role === "Admin" || authUser?.role === "Teacher";
@@ -289,7 +533,6 @@ const BatchDetails = () => {
       animate={{ opacity: 1 }}
       className="container mx-auto px-4 py-8 max-w-6xl min-h-screen bg-background text-foreground transition-colors duration-300"
     >
-      {/* Batch Delete Modal */}
       <ConfirmModal
         isOpen={isBatchModalOpen}
         onClose={() => setIsBatchModalOpen(false)}
@@ -298,7 +541,6 @@ const BatchDetails = () => {
         message={`Are you sure you want to delete "${displayBatchName}"? This action cannot be undone and will remove all associated student records from this batch.`}
       />
 
-      {/* Student Remove Modal */}
       <ConfirmModal
         isOpen={!!studentToDelete}
         onClose={() => setStudentToDelete(null)}
@@ -308,7 +550,6 @@ const BatchDetails = () => {
         confirmText="Remove"
       />
 
-      {/* Header Card */}
       <BackButton details={`Detailed view of the batch`} />
       <div className="p-8 rounded-3xl bg-card border border-border shadow-sm mb-8 mt-6 transition-colors">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -345,7 +586,6 @@ const BatchDetails = () => {
           )}
         </div>
 
-        {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
             <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
@@ -383,9 +623,7 @@ const BatchDetails = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Classes & Students */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Classes Section */}
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-4">
               Associated Courses
@@ -396,10 +634,7 @@ const BatchDetails = () => {
                   key={cls._id}
                   onClick={() =>
                     navigate(`/courses/${generateSlug(cls.name)}`, {
-                      state: {
-                        courseId: cls._id,
-                        courseName: cls.name,
-                      },
+                      state: { courseId: cls._id, courseName: cls.name },
                     })
                   }
                   className="p-5 bg-card border border-border hover:border-primary/50 transition-colors rounded-2xl shadow-sm cursor-pointer"
@@ -422,54 +657,82 @@ const BatchDetails = () => {
             </div>
           </div>
 
-          {/* Enrolled Students List */}
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-4">
-              Enrolled Students
+              Batch Students
             </h2>
-            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-              {currentBatch.students?.length > 0 ? (
-                <ul className="divide-y divide-border">
-                  {currentBatch.students.map((student) => (
-                    <li
-                      key={student._id}
-                      className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-inner">
-                          {student.name?.charAt(0).toUpperCase() ||
-                            student.email?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-foreground">
-                            {student.name || "Student"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {student.email} • {student.phone}
-                          </p>
-                          <p className="text-xs font-medium text-primary mt-1">
-                            Class: {getStudentClassInfo(student._id)}
-                          </p>
-                        </div>
-                      </div>
 
-                      {isStaff && (
-                        <button
-                          onClick={() => setStudentToDelete(student)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-                          title="Remove Student"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+            <div className="relative mb-4">
+              <Search className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search students in this batch..."
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                className="w-full pl-12 pr-10 py-3 rounded-xl border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+              />
+              {listSearch && (
+                <button
+                  onClick={() => setListSearch("")}
+                  className="absolute right-4 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+              {paginatedStudents.length > 0 ? (
+                <>
+                  <ul className="divide-y divide-border">
+                    {/* Animated List Container */}
+                    <AnimatePresence initial={false}>
+                      {paginatedStudents.map((student) => (
+                        <StudentRow
+                          key={student._id}
+                          baseStudent={student}
+                          mainClassName={getStudentClassInfo(student._id)}
+                          isStaff={isStaff}
+                          onDelete={setStudentToDelete}
+                          getUserById={getUserById}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </ul>
+
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-border bg-muted/20 flex items-center justify-between">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((p) => Math.max(1, p - 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Prev
+                      </button>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        disabled={currentPage === totalPages}
+                        className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="p-10 text-center flex flex-col items-center">
                   <Users className="w-12 h-12 text-muted-foreground/50 mb-3" />
                   <p className="text-muted-foreground font-medium">
-                    No students enrolled yet.
+                    {listSearch
+                      ? "No matching students found."
+                      : "No students enrolled yet."}
                   </p>
                 </div>
               )}
@@ -477,7 +740,6 @@ const BatchDetails = () => {
           </div>
         </div>
 
-        {/* Right Column: Admin/Teacher Control Panel */}
         {isStaff && (
           <div className="space-y-6">
             <div className="p-6 rounded-3xl bg-card border border-border shadow-sm sticky top-8">
@@ -489,19 +751,42 @@ const BatchDetails = () => {
               </h3>
 
               <form onSubmit={handleAddStudent} className="space-y-5">
-                {/* Searchable Student Dropdown */}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">
+                    1. Select Course
+                  </label>
+                  <select
+                    required
+                    value={mainClassId}
+                    onChange={(e) => {
+                      setMainClassId(e.target.value);
+                      setStudentEmail("");
+                      setSearchQuery("");
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      Select a Class...
+                    </option>
+                    {currentBatch.mainClasses?.map((cls) => (
+                      <option key={cls._id} value={cls._id}>
+                        {cls.name} (₹{cls.fees})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div ref={dropdownRef} className="relative">
                   <label className="block text-sm font-semibold text-foreground mb-1.5">
-                    Search & Select Student
+                    2. Search & Select Student
                   </label>
-
                   <div className="relative">
-                    {/* Input Field */}
                     <div className="relative flex items-center">
                       <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
                         required
+                        disabled={!mainClassId}
                         value={searchQuery}
                         onChange={(e) => {
                           setSearchQuery(e.target.value);
@@ -509,18 +794,29 @@ const BatchDetails = () => {
                           setIsDropdownOpen(true);
                         }}
                         onFocus={() => setIsDropdownOpen(true)}
-                        className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
-                        placeholder="Search by name or email..."
+                        className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder={
+                          mainClassId
+                            ? "Search by name or email..."
+                            : "Please select a course first..."
+                        }
                       />
-                      {/* Dynamic Avatar for Selected Student */}
                       {studentEmail && (
                         <div className="absolute right-3 w-7 h-7 rounded-full bg-muted overflow-hidden flex items-center justify-center border border-border">
-                          {students?.find((u) => u.email === studentEmail)
-                            ?.profilePicture ? (
+                          {availableStudentsToAdd.find(
+                            (u) => u.email === studentEmail,
+                          )?.profilePicture ||
+                          availableStudentsToAdd.find(
+                            (u) => u.email === studentEmail,
+                          )?.profilePic ? (
                             <img
                               src={
-                                students.find((u) => u.email === studentEmail)
-                                  .profilePicture
+                                availableStudentsToAdd.find(
+                                  (u) => u.email === studentEmail,
+                                ).profilePicture ||
+                                availableStudentsToAdd.find(
+                                  (u) => u.email === studentEmail,
+                                ).profilePic
                               }
                               alt="Avatar"
                               className="w-full h-full object-cover"
@@ -532,12 +828,11 @@ const BatchDetails = () => {
                       )}
                     </div>
 
-                    {/* Dropdown Results List */}
-                    {isDropdownOpen && (
+                    {isDropdownOpen && mainClassId && (
                       <div className="absolute z-50 w-full mt-2 bg-card rounded-xl border border-border shadow-2xl max-h-60 overflow-y-auto">
-                        {filteredStudents.length > 0 ? (
+                        {searchFilteredAvailable.length > 0 ? (
                           <ul className="py-2">
-                            {filteredStudents.map((student) => (
+                            {searchFilteredAvailable.map((student) => (
                               <li
                                 key={student._id}
                                 onClick={() => handleSelectStudent(student)}
@@ -547,18 +842,22 @@ const BatchDetails = () => {
                                     : ""
                                 }`}
                               >
-                                {/* Student Avatar in List */}
                                 <div className="w-8 h-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs overflow-hidden">
-                                  {student.profilePicture ? (
+                                  {student.profilePicture ||
+                                  student.profilePic ? (
                                     <img
-                                      src={student.profilePicture}
+                                      src={
+                                        student.profilePicture ||
+                                        student.profilePic
+                                      }
                                       alt="pic"
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
                                     (
                                       student.name?.charAt(0) ||
-                                      student.email?.charAt(0)
+                                      student.email?.charAt(0) ||
+                                      "S"
                                     ).toUpperCase()
                                   )}
                                 </div>
@@ -575,7 +874,9 @@ const BatchDetails = () => {
                           </ul>
                         ) : (
                           <div className="p-4 text-center text-sm text-muted-foreground">
-                            No students found.
+                            {students?.length === 0
+                              ? "No students available."
+                              : "No available students match this search or all are already enrolled in this batch."}
                           </div>
                         )}
                       </div>
@@ -583,49 +884,9 @@ const BatchDetails = () => {
                   </div>
                 </div>
 
-                {/* Enroll Course (Main Class) */}
-                {/*
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">
-                    Enroll in Course
-                  </label>
-                  <select
-                    required
-                    value={mainClassId}
-                    onChange={(e) => setMainClassId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm appearance-none cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select a Class...
-                    </option>
-                    {currentBatch.mainClasses?.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} (₹{cls.fees})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                */}
-
-                {/* Admission Date */}
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">
-                    Admission Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={admissionDate}
-                    onChange={(e) => setAdmissionDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
-                  />
-                </div>
-
                 <button
                   type="submit"
-                  disabled={
-                    !studentEmail || !mainClassId || !admissionDate || isAdding
-                  }
+                  disabled={!studentEmail || !mainClassId || isAdding}
                   className="w-full py-3 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold rounded-xl transition-all shadow-md hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2"
                 >
                   {isAdding ? (
