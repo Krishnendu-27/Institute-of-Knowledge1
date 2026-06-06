@@ -5,7 +5,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useLoginStore } from "../../stores/useLoginStore";
 import useAuthStore from "../../stores/useAuthStore";
 import useUiStateStore from "../../stores/useUiStateStore";
-import { Moon, Sun, Monitor, Menu, X } from "lucide-react";
+import { Moon, Sun, Monitor, Menu, X, ArrowRight } from "lucide-react";
 
 export const Navbar = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -75,7 +75,7 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border shadow-sm transition-colors duration-300">
       <div className="flex items-center justify-between px-4 md:px-12 py-3 md:py-4">
         {/* DESKTOP LEFT: Navigation Links */}
-        <div className="hidden md:flex flex-1 items-center gap-6 text-sm font-semibold text-foreground/80">
+        {/* <div className="hidden md:flex flex-1 items-center gap-6 text-sm font-semibold text-foreground/80">
           <NavLink
             to="/"
             className="hover:text-primary transition text-lg lg:text-xl font-extrabold"
@@ -88,7 +88,7 @@ export const Navbar = () => {
           >
             Modules
           </NavLink>
-        </div>
+        </div> */}
 
         {/* CENTER/MOBILE LEFT: Logo */}
         <div className="flex md:flex-1 justify-start md:justify-center">
@@ -184,7 +184,7 @@ export const Navbar = () => {
                 onClick={() => navigate("/")}
                 className="bg-primary text-primary-foreground px-6 py-2.5 lg:px-8 lg:py-3 rounded-full font-black text-sm lg:text-xl tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90 whitespace-nowrap"
               >
-                Start Now
+                continue
               </motion.button>
             )}
           </div>
@@ -211,7 +211,7 @@ export const Navbar = () => {
             className="md:hidden overflow-hidden bg-background border-b border-border shadow-lg"
           >
             <div className="px-6 py-6 flex flex-col gap-4">
-              <NavLink
+              {/* <NavLink
                 to="/"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors py-2"
@@ -224,7 +224,7 @@ export const Navbar = () => {
                 className="text-lg font-bold text-foreground/80 hover:text-primary transition-colors py-2"
               >
                 Modules
-              </NavLink>
+              </NavLink> */}
 
               <div className="pt-4 mt-2 border-t border-border">
                 {!isAuthenticated ? (
@@ -247,7 +247,7 @@ export const Navbar = () => {
                     }}
                     className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-black text-lg tracking-widest shadow-lg shadow-primary/30 transition-opacity hover:opacity-90"
                   >
-                    Start Now
+                    Continue
                   </motion.button>
                 )}
               </div>

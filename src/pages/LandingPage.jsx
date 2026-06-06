@@ -10,6 +10,8 @@ import { Footer } from "../components/Landing/Footer";
 import useUiStateStore from "../stores/useUiStateStore";
 import LoginOverlay from "../components/Login/LoginModal";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "../stores/useAuthStore";
+import { useLoginStore } from "../stores/useLoginStore";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -52,6 +54,8 @@ export default function LandingPage() {
     (state) => state.isLoginButtonclicked,
   );
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const openModal = useLoginStore((state) => state.openModal);
 
   return (
     <>
@@ -82,14 +86,7 @@ export default function LandingPage() {
             />
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/")}
-            className="mt-16 bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
-          >
-            Start Now
-          </motion.button>
+          
         </section>
 
         {/*------- Features Section -------  */}
@@ -134,14 +131,25 @@ export default function LandingPage() {
           </div>
 
           <div className="flex justify-center mt-16">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/")}
-              className="bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
-            >
-              Start Now
-            </motion.button>
+            {!isAuthenticated ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={openModal}
+                className="bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
+              >
+                Join Us
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/")}
+                className="bg-primary hover:opacity-90 text-primary-foreground px-12 py-4 rounded-full font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/30 transition-opacity"
+              >
+                Back to system
+              </motion.button>
+            )}
           </div>
         </section>
 
