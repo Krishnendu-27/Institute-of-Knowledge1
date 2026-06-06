@@ -6,6 +6,9 @@ import { Navbar } from "../components/Landing/Navbar";
 import { Testimonial } from "../components/Landing/Testimonial";
 import { FeatureCard } from "../components/Landing/FeatureCard";
 import { Footer } from "../components/Landing/Footer";
+import { MemoriesGrid } from "../components/Landing/MemoriesGrid";
+import { StudentProjectCarousel } from "../components/Landing/StudentProjectCarousel";
+import { ServiceHighlight } from "../components/Landing/ServiceHighlight";
 
 import useUiStateStore from "../stores/useUiStateStore";
 import LoginOverlay from "../components/Login/LoginModal";
@@ -113,6 +116,11 @@ export default function LandingPage() {
             </motion.div>
           </div>
         </section>
+
+        {/* ------Photo Gallery Sections-------- */}
+        <ServiceHighlight />
+        <StudentProjectCarousel />
+        <MemoriesGrid />
 
         {/* ------Testimonials-------- */}
         <section className="py-24 px-6 max-w-5xl mx-auto">
