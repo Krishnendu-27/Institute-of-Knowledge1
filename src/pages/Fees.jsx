@@ -452,7 +452,7 @@ const Fees = () => {
                   </p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Class:</span>
+                  <span className="text-muted-foreground">Course:</span>
                   <p className="font-bold text-primary">
                     {selectedMainClassObj?.name || "N/A"}
                   </p>

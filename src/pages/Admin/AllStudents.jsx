@@ -99,6 +99,7 @@ const StudentCard = ({
 
   // Use all assigned classes to ensure missing progress docs still render UI
   const assignedClassIds = allEnrolledClassIds;
+  const isTeacher = userRole === "Teacher"; // Defined role check
 
   // --- Card Click Navigation Handler ---
   const handleCardClick = () => {
@@ -160,8 +161,6 @@ const StudentCard = ({
     const isCertificate = fieldName === "certificateIssued";
 
     // --- Teacher Access Control ---
-    // Teachers can only toggle 'batchcompletion' (Course End)
-    const isTeacher = userRole === "Teacher";
     const isAllowedForTeacher = fieldName === "batchcompletion";
     const isDisabledByRole = isTeacher && !isAllowedForTeacher;
 
@@ -318,11 +317,19 @@ const StudentCard = ({
         {isBuildingMap ? (
           <div className="space-y-3 animate-pulse">
             {/* Skeleton Desktop Header */}
-            <div className="hidden lg:grid grid-cols-4 gap-4 px-3 mb-2">
+            <div
+              className={`hidden lg:grid ${isTeacher ? "grid-cols-2" : "grid-cols-4"} gap-4 px-3 mb-2`}
+            >
               <div className="h-3 bg-muted rounded w-20" />
-              <div className="h-3 bg-muted rounded w-20 mx-auto" />
-              <div className="h-3 bg-muted rounded w-20 mx-auto" />
-              <div className="h-3 bg-muted rounded w-24 mx-auto" />
+              <div
+                className={`h-3 bg-muted rounded w-20 ${isTeacher ? "ml-auto" : "mx-auto"}`}
+              />
+              {!isTeacher && (
+                <>
+                  <div className="h-3 bg-muted rounded w-20 mx-auto" />
+                  <div className="h-3 bg-muted rounded w-24 mx-auto" />
+                </>
+              )}
             </div>
 
             {/* Skeleton Tracker Rows */}
@@ -330,13 +337,19 @@ const StudentCard = ({
               ? assignedClassIds.map((clsId, i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+                    className={`grid grid-cols-1 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-4"} gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm`}
                   >
                     <div className="h-4 bg-muted rounded w-32" />
-                    <div className="grid grid-cols-3 gap-2 lg:col-span-3">
+                    <div
+                      className={`grid gap-2 ${isTeacher ? "grid-cols-1" : "grid-cols-3 lg:col-span-3"}`}
+                    >
                       <div className="h-[34px] bg-muted rounded-lg w-full" />
-                      <div className="h-[34px] bg-muted rounded-lg w-full" />
-                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      {!isTeacher && (
+                        <>
+                          <div className="h-[34px] bg-muted rounded-lg w-full" />
+                          <div className="h-[34px] bg-muted rounded-lg w-full" />
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
@@ -344,13 +357,19 @@ const StudentCard = ({
                 [1, 2].map((i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+                    className={`grid grid-cols-1 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-4"} gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm`}
                   >
                     <div className="h-4 bg-muted rounded w-32" />
-                    <div className="grid grid-cols-3 gap-2 lg:col-span-3">
+                    <div
+                      className={`grid gap-2 ${isTeacher ? "grid-cols-1" : "grid-cols-3 lg:col-span-3"}`}
+                    >
                       <div className="h-[34px] bg-muted rounded-lg w-full" />
-                      <div className="h-[34px] bg-muted rounded-lg w-full" />
-                      <div className="h-[34px] bg-muted rounded-lg w-full" />
+                      {!isTeacher && (
+                        <>
+                          <div className="h-[34px] bg-muted rounded-lg w-full" />
+                          <div className="h-[34px] bg-muted rounded-lg w-full" />
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -362,18 +381,28 @@ const StudentCard = ({
         ) : (
           <div className="space-y-3">
             {/* Desktop Header for Tracker Grid */}
-            <div className="hidden lg:grid grid-cols-4 gap-4 px-3 text-xs font-semibold text-muted-foreground">
+            <div
+              className={`hidden lg:grid ${isTeacher ? "grid-cols-2" : "grid-cols-4"} gap-4 px-3 text-xs font-semibold text-muted-foreground`}
+            >
               <span>Course Name</span>
-              <span className="text-center">Course Status</span>
-              <span className="text-center">Exam Status</span>
-              <span className="text-center">Certificate Status</span>
+              <span
+                className={isTeacher ? "text-right lg:pr-4" : "text-center"}
+              >
+                Course Status
+              </span>
+              {!isTeacher && (
+                <>
+                  <span className="text-center">Exam Status</span>
+                  <span className="text-center">Certificate Status</span>
+                </>
+              )}
             </div>
 
             {/* Tracker Items */}
             {assignedClassIds.map((clsId) => (
               <div
                 key={clsId}
-                className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm"
+                className={`grid grid-cols-1 ${isTeacher ? "lg:grid-cols-2" : "lg:grid-cols-4"} gap-3 lg:gap-4 items-center bg-background p-3 lg:p-2.5 rounded-xl border border-border shadow-sm`}
               >
                 <div className="flex items-center gap-2 lg:pr-2">
                   <div className="w-2 h-2 rounded-full bg-primary/50 shrink-0 lg:hidden" />
@@ -384,10 +413,16 @@ const StudentCard = ({
                     {classMap.get(clsId) || "Unknown Course"}
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 lg:col-span-3 lg:grid-cols-3">
+                <div
+                  className={`grid gap-2 ${isTeacher ? "grid-cols-1" : "grid-cols-3 lg:col-span-3 lg:grid-cols-3"}`}
+                >
                   {renderStatusToggle(clsId, "batchcompletion", "Course")}
-                  {renderStatusToggle(clsId, "examcompletion", "Exam")}
-                  {renderStatusToggle(clsId, "certificateIssued", "Issued")}
+                  {!isTeacher && (
+                    <>
+                      {renderStatusToggle(clsId, "examcompletion", "Exam")}
+                      {renderStatusToggle(clsId, "certificateIssued", "Issued")}
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -552,7 +587,7 @@ const AllStudents = () => {
       animate="in"
       variants={pageVariants}
       transition={{ duration: 0.3 }}
-      className="h-full bg-background p-4 md:p-8 relative flex flex-col"
+      className="min-h-full bg-background p-4 md:p-8 relative flex flex-col"
     >
       {/* Interactive Toast Notification */}
       <AnimatePresence>
@@ -587,7 +622,7 @@ const AllStudents = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-[1600px] mx-auto w-full h-full flex flex-col gap-6">
+      <div className="max-w-[1600px] mx-auto w-full flex flex-col gap-6">
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 relative">
           <div>
@@ -634,7 +669,7 @@ const AllStudents = () => {
 
         {/* LOADING & DATA DISPLAY */}
         {isLoadingStudents ? (
-          <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 pb-4">
+          <div className="flex flex-col relative pb-4">
             <div className="flex flex-col gap-4">
               {[1, 2, 3].map((skeletonIndex) => (
                 <StudentCardSkeleton key={skeletonIndex} />
@@ -642,7 +677,7 @@ const AllStudents = () => {
             </div>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="flex-1 bg-card rounded-2xl border border-border border-dashed p-16 flex flex-col items-center justify-center text-muted-foreground">
+          <div className="bg-card rounded-2xl border border-border border-dashed p-16 flex flex-col items-center justify-center text-muted-foreground">
             <Search className="w-12 h-12 mb-4 opacity-20" />
             <p className="text-lg font-medium text-foreground">
               No students found
@@ -654,8 +689,8 @@ const AllStudents = () => {
             </p>
           </div>
         ) : (
-          /* CARD LIST SECTION - Scrollable Y-axis only */
-          <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 pb-4">
+          /* CARD LIST SECTION - Flows naturally to prevent gap */
+          <div className="flex flex-col relative pb-4">
             {isBuildingMap && (
               <div className="absolute top-0 left-0 right-0 h-1 bg-primary/10 overflow-hidden z-20 rounded-full mb-4">
                 <div className="h-full bg-primary w-1/3 animate-[slide_1.5s_ease-in-out_infinite]" />

@@ -26,7 +26,7 @@ const FilterPanel = ({
               disabled={isLoading}
               className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">-- Select Main Class --</option>
+              <option value="">-- Select Course --</option>
               {mainClasses?.map((mainClass) => (
                 <option key={mainClass._id} value={mainClass._id}>
                   {mainClass.name} (₹{mainClass.fees})
@@ -59,7 +59,7 @@ const FilterPanel = ({
           </div>
           {!selectedMainClass && (
             <p className="text-xs text-muted-foreground mt-2">
-              Select a main class first
+              Select a Course first
             </p>
           )}
         </div>
@@ -68,7 +68,7 @@ const FilterPanel = ({
       {selectedMainClass && selectedBatch && (
         <div className="mt-4 p-3 bg-success/10 border border-success/20 rounded-lg">
           <p className="text-sm font-medium text-success flex items-center gap-2">
-            ✓ Filters applied. Showing students for the selected class and
+            ✓ Filters applied. Showing students for the selected Course and
             batch.
           </p>
         </div>
