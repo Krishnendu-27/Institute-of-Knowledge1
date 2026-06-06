@@ -104,7 +104,7 @@ export const NavigationLayout = () => {
       { path: "/", icon: Home, label: "Dashboard" },
       // { path: "/teachers", icon: Users, label: "Teachers" },
       { path: "/students", icon: GraduationCap, label: "Students" },
-      { path: "/batches", icon: Layers, label: "Batches" },
+      { path: "/batches", icon: Layers, label: "Assigned Batches" },
       { path: "/attendance", icon: Calendar, label: "Attendance" },
       {
         path: "/attendance-status",

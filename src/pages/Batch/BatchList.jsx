@@ -136,6 +136,32 @@ const BatchList = () => {
     return matchesSearch && matchesTrade;
   });
 
+  const getHeaderContent = (role) => {
+    switch (role) {
+      case "Teacher":
+        return {
+          title: "Assigned Batches",
+          description:
+            "Overview of your assigned classes, course details, and enrolled students. Track your daily schedules and manage your teaching itinerary effectively.",
+        };
+      case "Student":
+        return {
+          title: "My Batches",
+          description:
+            "Access your enrolled batches, course details, and upcoming class schedules. Stay updated on your learning journey and upcoming sessions.",
+        };
+      case "Admin":
+      default:
+        return {
+          title: "Batch Management",
+          description:
+            "Overview of all active batches, assigned courses, fees, and student allocations. Manage, create, and organize your institution's educational schedules effectively.",
+        };
+    }
+  };
+
+  const { title, description } = getHeaderContent(userRole);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -147,13 +173,9 @@ const BatchList = () => {
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-8 gap-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            Batch Management
+            {title}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Overview of all active Batches, Assigned Course, fees, and student
-            allocations. Manage and organize your educational schedules
-            effectively.
-          </p>
+          <p className="text-muted-foreground mt-1">{description}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto shrink-0">

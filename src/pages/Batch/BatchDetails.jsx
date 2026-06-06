@@ -150,7 +150,8 @@ const BatchSkeleton = () => (
 const StudentRow = ({
   baseStudent,
   mainClassName,
-  isStaff,
+  canDelete,
+  canViewProfile,
   onDelete,
   getUserById,
 }) => {
@@ -223,15 +224,19 @@ const StudentRow = ({
       animate={{ opacity: 1, y: 0, height: "auto" }}
       exit={{ opacity: 0, x: -20, height: 0 }}
       transition={{ duration: 0.2 }}
-      className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors overflow-hidden group"
+      className={`p-4 flex items-center justify-between transition-colors overflow-hidden ${
+        canViewProfile ? "hover:bg-muted/50 group" : ""
+      }`}
     >
       {/* Clickable Area for Profile Navigation */}
       <div
-        className="flex items-center gap-4 flex-1 cursor-pointer"
-        onClick={handleViewProfile}
-        title="View Student Profile"
+        className={`flex items-center gap-4 flex-1 ${canViewProfile ? "cursor-pointer" : ""}`}
+        onClick={canViewProfile ? handleViewProfile : undefined}
+        title={canViewProfile ? "View Student Profile" : "Student Details"}
       >
-        <div className="w-12 h-12 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-border group-hover:ring-2 ring-primary/30 transition-all">
+        <div
+          className={`w-12 h-12 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-border transition-all ${canViewProfile ? "group-hover:ring-2 ring-primary/30" : ""}`}
+        >
           {details?.profilePic || details?.profilePicture ? (
             <img
               src={details.profilePic || details.profilePicture}
@@ -247,7 +252,9 @@ const StudentRow = ({
           )}
         </div>
         <div>
-          <p className="font-bold text-foreground group-hover:text-primary transition-colors">
+          <p
+            className={`font-bold text-foreground transition-colors ${canViewProfile ? "group-hover:text-primary" : ""}`}
+          >
             {details.name || "Unknown Student"}
           </p>
           <p className="text-sm text-muted-foreground">
@@ -260,7 +267,7 @@ const StudentRow = ({
       </div>
 
       {/* Delete Button (Separate from clickable profile area) */}
-      {isStaff && (
+      {canDelete && (
         <button
           onClick={(e) => {
             e.stopPropagation(); // Prevents click from bubbling to the profile navigation
@@ -297,6 +304,7 @@ export default function BatchDetails() {
     deleteBatch,
     isLoading,
   } = useBatchStore();
+
   const { user: authUser } = useAuthStore();
   const userRole = useAuthStore((state) => state.userRole);
 
@@ -312,9 +320,12 @@ export default function BatchDetails() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+  // Do not fetch students list if the user is a Student
   useEffect(() => {
-    getStudents();
-  }, [getStudents]);
+    if (userRole !== "Student") {
+      getStudents();
+    }
+  }, [getStudents, userRole]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -518,7 +529,7 @@ export default function BatchDetails() {
     return <BatchSkeleton />;
   }
 
-  const isStaff = authUser?.role === "Admin" || authUser?.role === "Teacher";
+  const isAdmin = authUser?.role === "Admin";
 
   const getStudentClassInfo = (studentId) => {
     const pair = currentBatch.mainClassStudentPairs?.find(
@@ -550,7 +561,7 @@ export default function BatchDetails() {
         message={`Are you sure you want to remove ${studentToDelete?.name} from this batch?`}
         confirmText="Remove"
       />
-  
+
       <BackButton details={`Detailed view of the batch`} />
       <div className="p-8 rounded-3xl bg-card border border-border shadow-sm mb-8 mt-6 transition-colors">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -572,7 +583,7 @@ export default function BatchDetails() {
             </p>
           </div>
 
-          {authUser?.role === "Admin" && (
+          {isAdmin && (
             <div className="flex gap-3">
               <button
                 onClick={() =>
@@ -646,11 +657,12 @@ export default function BatchDetails() {
                   <div
                     key={cls._id}
                     onClick={() =>
+                      isAdmin &&
                       navigate(`/courses/${generateSlug(cls.name)}`, {
                         state: { courseId: cls._id, courseName: cls.name },
                       })
                     }
-                    className="p-5 bg-card border border-border hover:border-primary/50 transition-colors rounded-2xl shadow-sm cursor-pointer"
+                    className={`p-5 bg-card border border-border rounded-2xl shadow-sm ${isAdmin ? "hover:border-primary/50 transition-colors cursor-pointer" : ""}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-foreground">{cls.name}</h3>
@@ -705,7 +717,8 @@ export default function BatchDetails() {
                             key={student._id}
                             baseStudent={student}
                             mainClassName={getStudentClassInfo(student._id)}
-                            isStaff={isStaff}
+                            canDelete={isAdmin}
+                            canViewProfile={isAdmin}
                             onDelete={setStudentToDelete}
                             getUserById={getUserById}
                           />
@@ -753,7 +766,7 @@ export default function BatchDetails() {
             </div>
           </div>
 
-          {isStaff && (
+          {isAdmin && (
             <div className="space-y-6">
               <div className="p-6 rounded-3xl bg-card border border-border shadow-sm sticky top-8">
                 <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
