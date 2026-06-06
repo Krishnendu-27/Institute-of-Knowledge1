@@ -242,13 +242,13 @@ const AdminDashboard = ({
           icon={Layers}
           colorType="warning"
         />
-        <KpiCard
+        {/* <KpiCard
           isLoading={isLoading}
           title="Est. Revenue"
           value="₹ --"
           icon={IndianRupee}
           colorType="success"
-        />
+        /> */}
       </div>
 
       {/* Quick Action Buttons */}
@@ -378,13 +378,13 @@ const TeacherDashboard = ({ navigate, user, batches, isLoading }) => {
           icon={Users}
           colorType="success"
         />
-        <KpiCard
+        {/* <KpiCard
           isLoading={isLoading}
           title="Pending Actions"
           value="0"
           icon={AlertCircle}
           colorType="warning"
-        />
+        /> */}
       </div>
 
       <div className="flex flex-wrap gap-3">
