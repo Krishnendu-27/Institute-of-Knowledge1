@@ -727,7 +727,8 @@ export default function Dashboard() {
       {/* Dynamic Header based on Role */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2 capitalize">
-          Welcome back, {user?.name?.split(" ")[0] || "User"} 👋
+          {/* Welcome back, {user?.name?.split(" ")[0] || "User"} 👋 */}
+          Welcome back, {user?.name || "User"} 👋
         </h1>
         <p className="text-muted-foreground font-medium">
           Here is what's happening in your {role.toLowerCase()} portal today.
