@@ -1049,7 +1049,7 @@ const FeesYearlyStatus = () => {
                   disabled={isLoading}
                   className="w-full px-4 py-2 border border-border rounded-lg appearance-none bg-background text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 >
-                  <option value="">-- Select Main Class --</option>
+                  <option value="">-- Select Course --</option>
                   {displayedMainClasses.map((mainClass) => (
                     <option key={mainClass._id} value={mainClass._id}>
                       {mainClass.name} (₹{mainClass.fees})
@@ -1330,7 +1330,7 @@ const FeesYearlyStatus = () => {
           <div className="bg-muted/30 border border-border rounded-xl shadow-sm p-12 text-center print:hidden">
             <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
             <p className="text-muted-foreground text-lg">
-              Select a class and batch to view yearly fee status
+              Select a Course and batch to view yearly fee status
             </p>
           </div>
         )}

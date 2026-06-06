@@ -134,9 +134,9 @@ export const NavigationLayout = () => {
       {
         path: "/attendance-status",
         icon: BarChart3,
-        label: "Attendance Status",
+        label: "My Attendance Status",
       },
-      { path: "/fees-yearly-status", icon: HandCoins, label: "Fees Status" },
+      { path: "/fees-yearly-status", icon: HandCoins, label: "My Fees Status" },
       {
         path: `/profile/${generateSlug(user?.name || "user")}`,
         icon: User,

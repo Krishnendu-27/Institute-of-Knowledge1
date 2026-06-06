@@ -440,10 +440,19 @@ const TeacherDashboard = ({ navigate, user, batches, isLoading }) => {
   );
 };
 
-const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
-  // Mock data for student until specific endpoint exists
-  const myBatches =
-    batches?.filter((b) => b.students?.some((s) => s._id === user?._id)) || [];
+const StudentDashboard = ({ navigate, user, isLoading }) => {
+  // Calculate active courses by checking if today's date falls between startDate and endDate
+  const currentDate = new Date();
+  const activeCoursesCount =
+    user?.mainClasses?.filter((cls) => {
+      if (!cls.startDate || !cls.endDate) return false;
+      const start = new Date(cls.startDate);
+      const end = new Date(cls.endDate);
+      return currentDate >= start && currentDate <= end;
+    }).length || 0;
+
+  // Extract batches directly from the authenticated student payload
+  const myBatches = user?.batches || [];
 
   return (
     <motion.div
@@ -455,11 +464,11 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
         <KpiCard
           isLoading={isLoading}
           title="Active Courses"
-          value={myBatches.length}
+          value={activeCoursesCount}
           icon={BookOpen}
           colorType="primary"
         />
-        <KpiCard
+        {/* <KpiCard
           isLoading={isLoading}
           title="Overall Attendance"
           value="--%"
@@ -472,16 +481,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
           value="Active"
           icon={IndianRupee}
           colorType="success"
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => navigate("/fees")}
-          className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-all active:scale-95"
-        >
-          <IndianRupee size={18} /> Pay Fees
-        </button>
+        /> */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -510,9 +510,6 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
                         </p>
                       </div>
                     </div>
-                    <span className="mt-3 sm:mt-0 px-3 py-1 bg-background border border-border text-foreground text-xs font-bold rounded-lg text-center shrink-0">
-                      Instructor: {batch.teacherEmail?.split("@")[0]}
-                    </span>
                   </div>
                 ))}
               </div>
@@ -524,7 +521,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
           </SectionCard>
         </div>
 
-        <div className="lg:col-span-1">
+        {/* <div className="lg:col-span-1">
           <SectionCard title="Notice Board" icon={Bell}>
             <div className="space-y-4">
               <div className="p-3 bg-muted/30 border border-border rounded-xl">
@@ -541,7 +538,7 @@ const StudentDashboard = ({ navigate, user, batches, isLoading }) => {
               </div>
             </div>
           </SectionCard>
-        </div>
+        </div> */}
       </div>
     </motion.div>
   );
@@ -727,7 +724,6 @@ export default function Dashboard() {
       {/* Dynamic Header based on Role */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2 capitalize">
-          {/* Welcome back, {user?.name?.split(" ")[0] || "User"} 👋 */}
           Welcome back, {user?.name || "User"} 👋
         </h1>
         <p className="text-muted-foreground font-medium">
@@ -760,7 +756,6 @@ export default function Dashboard() {
         <StudentDashboard
           navigate={navigate}
           user={user}
-          batches={batches}
           isLoading={isLoading}
         />
       )}
