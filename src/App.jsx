@@ -183,10 +183,7 @@ const App = () => {
             </Route>
           </Route>
 
-          {/* PUBLIC ROUTES */}
-          <Route element={<PublicRoute />}>
-            <Route path="/home" element={<LandingPage />} />
-          </Route>
+          <Route path="/home" element={<LandingPage />} />
 
           {/* ACCESS DENIED & 404 ROUTES */}
           <Route path="/access-denied" element={<AccessDenied />} />
