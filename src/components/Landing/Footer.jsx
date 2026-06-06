@@ -23,9 +23,8 @@ const footerData = {
   address: {
     street: "F.P. School, near Lauhati, Baidyapara",
     city: "Rajarhat, New Town, WB 700135",
-    coordinates: { lat: 22.61093436657517, lng: 88.5187134320553 },
-    mapLink:
-      `https://www.google.com/maps/place/22.61093436657517,88.5187134320553`,
+    coordinates: { lat: 22.610940155735868, lng: 88.51870979069498 },
+    mapLink: `https://www.google.com/maps/place/22.610940155735868,88.51870979069498`,
   },
   contact: {
     phone: "+91 7278957733",
@@ -33,7 +32,7 @@ const footerData = {
     website: "instituteofknowledge.in",
   },
   hours: {
-    weekdays: "Saturday - Thursday: 10:00 AM - 5:00 PM",
+    weekdays: "Saturday - Thursday: 10:00 AM - 10:00 PM",
     weekend: "Friday: Closed",
   },
   quickLinks: [
@@ -100,9 +99,20 @@ export const Footer = () => {
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={footerData.address.coordinates}
-                zoom={15}
+                zoom={30}
+                options={{
+                  zoomControl: true,
+                  gestureHandling: "cooperative",
+                }}
               >
-                <Marker position={footerData.address.coordinates} />
+                <Marker
+                  position={footerData.address.coordinates}
+                  onClick={() =>
+                    window.open(footerData.address.mapLink, "_blank")
+                  }
+                  title="Click to view on Google Maps"
+                  cursor="pointer"
+                />
               </GoogleMap>
             </LoadScript>
           </div>
