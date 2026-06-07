@@ -32,9 +32,15 @@ const TeacherCardSkeleton = () => (
 
       {/* Right side: Classes count and chevron */}
       <div className="flex items-center justify-end gap-4 sm:ml-4 border-t sm:border-t-0 border-border/50 pt-4 sm:pt-0">
-        <div className="flex flex-col items-end gap-1.5">
-          <div className="h-7 w-8 bg-muted rounded" />
-          <div className="h-3 w-14 bg-muted/70 rounded" />
+        <div className="flex gap-6">
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="h-7 w-8 bg-muted rounded" />
+            <div className="h-3 w-14 bg-muted/70 rounded" />
+          </div>
+          <div className="flex flex-col items-end gap-1.5 border-l border-border/50 pl-6">
+            <div className="h-7 w-8 bg-muted rounded" />
+            <div className="h-3 w-14 bg-muted/70 rounded" />
+          </div>
         </div>
         <div className="w-6 h-6 bg-muted rounded shrink-0" />
       </div>
@@ -256,13 +262,23 @@ const AllTeachers = () => {
                       </div>
 
                       <div className="flex items-center justify-end gap-4 sm:ml-4 border-t sm:border-t-0 border-border/50 pt-4 sm:pt-0">
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-primary leading-none mb-1">
-                            {teacher.mainClasses?.length || 0}
-                          </p>
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                            Classes
-                          </p>
+                        <div className="flex gap-6">
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-primary leading-none mb-1">
+                              {teacher.mainClasses?.length || 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                              Courses
+                            </p>
+                          </div>
+                          <div className="text-right border-l border-border/50 pl-6">
+                            <p className="text-2xl font-bold text-primary leading-none mb-1">
+                              {teacher.batches?.length || 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                              Batches
+                            </p>
+                          </div>
                         </div>
                         <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-transform shrink-0" />
                       </div>

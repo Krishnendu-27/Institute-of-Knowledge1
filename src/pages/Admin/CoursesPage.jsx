@@ -75,8 +75,13 @@ const CoursesPage = () => {
         if (!item) return false;
 
         const nameStr = typeof item.name === "string" ? item.name : "";
-        const teacherStr =
-          typeof item.teacherName === "string" ? item.teacherName : "";
+        const teacherStr = Array.isArray(item.teachers)
+          ? item.teachers
+              .map((t) => (typeof t === "string" ? t : t.name))
+              .join(" ")
+          : typeof item.teacherName === "string"
+            ? item.teacherName
+            : "";
 
         const matchesSearch =
           nameStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -323,8 +328,15 @@ const CoursesPage = () => {
                             {status.label}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Instructor: {classItem?.teacherName || "N/A"}
+                        <p className="text-sm font-medium text-muted-foreground line-clamp-1">
+                          Instructor:{" "}
+                          {classItem?.teachers && classItem.teachers.length > 0
+                            ? classItem.teachers
+                                .map((t) =>
+                                  typeof t === "string" ? t : t.name,
+                                )
+                                .join(", ")
+                            : classItem?.teacherName || "Unassigned"}
                         </p>
                       </div>
                     </div>
