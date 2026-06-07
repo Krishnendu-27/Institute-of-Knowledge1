@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -14,11 +14,16 @@ import {
   UserCheck,
   Trash2,
   ShieldAlert,
+  BookOpen,
+  Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../../stores/useAuthStore";
 import useUserStore from "../../stores/useUserStore";
 import BackButton from "../../components/UI/Button";
+import useBatchStore from "../../stores/useBatchStore";
+import useClassStore from "../../stores/useClassStore";
+import { generateSlug } from "../../util/generateSlug";
 
 const TeacherProfile = () => {
   const location = useLocation();
@@ -45,6 +50,8 @@ const TeacherProfile = () => {
   const updateUser = useUserStore((state) => state.updateUser);
   const deleteUser = useUserStore((state) => state.deleteUser);
   const isUpdating = useUserStore((state) => state.isLoading);
+  const { batches, fetchBatches } = useBatchStore();
+  const { allClass, getClasses } = useClassStore();
 
   // Local State
   const [profileData, setProfileData] = useState(null);
@@ -61,6 +68,11 @@ const TeacherProfile = () => {
   const [formData, setFormData] = useState({});
   const [newProfilePic, setNewProfilePic] = useState(null);
   const [newProfilePreview, setNewProfilePreview] = useState(null);
+
+  useEffect(() => {
+    fetchBatches();
+    getClasses();
+  }, [fetchBatches, getClasses]);
 
   useEffect(() => {
     if (!activeUserId) {
@@ -261,6 +273,26 @@ const TeacherProfile = () => {
     }
   };
 
+  const teacherBatches =
+    batches?.filter(
+      (b) =>
+        b.teacherEmail === profileData?.email ||
+        b.teachers?.some((t) => (t._id || t) === profileData?._id),
+    ) || [];
+
+  const teacherCourses =
+    allClass?.filter(
+      (c) =>
+        c.teacherEmail === profileData?.email ||
+        c.teachers?.some((t) => (t._id || t) === profileData?._id),
+    ) || [];
+
+  const displayBatches =
+    teacherBatches.length > 0 ? teacherBatches : profileData?.batches || [];
+
+  const displayCourses =
+    teacherCourses.length > 0 ? teacherCourses : profileData?.mainClasses || [];
+
   if (isLoading || !profileData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -283,9 +315,17 @@ const TeacherProfile = () => {
         <p className="text-sm font-medium capitalize tracking-wider">{label}</p>
       </div>
       <div className="sm:w-2/3 pl-11 sm:pl-0">
-        <p className="text-sm sm:text-base font-semibold text-foreground break-all">
-          {value || "Not Provided"}
-        </p>
+        {typeof value === "string" || typeof value === "number" ? (
+          <p className="text-sm sm:text-base font-semibold text-foreground break-words">
+            {value || "Not Provided"}
+          </p>
+        ) : (
+          value || (
+            <p className="text-sm sm:text-base font-semibold text-foreground">
+              Not Provided
+            </p>
+          )
+        )}
       </div>
     </div>
   );
@@ -422,6 +462,100 @@ const TeacherProfile = () => {
                       icon={Calendar}
                       label="Joined Date"
                       value={formatDate(profileData.createdAt)}
+                    />
+                  </div>
+                  <div className="col-span-1 md:border-r md:border-t-0 border-t border-border/50">
+                    <InfoRow
+                      icon={BookOpen}
+                      label="Assigned Courses"
+                      value={
+                        displayCourses?.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {displayCourses.map((c, i) => {
+                              const courseObj =
+                                typeof c === "object"
+                                  ? c
+                                  : allClass?.find((cls) => cls._id === c);
+                              const courseName = courseObj ? courseObj.name : c;
+                              const isClickable = isAdmin && courseObj;
+
+                              const content = (
+                                <span
+                                  key={courseObj?._id || i}
+                                  className={`bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-md text-xs font-semibold ${isClickable ? "hover:bg-primary/20 cursor-pointer transition-colors" : ""}`}
+                                >
+                                  {courseName}
+                                </span>
+                              );
+
+                              return isClickable ? (
+                                <Link
+                                  key={courseObj?._id || i}
+                                  to={`/courses/${generateSlug(courseObj.name)}`}
+                                  state={{
+                                    courseId: courseObj._id,
+                                    courseName: courseObj.name,
+                                  }}
+                                >
+                                  {content}
+                                </Link>
+                              ) : (
+                                content
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          "None"
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="col-span-1 md:border-t-0 border-t border-border/50">
+                    <InfoRow
+                      icon={Clock}
+                      label="Assigned Batches"
+                      value={
+                        displayBatches?.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {displayBatches.map((b, i) => {
+                              const batchObj =
+                                typeof b === "object"
+                                  ? b
+                                  : batches?.find((batch) => batch._id === b);
+                              const batchName = batchObj
+                                ? `${batchObj.name} (${batchObj.weekday})`
+                                : b;
+                              const isClickable = isAdmin && batchObj;
+
+                              const content = (
+                                <span
+                                  key={batchObj?._id || i}
+                                  className={`bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-md text-xs font-semibold ${isClickable ? "hover:bg-emerald-500/20 cursor-pointer transition-colors" : ""}`}
+                                >
+                                  {batchName}
+                                </span>
+                              );
+
+                              return isClickable ? (
+                                <Link
+                                  key={batchObj?._id || i}
+                                  to={`/batches/${generateSlug(batchObj.name)}`}
+                                  state={{
+                                    batchId: batchObj._id,
+                                    batchName: batchObj.name,
+                                  }}
+                                >
+                                  {content}
+                                </Link>
+                              ) : (
+                                content
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          "None"
+                        )
+                      }
                     />
                   </div>
                 </div>
