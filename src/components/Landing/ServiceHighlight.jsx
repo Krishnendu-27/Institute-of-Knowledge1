@@ -23,7 +23,7 @@ export const ServiceHighlight = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-primary/20 max-h-96 md:max-h-full">
               <img
-                src={Image.liflet}
+                src={Image.serviceHighlight}
                 alt="Our Services"
                 className="w-full h-full object-cover"
               />

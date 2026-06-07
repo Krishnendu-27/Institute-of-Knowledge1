@@ -4,14 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Image } from "../../assets/Image";
 
 export const StudentProjectCarousel = () => {
-  const images = [
-    Image.img1,
-    Image.img3,
-    Image.img4,
-    Image.img5,
-    Image.img6,
-    Image.ig2,
-  ];
+  const images = Image.studentProjects;
 
   const [current, setCurrent] = React.useState(0);
 
