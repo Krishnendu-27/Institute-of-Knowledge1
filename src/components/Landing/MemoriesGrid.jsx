@@ -3,17 +3,7 @@ import { motion } from "framer-motion";
 import { Image } from "../../assets/Image";
 
 export const MemoriesGrid = () => {
-  const images = [
-    Image.img8,
-    Image.img9,
-    Image.img10,
-    Image.img11,
-    Image.img12,
-    Image.img13,
-    Image.img14,
-    Image.img15,
-    Image.img16,
-  ];
+  const images = Image.memories;
 
   return (
     <section className="py-24 px-6 max-w-6xl mx-auto">
