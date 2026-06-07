@@ -1,19 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Image } from "../../assets/Image";
 
 export const MemoriesGrid = () => {
-  const images = [
-    "/src/assets/photos/memories/img7.jpeg",
-    "/src/assets/photos/memories/img8.jpeg",
-    "/src/assets/photos/memories/img9.jpeg",
-    "/src/assets/photos/memories/img10.jpeg",
-    "/src/assets/photos/memories/img11.jpeg",
-    "/src/assets/photos/memories/img12.jpeg",
-    "/src/assets/photos/memories/img13.jpeg",
-    "/src/assets/photos/memories/img14.jpeg",
-    "/src/assets/photos/memories/img15.jpeg",
-    "/src/assets/photos/memories/img16.jpeg",
-  ];
+  const images = Image.memories;
 
   return (
     <section className="py-24 px-6 max-w-6xl mx-auto">

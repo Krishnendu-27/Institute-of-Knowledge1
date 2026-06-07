@@ -1,16 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Image } from "../../assets/Image";
 
 export const StudentProjectCarousel = () => {
-  const images = [
-    "/src/assets/photos/stduent project/img1.jpeg",
-    "/src/assets/photos/stduent project/img3.jpeg",
-    "/src/assets/photos/stduent project/img4.jpeg",
-    "/src/assets/photos/stduent project/img5.jpeg",
-    "/src/assets/photos/stduent project/img6.jpeg",
-    "/src/assets/photos/stduent project/ig2.jpeg",
-  ];
+  const images = Image.studentProjects;
 
   const [current, setCurrent] = React.useState(0);
 
