@@ -24,7 +24,7 @@ const footerData = {
     street: "F.P. School, near Lauhati, Baidyapara",
     city: "Rajarhat, New Town, WB 700135",
     coordinates: { lat: 22.610940155735868, lng: 88.51870979069498 },
-    mapLink: `https://www.google.com/maps/place/22.610940155735868,88.51870979069498`,
+    mapLink: `https://maps.app.goo.gl/pkjCRdahsueU2tT68?g_st=aw`,
   },
   contact: {
     phone: "+91 7278957733",

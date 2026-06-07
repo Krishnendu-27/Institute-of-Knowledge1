@@ -1,18 +1,18 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Image } from "../../assets/Image";
 
 export const MemoriesGrid = () => {
   const images = [
-    "/src/assets/photos/memories/img7.jpeg",
-    "/src/assets/photos/memories/img8.jpeg",
-    "/src/assets/photos/memories/img9.jpeg",
-    "/src/assets/photos/memories/img10.jpeg",
-    "/src/assets/photos/memories/img11.jpeg",
-    "/src/assets/photos/memories/img12.jpeg",
-    "/src/assets/photos/memories/img13.jpeg",
-    "/src/assets/photos/memories/img14.jpeg",
-    "/src/assets/photos/memories/img15.jpeg",
-    "/src/assets/photos/memories/img16.jpeg",
+    Image.img8,
+    Image.img9,
+    Image.img10,
+    Image.img11,
+    Image.img12,
+    Image.img13,
+    Image.img14,
+    Image.img15,
+    Image.img16,
   ];
 
   return (

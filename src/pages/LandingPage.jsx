@@ -41,13 +41,23 @@ const FeatureCardContent = [
 
 const TestimonialContent = [
   {
-    text: "Student management system, I team and teach easily and utilize our time and efforts for students.",
-    author: "Haran Webber",
+    text: "এই স্টুডেন্ট ম্যানেজমেন্ট সিস্টেমের মাধ্যমে উপস্থিতি, ফলাফল এবং শিক্ষার্থীদের তথ্য পরিচালনা করা অনেক সহজ হয়েছে।",
+    author: "রাহুল চক্রবর্তী, প্রধান শিক্ষক",
     isRight: false,
   },
   {
-    text: "The student management team works effortlessly with reporting and various environment foundations.",
-    author: "Mana Smith",
+    text: "ফি ম্যানেজমেন্ট, পরীক্ষার রিপোর্ট এবং অভিভাবকদের সাথে যোগাযোগ এখন সম্পূর্ণ ডিজিটাল ও ঝামেলামুক্ত।",
+    author: "সুস্মিতা দাস, স্কুল প্রশাসক",
+    isRight: true,
+  },
+  {
+    text: "শিক্ষকদের জন্য উপস্থিতি নেওয়া এবং রিপোর্ট তৈরি করা এখন খুবই সহজ। এতে সময় বাঁচে এবং কাজের দক্ষতা বাড়ে।",
+    author: "অরিন্দম সেন, শিক্ষক",
+    isRight: false,
+  },
+  {
+    text: "অভিভাবক হিসেবে আমি আমার সন্তানের উপস্থিতি, ফলাফল এবং স্কুলের গুরুত্বপূর্ণ নোটিশ সহজেই দেখতে পারি।",
+    author: "মৌসুমী রায়, অভিভাবক",
     isRight: true,
   },
 ];
@@ -88,8 +98,6 @@ export default function LandingPage() {
               alt="hero_image"
             />
           </div>
-
-          
         </section>
 
         {/*------- Features Section -------  */}
