@@ -11,7 +11,6 @@ import {
   Calendar,
   Clock,
   Users,
-  GraduationCap,
   Briefcase,
   Plus,
   Trash2,
@@ -29,7 +28,7 @@ const CreateBatch = () => {
   const { createBatch, isLoading } = useBatchStore();
 
   // Store connections
-  const { teachers, students, getTeachers, getStudents } = useUserStore();
+  const { teachers, getTeachers } = useUserStore();
   const { allClass: mainClasses = [], getClasses } = useClassStore();
 
   // Core Form State
@@ -43,9 +42,9 @@ const CreateBatch = () => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const assignTradeToBatch = useTradeStore((state) => state.assignTradeToBatch);
 
-  // Pairs State: [{ id, mainClass, student }]
-  const [pairs, setPairs] = useState([
-    { id: Date.now(), mainClass: null, student: null },
+  // Classes State: [{ id, mainClass }]
+  const [selectedClasses, setSelectedClasses] = useState([
+    { id: Date.now(), mainClass: null },
   ]);
 
   // UI / Search State
@@ -53,14 +52,12 @@ const CreateBatch = () => {
   const [searchQueries, setSearchQueries] = useState({
     teacher: "",
     class: "",
-    student: "",
   });
 
   useEffect(() => {
     getTeachers();
-    getStudents();
     getClasses();
-  }, [getTeachers, getStudents, getClasses]);
+  }, [getTeachers, getClasses]);
 
   // Handle clicking outside to close active dropdowns
   useEffect(() => {
@@ -76,61 +73,46 @@ const CreateBatch = () => {
   // Handle Teacher Selection
   const handleTeacherSelect = (teacher) => {
     setSelectedTeacher(teacher);
-    // Reset pairs when teacher changes to clear invalid classes
-    setPairs([{ id: Date.now(), mainClass: null, student: null }]);
+    // Reset classes when teacher changes
+    setSelectedClasses([{ id: Date.now(), mainClass: null }]);
     setActiveDropdown(null);
-    setSearchQueries({ teacher: "", class: "", student: "" });
+    setSearchQueries({ teacher: "", class: "" });
   };
 
-  // Pair Management Functions
-  const addPair = () => {
-    setPairs([...pairs, { id: Date.now(), mainClass: null, student: null }]);
+  // Class Management Functions
+  const addClass = () => {
+    setSelectedClasses([
+      ...selectedClasses,
+      { id: Date.now(), mainClass: null },
+    ]);
   };
 
-  const removePair = (id) => {
-    if (pairs.length > 1) {
-      setPairs(pairs.filter((p) => p.id !== id));
+  const removeClass = (id) => {
+    if (selectedClasses.length > 1) {
+      setSelectedClasses(selectedClasses.filter((c) => c.id !== id));
     }
   };
 
-  const updatePair = (id, field, value) => {
-    setPairs(
-      pairs.map((p) => {
-        if (p.id === id) {
-          const newPair = { ...p, [field]: value };
-          // If class changes, reset the student since they must match the new class
-          if (field === "mainClass") {
-            newPair.student = null;
-          }
-          return newPair;
-        }
-        return p;
-      }),
+  const updateClass = (id, cls) => {
+    setSelectedClasses(
+      selectedClasses.map((c) => (c.id === id ? { ...c, mainClass: cls } : c)),
     );
     setActiveDropdown(null);
-    setSearchQueries({ teacher: "", class: "", student: "" });
+    setSearchQueries({ teacher: "", class: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validPairs = pairs.filter((p) => p.mainClass && p.student);
+    const validClasses = selectedClasses.filter((c) => c.mainClass);
 
-    if (!selectedTeacher || validPairs.length === 0) {
-      toast.error(
-        "Please select a teacher and create at least one valid course-student pair.",
-      );
+    if (!selectedTeacher || validClasses.length === 0) {
+      toast.error("Please select a teacher and add at least one course.");
       return;
     }
 
-    // Extract unique classes and students from the valid pairs
-    const mainClassesSet = new Set(validPairs.map((p) => p.mainClass._id));
-    const studentsSet = new Set(validPairs.map((p) => p.student._id));
-
-    const mainClassStudentPairs = validPairs.map((p) => ({
-      mainClass: p.mainClass._id,
-      student: p.student._id,
-    }));
+    // Extract unique classes
+    const mainClassesSet = new Set(validClasses.map((c) => c.mainClass._id));
 
     const payload = {
       name,
@@ -141,8 +123,8 @@ const CreateBatch = () => {
       teacherName: selectedTeacher.name || selectedTeacher.email,
       teachers: [selectedTeacher._id],
       mainClasses: Array.from(mainClassesSet),
-      students: Array.from(studentsSet),
-      mainClassStudentPairs,
+      students: [],
+      mainClassStudentPairs: [],
       tradeId: selectedTradeId || undefined,
     };
 
@@ -198,27 +180,6 @@ const CreateBatch = () => {
     );
   };
 
-  // Filter students based on the selected class AND exclude those already selected in other pairs
-  const getAvailableStudents = (selectedClassId, currentPairId) => {
-    if (!selectedClassId) return [];
-
-    // Get an array of student IDs already selected in OTHER pairs
-    const alreadySelectedStudentIds = pairs
-      .filter((p) => p.id !== currentPairId && p.student)
-      .map((p) => p.student._id);
-
-    return students?.filter((std) => {
-      // 1. Check if the student belongs to the selected class
-      const belongsToClass = std.mainClasses?.some(
-        (sc) => (sc._id || sc) === selectedClassId,
-      );
-      // 2. Check if the student is NOT already selected in another pair
-      const isNotSelectedYet = !alreadySelectedStudentIds.includes(std._id);
-
-      return belongsToClass && isNotSelectedYet;
-    });
-  };
-
   const availableClasses = getAvailableClasses();
   const availableTeachers = teachers?.filter(
     (t) => t._id !== selectedTeacher?._id,
@@ -232,7 +193,7 @@ const CreateBatch = () => {
     >
       <div className="p-5 sm:p-8 rounded-3xl bg-card border border-border shadow-2xl transition-colors duration-300">
         <BackButton
-          details={`Set up core details, schedule, and enroll members to provision a
+          details={`Set up core details, schedule, and assign courses to provision a
             new learning batch.`}
         />
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8 mt-6">
@@ -459,7 +420,7 @@ const CreateBatch = () => {
             </div>
           </div>
 
-          {/* SECTION 3: Enrollments (Paired System) */}
+          {/* SECTION 3: Assigned Courses */}
           <div
             className={`bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6 transition-opacity ${
               !selectedTeacher
@@ -469,8 +430,8 @@ const CreateBatch = () => {
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Users size={20} className="text-primary" />
-                Courses and Students
+                <BookOpen size={20} className="text-primary" />
+                Assigned Courses
               </h2>
               {!selectedTeacher && (
                 <span className="text-xs text-destructive bg-destructive/10 px-3 py-1 rounded-full font-medium">
@@ -481,21 +442,23 @@ const CreateBatch = () => {
 
             <div className="space-y-4">
               <AnimatePresence>
-                {pairs.map((pair, index) => (
+                {selectedClasses.map((selectedClass, index) => (
                   <motion.div
-                    key={pair.id}
+                    key={selectedClass.id}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-start"
+                    className="flex flex-col sm:flex-row gap-4 items-start"
                   >
-                    {/* Course Selection for Pair */}
-                    <div className="relative dropdown-container">
+                    {/* Course Selection */}
+                    <div className="relative dropdown-container flex-1 w-full">
                       <div
                         className="relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm cursor-text"
-                        onClick={() => setActiveDropdown(`class-${pair.id}`)}
+                        onClick={() =>
+                          setActiveDropdown(`class-${selectedClass.id}`)
+                        }
                       >
-                        {pair.mainClass ? (
+                        {selectedClass.mainClass ? (
                           <div className="flex items-center gap-2 bg-primary/10 px-2 py-1.5 rounded-lg w-full">
                             <Avatar
                               icon={BookOpen}
@@ -503,13 +466,13 @@ const CreateBatch = () => {
                               textColor="text-primary"
                             />
                             <span className="text-sm font-medium text-primary truncate flex-1">
-                              {pair.mainClass.name}
+                              {selectedClass.mainClass.name}
                             </span>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                updatePair(pair.id, "mainClass", null);
+                                updateClass(selectedClass.id, null);
                               }}
                               className="text-primary/70 hover:text-primary ml-1 p-1 transition-colors"
                             >
@@ -526,7 +489,7 @@ const CreateBatch = () => {
                               type="text"
                               placeholder="Select Course..."
                               value={
-                                activeDropdown === `class-${pair.id}`
+                                activeDropdown === `class-${selectedClass.id}`
                                   ? searchQueries.class
                                   : ""
                               }
@@ -534,14 +497,14 @@ const CreateBatch = () => {
                                 handleSearchChange(
                                   "class",
                                   e.target.value,
-                                  `class-${pair.id}`,
+                                  `class-${selectedClass.id}`,
                                 )
                               }
                               className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate"
                             />
                           </>
                         )}
-                        {!pair.mainClass && (
+                        {!selectedClass.mainClass && (
                           <ChevronDown
                             className="absolute right-4 text-muted-foreground pointer-events-none"
                             size={18}
@@ -550,8 +513,8 @@ const CreateBatch = () => {
                       </div>
 
                       <AnimatePresence>
-                        {activeDropdown === `class-${pair.id}` &&
-                          !pair.mainClass && (
+                        {activeDropdown === `class-${selectedClass.id}` &&
+                          !selectedClass.mainClass && (
                             <motion.div
                               initial={{ opacity: 0, y: -5 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -570,7 +533,7 @@ const CreateBatch = () => {
                                   <div
                                     key={cls._id}
                                     onClick={() =>
-                                      updatePair(pair.id, "mainClass", cls)
+                                      updateClass(selectedClass.id, cls)
                                     }
                                     className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
                                   >
@@ -599,147 +562,12 @@ const CreateBatch = () => {
                       </AnimatePresence>
                     </div>
 
-                    {/* Student Selection for Pair */}
-                    <div className="relative dropdown-container">
-                      <div
-                        className={`relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border transition-all shadow-sm ${
-                          pair.mainClass
-                            ? "bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary cursor-text"
-                            : "bg-muted/50 cursor-not-allowed"
-                        }`}
-                        onClick={() => {
-                          if (pair.mainClass)
-                            setActiveDropdown(`student-${pair.id}`);
-                        }}
-                      >
-                        {pair.student ? (
-                          <div className="flex items-center gap-2 bg-muted px-2 py-1.5 rounded-lg w-full border border-border shadow-sm">
-                            <img
-                              src={
-                                pair.student.profilePic ||
-                                `https://ui-avatars.com/api/?name=${pair.student.name || "S"}&background=random`
-                              }
-                              alt={pair.student.name}
-                              className="w-6 h-6 rounded-full object-cover"
-                            />
-                            <span className="text-sm font-medium text-foreground truncate flex-1">
-                              {pair.student.name ||
-                                pair.student.email.split("@")[0]}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updatePair(pair.id, "student", null);
-                              }}
-                              className="text-muted-foreground hover:text-destructive ml-1 p-1 transition-colors"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <Search
-                              size={16}
-                              className="text-muted-foreground mr-2 shrink-0"
-                            />
-                            <input
-                              type="text"
-                              disabled={!pair.mainClass}
-                              placeholder={
-                                pair.mainClass
-                                  ? "Select Student..."
-                                  : "Select Course first"
-                              }
-                              value={
-                                activeDropdown === `student-${pair.id}`
-                                  ? searchQueries.student
-                                  : ""
-                              }
-                              onChange={(e) =>
-                                handleSearchChange(
-                                  "student",
-                                  e.target.value,
-                                  `student-${pair.id}`,
-                                )
-                              }
-                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate disabled:cursor-not-allowed"
-                            />
-                          </>
-                        )}
-                        {!pair.student && (
-                          <ChevronDown
-                            className="absolute right-4 text-muted-foreground pointer-events-none"
-                            size={18}
-                          />
-                        )}
-                      </div>
-
-                      <AnimatePresence>
-                        {activeDropdown === `student-${pair.id}` &&
-                          !pair.student &&
-                          pair.mainClass && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -5 }}
-                              className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
-                            >
-                              {getAvailableStudents(pair.mainClass._id, pair.id)
-                                .filter(
-                                  (s) =>
-                                    s.name
-                                      ?.toLowerCase()
-                                      .includes(
-                                        searchQueries.student.toLowerCase(),
-                                      ) ||
-                                    s.email
-                                      ?.toLowerCase()
-                                      .includes(
-                                        searchQueries.student.toLowerCase(),
-                                      ),
-                                )
-                                .map((student) => (
-                                  <div
-                                    key={student._id}
-                                    onClick={() =>
-                                      updatePair(pair.id, "student", student)
-                                    }
-                                    className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
-                                  >
-                                    <Avatar
-                                      src={student.profilePic}
-                                      name={student.name || student.email}
-                                      icon={GraduationCap}
-                                    />
-                                    <div className="flex-1 overflow-hidden">
-                                      <p className="text-sm font-medium text-foreground truncate">
-                                        {student.name || "Unknown Student"}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground truncate">
-                                        {student.email}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                              {getAvailableStudents(pair.mainClass._id, pair.id)
-                                .length === 0 && (
-                                <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                                  No available students (or all are already
-                                  assigned).
-                                </div>
-                              )}
-                            </motion.div>
-                          )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Remove Pair Button */}
+                    {/* Remove Course Button */}
                     <button
                       type="button"
-                      onClick={() => removePair(pair.id)}
-                      disabled={pairs.length === 1}
-                      className="mt-1 sm:mt-0 p-3.5 rounded-xl border border-border bg-background text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      onClick={() => removeClass(selectedClass.id)}
+                      disabled={selectedClasses.length === 1}
+                      className="mt-1 sm:mt-0 p-3.5 rounded-xl border border-border bg-background text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0 w-full sm:w-auto h-[50px]"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -750,7 +578,7 @@ const CreateBatch = () => {
 
             <button
               type="button"
-              onClick={addPair}
+              onClick={addClass}
               className="mt-4 flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-lg hover:bg-primary/10"
             >
               <Plus size={16} /> Add More

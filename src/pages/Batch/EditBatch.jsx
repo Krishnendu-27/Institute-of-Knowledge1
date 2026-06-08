@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, BookOpen } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useUserStore from "../../stores/useUserStore";
+import useClassStore from "../../stores/useClassStore";
 import BackButton from "../../components/UI/Button";
 
 const EditBatch = () => {
@@ -16,6 +17,7 @@ const EditBatch = () => {
     useBatchStore();
 
   const { teachers, getTeachers } = useUserStore();
+  const { allClass: mainClasses = [], getClasses } = useClassStore();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +26,8 @@ const EditBatch = () => {
     endTime: "",
     teacherId: "",
   });
+
+  const [selectedNewCourse, setSelectedNewCourse] = useState("");
 
   // Custom Dropdown State for Teacher
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
@@ -36,7 +40,8 @@ const EditBatch = () => {
       navigate("/batches");
     }
     getTeachers();
-  }, [id, fetchBatchById, getTeachers, navigate]);
+    getClasses();
+  }, [id, fetchBatchById, getTeachers, getClasses, navigate]);
 
   useEffect(() => {
     if (currentBatch && teachers?.length > 0) {
@@ -97,10 +102,25 @@ const EditBatch = () => {
         })) || [],
     };
 
+    if (selectedNewCourse) {
+      payload.mainClassId = selectedNewCourse;
+    }
+
     await updateBatch(id, payload, navigate);
   };
 
   const selectedTeacher = teachers?.find((t) => t._id === formData.teacherId);
+
+  // Available courses to add: taught by selected teacher AND not already in batch
+  const availableClassesToAdd = (mainClasses || []).filter((cls) => {
+    const teacherHasClass = selectedTeacher?.mainClasses?.some(
+      (tc) => (tc._id || tc) === cls._id,
+    );
+    const batchHasClass = currentBatch?.mainClasses?.some(
+      (bc) => (bc._id || bc) === cls._id,
+    );
+    return teacherHasClass && !batchHasClass;
+  });
 
   return (
     <motion.div
@@ -220,6 +240,7 @@ const EditBatch = () => {
                                 ...formData,
                                 teacherId: teacher._id,
                               });
+                              setSelectedNewCourse(""); // Reset course selection on teacher change
                               setIsTeacherDropdownOpen(false);
                             }}
                             className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors ${
@@ -298,6 +319,60 @@ const EditBatch = () => {
               />
             </div>
           </div>
+
+          {/* Assigned Courses / Add Course */}
+          <div className="pt-4 border-t border-border">
+            <label className="block text-sm font-medium text-foreground mb-3">
+              Assigned Courses
+            </label>
+            <div className="space-y-2 mb-4">
+              {currentBatch?.mainClasses?.map((cls) => (
+                <div
+                  key={cls._id || cls}
+                  className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border"
+                >
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span className="font-medium text-foreground text-sm">
+                    {cls.name || "Unknown Course"}
+                  </span>
+                </div>
+              ))}
+              {(!currentBatch?.mainClasses ||
+                currentBatch.mainClasses.length === 0) && (
+                <div className="text-sm text-muted-foreground p-3 border border-dashed border-border rounded-xl">
+                  No courses assigned yet.
+                </div>
+              )}
+            </div>
+
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Add New Course (Optional)
+            </label>
+            <select
+              value={selectedNewCourse}
+              onChange={(e) => setSelectedNewCourse(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              disabled={!selectedTeacher || availableClassesToAdd.length === 0}
+            >
+              <option value="">
+                {!selectedTeacher
+                  ? "Select a teacher first"
+                  : availableClassesToAdd.length === 0
+                    ? "No available courses to add"
+                    : "-- Select a course to add --"}
+              </option>
+              {availableClassesToAdd.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground mt-2">
+              You can add one new course at a time. To add more, save and edit
+              again.
+            </p>
+          </div>
+
           <div className="pt-6 flex gap-4">
             <button
               type="button"
