@@ -28,6 +28,15 @@ import BackButton from "../components/UI/Button";
 import { COUNTRIES } from "../util/Countries";
 
 const STREAM_OPTIONS = [
+  "1st",
+  "2nd",
+  "3rd",
+  "4th",
+  "5th",
+  "6th",
+  "7th",
+  "8th",
+  "9th",
   "Science",
   "Commerce",
   "Arts",
