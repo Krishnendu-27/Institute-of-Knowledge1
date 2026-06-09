@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Check, BookOpen } from "lucide-react";
+import { ChevronDown, Check, BookOpen, Trash2, Plus } from "lucide-react";
 import useBatchStore from "../../stores/useBatchStore";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
@@ -28,6 +28,7 @@ const EditBatch = () => {
   });
 
   const [selectedNewCourse, setSelectedNewCourse] = useState("");
+  const [assignedCourses, setAssignedCourses] = useState([]);
 
   // Custom Dropdown State for Teacher
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
@@ -64,6 +65,7 @@ const EditBatch = () => {
         endTime: currentBatch.endTime || "",
         teacherId: initialTeacherId,
       });
+      setAssignedCourses(currentBatch.mainClasses || []);
     }
   }, [currentBatch, teachers]);
 
@@ -80,6 +82,24 @@ const EditBatch = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleAddCourse = () => {
+    if (!selectedNewCourse) return;
+    const courseObj = mainClasses.find((c) => c._id === selectedNewCourse);
+    if (
+      courseObj &&
+      !assignedCourses.some((c) => c._id === selectedNewCourse)
+    ) {
+      setAssignedCourses([...assignedCourses, courseObj]);
+      setSelectedNewCourse("");
+    }
+  };
+
+  const handleRemoveCourse = (courseId) => {
+    setAssignedCourses(
+      assignedCourses.filter((c) => (c._id || c) !== courseId),
+    );
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -92,34 +112,33 @@ const EditBatch = () => {
       weekday: formData.weekday,
       startTime: formData.startTime,
       endTime: formData.endTime,
-      teachers: [formData.teacherId],
-      mainClasses: currentBatch.mainClasses?.map((c) => c._id || c) || [],
+      teachers: formData.teacherId ? [formData.teacherId] : [],
+      mainClasses: assignedCourses.map((c) => c._id || c),
       students: currentBatch.students?.map((s) => s._id || s) || [],
       mainClassStudentPairs:
-        currentBatch.mainClassStudentPairs?.map((pair) => ({
-          mainClass: pair.mainClass?._id || pair.mainClass,
-          student: pair.student?._id || pair.student,
-        })) || [],
+        currentBatch.mainClassStudentPairs
+          ?.filter((pair) =>
+            assignedCourses.some(
+              (c) => (c._id || c) === (pair.mainClass?._id || pair.mainClass),
+            ),
+          )
+          .map((pair) => ({
+            mainClass: pair.mainClass?._id || pair.mainClass,
+            student: pair.student?._id || pair.student,
+          })) || [],
     };
-
-    if (selectedNewCourse) {
-      payload.mainClassId = selectedNewCourse;
-    }
 
     await updateBatch(id, payload, navigate);
   };
 
   const selectedTeacher = teachers?.find((t) => t._id === formData.teacherId);
 
-  // Available courses to add: taught by selected teacher AND not already in batch
+  // Available courses to add
   const availableClassesToAdd = (mainClasses || []).filter((cls) => {
-    const teacherHasClass = selectedTeacher?.mainClasses?.some(
-      (tc) => (tc._id || tc) === cls._id,
-    );
-    const batchHasClass = currentBatch?.mainClasses?.some(
+    const batchHasClass = assignedCourses.some(
       (bc) => (bc._id || bc) === cls._id,
     );
-    return teacherHasClass && !batchHasClass;
+    return !batchHasClass;
   });
 
   return (
@@ -326,19 +345,27 @@ const EditBatch = () => {
               Assigned Courses
             </label>
             <div className="space-y-2 mb-4">
-              {currentBatch?.mainClasses?.map((cls) => (
+              {assignedCourses.map((cls) => (
                 <div
                   key={cls._id || cls}
-                  className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border"
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-border group"
                 >
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  <span className="font-medium text-foreground text-sm">
-                    {cls.name || "Unknown Course"}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="w-5 h-5 text-primary" />
+                    <span className="font-medium text-foreground text-sm">
+                      {cls.name || "Unknown Course"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCourse(cls._id || cls)}
+                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
-              {(!currentBatch?.mainClasses ||
-                currentBatch.mainClasses.length === 0) && (
+              {assignedCourses.length === 0 && (
                 <div className="text-sm text-muted-foreground p-3 border border-dashed border-border rounded-xl">
                   No courses assigned yet.
                 </div>
@@ -348,28 +375,35 @@ const EditBatch = () => {
             <label className="block text-sm font-medium text-foreground mb-2">
               Add New Course (Optional)
             </label>
-            <select
-              value={selectedNewCourse}
-              onChange={(e) => setSelectedNewCourse(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              disabled={!selectedTeacher || availableClassesToAdd.length === 0}
-            >
-              <option value="">
-                {!selectedTeacher
-                  ? "Select a teacher first"
-                  : availableClassesToAdd.length === 0
+            <div className="flex gap-2">
+              <select
+                value={selectedNewCourse}
+                onChange={(e) => setSelectedNewCourse(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                disabled={availableClassesToAdd.length === 0}
+              >
+                <option value="">
+                  {availableClassesToAdd.length === 0
                     ? "No available courses to add"
                     : "-- Select a course to add --"}
-              </option>
-              {availableClassesToAdd.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
                 </option>
-              ))}
-            </select>
+                {availableClassesToAdd.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleAddCourse}
+                disabled={!selectedNewCourse}
+                className="px-4 py-3 bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50 rounded-xl font-medium transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
             <p className="text-xs text-muted-foreground mt-2">
-              You can add one new course at a time. To add more, save and edit
-              again.
+              You can add or remove courses. Changes apply when you save.
             </p>
           </div>
 
@@ -383,7 +417,7 @@ const EditBatch = () => {
             </button>
             <button
               type="submit"
-              disabled={isLoading || !formData.teacherId}
+              disabled={isLoading}
               className="w-full py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold rounded-xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]"
             >
               {isLoading ? "Saving..." : "Save Changes"}

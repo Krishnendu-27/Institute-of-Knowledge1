@@ -39,7 +39,6 @@ const CreateBatch = () => {
   const [selectedTradeId, setSelectedTradeId] = useState("");
 
   // Relational Data State
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const assignTradeToBatch = useTradeStore((state) => state.assignTradeToBatch);
 
   // Classes State: [{ id, mainClass }]
@@ -50,7 +49,6 @@ const CreateBatch = () => {
   // UI / Search State
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchQueries, setSearchQueries] = useState({
-    teacher: "",
     class: "",
   });
 
@@ -69,15 +67,6 @@ const CreateBatch = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
-
-  // Handle Teacher Selection
-  const handleTeacherSelect = (teacher) => {
-    setSelectedTeacher(teacher);
-    // Reset classes when teacher changes
-    setSelectedClasses([{ id: Date.now(), mainClass: null }]);
-    setActiveDropdown(null);
-    setSearchQueries({ teacher: "", class: "" });
-  };
 
   // Class Management Functions
   const addClass = () => {
@@ -98,7 +87,7 @@ const CreateBatch = () => {
       selectedClasses.map((c) => (c.id === id ? { ...c, mainClass: cls } : c)),
     );
     setActiveDropdown(null);
-    setSearchQueries({ teacher: "", class: "" });
+    setSearchQueries({ class: "" });
   };
 
   const handleSubmit = async (e) => {
@@ -106,8 +95,8 @@ const CreateBatch = () => {
 
     const validClasses = selectedClasses.filter((c) => c.mainClass);
 
-    if (!selectedTeacher || validClasses.length === 0) {
-      toast.error("Please select a teacher and add at least one course.");
+    if (validClasses.length === 0) {
+      toast.error("Please add at least one course.");
       return;
     }
 
@@ -119,9 +108,7 @@ const CreateBatch = () => {
       weekday,
       startTime,
       endTime,
-      teacherEmail: selectedTeacher.email,
-      teacherName: selectedTeacher.name || selectedTeacher.email,
-      teachers: [selectedTeacher._id],
+      teachers: [],
       mainClasses: Array.from(mainClassesSet),
       students: [],
       mainClassStudentPairs: [],
@@ -172,18 +159,11 @@ const CreateBatch = () => {
     setActiveDropdown(activeKey);
   };
 
-  // Filter classes based on selected teacher's assigned classes
   const getAvailableClasses = () => {
-    if (!selectedTeacher || !selectedTeacher.mainClasses) return [];
-    return mainClasses.filter((cls) =>
-      selectedTeacher.mainClasses.some((tc) => (tc._id || tc) === cls._id),
-    );
+    return mainClasses;
   };
 
   const availableClasses = getAvailableClasses();
-  const availableTeachers = teachers?.filter(
-    (t) => t._id !== selectedTeacher?._id,
-  );
 
   return (
     <motion.div
@@ -218,112 +198,6 @@ const CreateBatch = () => {
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm placeholder:text-muted-foreground"
                   placeholder="e.g. Morning Physics A"
                 />
-              </div>
-
-              {/* Teacher Assignment */}
-              <div className="md:col-span-1 relative dropdown-container">
-                <label className="block text-sm font-semibold text-foreground mb-2">
-                  Assign Lead Teacher
-                </label>
-                <div
-                  className="relative flex items-center w-full min-h-[50px] px-4 py-2 rounded-xl border border-border bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm cursor-text"
-                  onClick={() => setActiveDropdown("teacher")}
-                >
-                  {selectedTeacher ? (
-                    <div className="flex items-center gap-2 bg-primary/10 px-2 py-1.5 rounded-lg w-full">
-                      <Avatar
-                        src={selectedTeacher.profilePic}
-                        name={selectedTeacher.name || selectedTeacher.email}
-                      />
-                      <span className="text-sm font-medium text-primary truncate flex-1">
-                        {selectedTeacher.name || "Selected Teacher"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTeacherSelect(null);
-                        }}
-                        className="text-primary/70 hover:text-primary ml-1 p-1 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <Search
-                        size={18}
-                        className="text-muted-foreground mr-2 shrink-0"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Search teacher by name or email..."
-                        value={searchQueries.teacher}
-                        onChange={(e) =>
-                          handleSearchChange(
-                            "teacher",
-                            e.target.value,
-                            "teacher",
-                          )
-                        }
-                        className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm w-full truncate"
-                      />
-                    </>
-                  )}
-                  {!selectedTeacher && (
-                    <ChevronDown
-                      className="absolute right-4 text-muted-foreground pointer-events-none"
-                      size={18}
-                    />
-                  )}
-                </div>
-
-                <AnimatePresence>
-                  {activeDropdown === "teacher" && !selectedTeacher && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
-                    >
-                      {availableTeachers
-                        ?.filter(
-                          (t) =>
-                            t.name
-                              ?.toLowerCase()
-                              .includes(searchQueries.teacher.toLowerCase()) ||
-                            t.email
-                              ?.toLowerCase()
-                              .includes(searchQueries.teacher.toLowerCase()),
-                        )
-                        .map((teacher) => (
-                          <div
-                            key={teacher._id || teacher.email}
-                            onClick={() => handleTeacherSelect(teacher)}
-                            className="px-4 py-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors border-b last:border-0 border-border/50"
-                          >
-                            <Avatar
-                              src={teacher.profilePic}
-                              name={teacher.name || teacher.email}
-                            />
-                            <div className="flex-1 overflow-hidden">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {teacher.name || "Unknown Name"}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {teacher.email}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      {availableTeachers?.length === 0 && (
-                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                          No available teachers found.
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* Trade Selection */}
@@ -421,23 +295,12 @@ const CreateBatch = () => {
           </div>
 
           {/* SECTION 3: Assigned Courses */}
-          <div
-            className={`bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6 transition-opacity ${
-              !selectedTeacher
-                ? "opacity-50 pointer-events-none"
-                : "opacity-100"
-            }`}
-          >
+          <div className="bg-muted/30 p-5 sm:p-6 rounded-2xl border border-border/50 space-y-6 transition-opacity opacity-100">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <BookOpen size={20} className="text-primary" />
                 Assigned Courses
               </h2>
-              {!selectedTeacher && (
-                <span className="text-xs text-destructive bg-destructive/10 px-3 py-1 rounded-full font-medium">
-                  Select a teacher first
-                </span>
-              )}
             </div>
 
             <div className="space-y-4">
@@ -554,7 +417,7 @@ const CreateBatch = () => {
                                 ))}
                               {availableClasses.length === 0 && (
                                 <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                                  No matching classes for this teacher.
+                                  No matching classes found.
                                 </div>
                               )}
                             </motion.div>
