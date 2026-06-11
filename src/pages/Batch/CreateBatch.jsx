@@ -37,6 +37,7 @@ const CreateBatch = () => {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [selectedTradeId, setSelectedTradeId] = useState("");
+  const [teacherId, setTeacherId] = useState("");
 
   // Relational Data State
   const assignTradeToBatch = useTradeStore((state) => state.assignTradeToBatch);
@@ -108,7 +109,7 @@ const CreateBatch = () => {
       weekday,
       startTime,
       endTime,
-      teachers: [],
+      teachers: teacherId ? [teacherId] : [],
       mainClasses: Array.from(mainClassesSet),
       students: [],
       mainClassStudentPairs: [],
@@ -215,6 +216,31 @@ const CreateBatch = () => {
                     {TRADES.map((trade) => (
                       <option key={trade.id} value={trade.id}>
                         {trade.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="absolute right-4 top-3.5 text-muted-foreground pointer-events-none"
+                    size={18}
+                  />
+                </div>
+              </div>
+
+              {/* Teacher Selection */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Assign Teacher
+                </label>
+                <div className="relative">
+                  <select
+                    value={teacherId}
+                    onChange={(event) => setTeacherId(event.target.value)}
+                    className="w-full px-4 py-3 appearance-none rounded-xl border border-border bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                  >
+                    <option value="">Unassigned</option>
+                    {teachers?.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>
+                        {teacher.name} ({teacher.email})
                       </option>
                     ))}
                   </select>

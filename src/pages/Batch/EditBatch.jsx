@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check, BookOpen, Trash2, Plus } from "lucide-react";
+import toast from "react-hot-toast";
 import useBatchStore from "../../stores/useBatchStore";
 import useUserStore from "../../stores/useUserStore";
 import useClassStore from "../../stores/useClassStore";
@@ -107,28 +108,68 @@ const EditBatch = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      name: formData.name,
-      weekday: formData.weekday,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      teachers: formData.teacherId ? [formData.teacherId] : [],
-      mainClasses: assignedCourses.map((c) => c._id || c),
-      students: currentBatch.students?.map((s) => s._id || s) || [],
-      mainClassStudentPairs:
-        currentBatch.mainClassStudentPairs
-          ?.filter((pair) =>
-            assignedCourses.some(
-              (c) => (c._id || c) === (pair.mainClass?._id || pair.mainClass),
-            ),
-          )
-          .map((pair) => ({
-            mainClass: pair.mainClass?._id || pair.mainClass,
-            student: pair.student?._id || pair.student,
-          })) || [],
-    };
+    // --- 1. Identify all changes ---
+    const originalCourseIds =
+      currentBatch.mainClasses?.map((c) => c._id || c) || [];
+    const currentAssignedCourseIds = assignedCourses.map((c) => c._id || c);
 
-    await updateBatch(id, payload, navigate);
+    const newlyAddedCourseIds = currentAssignedCourseIds.filter(
+      (id) => !originalCourseIds.includes(id),
+    );
+    const coursesRemoved = originalCourseIds.some(
+      (id) => !currentAssignedCourseIds.includes(id),
+    );
+    const teacherIdChanged =
+      (currentBatch.teachers?.[0]?._id || currentBatch.teachers?.[0] || "") !==
+      formData.teacherId;
+    const detailsChanged =
+      currentBatch.name !== formData.name ||
+      currentBatch.weekday !== formData.weekday ||
+      currentBatch.startTime !== formData.startTime ||
+      currentBatch.endTime !== formData.endTime ||
+      teacherIdChanged;
+
+    const hasAdditions = newlyAddedCourseIds.length > 0;
+    const hasOtherChanges = detailsChanged || coursesRemoved;
+
+    if (!hasAdditions && !hasOtherChanges) {
+      toast.success("No changes to save.");
+      return navigate(-1);
+    }
+
+    // --- 2. Perform updates sequentially ---
+    try {
+      // Part A: Add all new courses one by one using the mainClassId endpoint.
+      if (hasAdditions) {
+        for (let i = 0; i < newlyAddedCourseIds.length; i++) {
+          const mainClassId = newlyAddedCourseIds[i];
+          const isLastUpdate =
+            i === newlyAddedCourseIds.length - 1 && !hasOtherChanges;
+          await updateBatch(
+            id,
+            { mainClassId },
+            isLastUpdate ? navigate : undefined,
+          );
+        }
+      }
+
+      // Part B: If other details changed or courses were removed, send one final update.
+      // This sets the final state for batch details and the course list.
+      if (hasOtherChanges) {
+        const finalStatePayload = {
+          name: formData.name,
+          weekday: formData.weekday,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          teachers: formData.teacherId ? [formData.teacherId] : [],
+          mainClasses: currentAssignedCourseIds,
+        };
+        await updateBatch(id, finalStatePayload, navigate);
+      }
+    } catch (error) {
+      // The store likely handles toasts, but we can log here.
+      console.error("An error occurred during batch update:", error);
+    }
   };
 
   const selectedTeacher = teachers?.find((t) => t._id === formData.teacherId);
