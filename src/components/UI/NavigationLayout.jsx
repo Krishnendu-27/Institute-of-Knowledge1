@@ -676,7 +676,7 @@ export const NavigationLayout = () => {
                       </p>
                     </div>
 
-                    {/* Theme Toggle Grid - Optimized for Mobile */}
+                    {/* Theme Toggle Grid */}
                     <div className="grid grid-cols-3 gap-3 md:gap-4">
                       <button
                         onClick={() => setTheme("system")}
@@ -728,11 +728,10 @@ export const NavigationLayout = () => {
         )}
       </AnimatePresence>
 
-      {/* ---------------- MOBILE DRAWER (LEFT SIDE HAMBURGER) ---------------- */}
+      {/* ---------------- MOBILE DRAWER ---------------- */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -742,7 +741,6 @@ export const NavigationLayout = () => {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] md:hidden"
             />
 
-            {/* Off-Canvas Sidebar */}
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -750,7 +748,6 @@ export const NavigationLayout = () => {
               transition={{ ease: "easeOut", duration: 0.3 }}
               className="fixed top-0 bottom-0 left-0 h-[100dvh] w-[280px] bg-card border-r border-border z-[90] flex flex-col shadow-2xl md:hidden"
             >
-              {/* Drawer Header */}
               <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
                 <div className="flex items-center gap-3">
                   <img
@@ -770,13 +767,8 @@ export const NavigationLayout = () => {
                 </button>
               </div>
 
-              {/* Drawer Scrollable Nav - EVERYTHING IN ONE LIST */}
               <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {/* Main Nav Section */}
                 <div className="space-y-1.5">
-                  {/* <h4 className="px-3 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
-                    Main Menu
-                  </h4> */}
                   {menuItems.map((item) => {
                     const isActive =
                       item.path === "/"
@@ -822,13 +814,6 @@ export const NavigationLayout = () => {
                     <span className="font-medium">Logout</span>
                   </button>
                 </div>
-
-                {/* Account & Settings Section */}
-                {/* <div className="space-y-1.5 pt-2 border-t border-border">
-                  <h4 className="px-3 text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 mt-2">
-                    Account & App
-                  </h4>
-                </div> */}
               </nav>
             </motion.aside>
           </>
@@ -866,7 +851,6 @@ export const NavigationLayout = () => {
           </AnimatePresence>
         </div>
 
-        {/* SCROLLABLE NAV WITH HIDDEN SCROLLBAR */}
         <nav className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {menuItems.map((item) => {
             const isActive =
@@ -898,25 +882,19 @@ export const NavigationLayout = () => {
         </nav>
       </motion.aside>
 
-      {/* ---------------- MAIN CONTENT AREA (UNIFIED) ---------------- */}
+      {/* ---------------- MAIN CONTENT AREA ---------------- */}
       <div className="flex-1 flex flex-col h-[100dvh] min-w-0 overflow-hidden relative bg-background">
-        {/* Mobile Header Toolbar */}
-        <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border shadow-sm shrink-0 z-10 relative">
-          <div className="flex items-center gap-3">
-            <img
-              src={Image.Logo}
-              alt="Logo"
-              className="w-8 h-8 object-contain"
-            />
-            <h1 className="font-bold text-sm leading-tight tracking-tight">
-              Institute of Knowledge
-            </h1>
+        {/* Mobile Fixed Top Bar (Sticky Breadcrumbs & Menu) */}
+        <header className="md:hidden flex items-center justify-between shrink-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3">
+          <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <Breadcrumbs />
           </div>
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 text-foreground/80 hover:text-primary active:scale-95 transition-all focus:outline-none"
+            className="ml-4 p-2 rounded-xl border border-border bg-card text-foreground/80 hover:text-primary hover:border-primary/50 active:scale-95 transition-all shadow-sm shrink-0"
+            aria-label="Open Menu"
           >
-            <Menu size={26} />
+            <Menu size={20} />
           </button>
         </header>
 
@@ -943,12 +921,9 @@ export const NavigationLayout = () => {
           </div>
         </header>
 
-        {/* The single, unified scrollable page wrapper WITH SCROLLBARS HIDDEN */}
+        {/* Unified Scrollable Page Wrapper */}
         <main className="flex-1 overflow-y-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="max-w-7xl mx-auto p-4 md:p-8 h-full flex flex-col">
-            <div className="md:hidden mb-4">
-              <Breadcrumbs />
-            </div>
             <Outlet />
           </div>
         </main>

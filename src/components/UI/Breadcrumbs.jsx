@@ -1,19 +1,4 @@
-import {
-  Home,
-  Users,
-  GraduationCap,
-  UserPlus,
-  User,
-  LogOut,
-  ChevronRight,
-  BadgePlus,
-  IdCard,
-  Newspaper,
-  BookCheck,
-  Form,
-  Menu,
-  X,
-} from "lucide-react";
+import { Home, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export const Breadcrumbs = () => {
@@ -27,7 +12,7 @@ export const Breadcrumbs = () => {
     >
       <Link
         to="/"
-        className="hover:text-primary transition-all duration-200 flex items-center bg-foreground/5 py-1.5 px-3 rounded-lg hover:bg-primary/10"
+        className="hover:text-primary transition-all duration-200 flex items-center bg-foreground/5 py-1.5 px-3 rounded-lg hover:bg-primary/10 shrink-0"
       >
         <Home size={18} className="mr-2" />
         Dashboard
@@ -39,8 +24,11 @@ export const Breadcrumbs = () => {
         const title = value.replaceAll("-", " ");
 
         return (
-          <div key={to} className="flex items-center capitalize">
-            <ChevronRight size={18} className="mx-1 text-foreground/40" />
+          <div key={to} className="flex items-center capitalize shrink-0">
+            <ChevronRight
+              size={18}
+              className="mx-1 text-foreground/40 shrink-0"
+            />
             {isLast ? (
               <span className="text-foreground font-bold bg-foreground/5 py-1.5 px-3 rounded-lg shadow-sm">
                 {title}
