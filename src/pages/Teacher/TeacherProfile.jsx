@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   BookOpen,
   Clock,
+  Printer,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../../stores/useAuthStore";
@@ -24,6 +25,7 @@ import BackButton from "../../components/UI/Button";
 import useBatchStore from "../../stores/useBatchStore";
 import useClassStore from "../../stores/useClassStore";
 import { generateSlug } from "../../util/generateSlug";
+import { Image } from "../../assets/Image";
 
 const TeacherProfile = () => {
   const location = useLocation();
@@ -266,6 +268,48 @@ const TeacherProfile = () => {
     });
   };
 
+  const formatIdCardDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return "-";
+    return [
+      String(date.getDate()).padStart(2, "0"),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      date.getFullYear(),
+    ].join(".");
+  };
+
+  const escapeHtml = (value = "") =>
+    String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const getAbsoluteUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http") || path.startsWith("data:")) return path;
+    return window.location.origin + (path.startsWith("/") ? path : `/${path}`);
+  };
+
+  const getTeacherEmployeeId = (teacher) => {
+    if (!teacher) return "IK000000A000";
+    const joinedDate = teacher.createdAt ? new Date(teacher.createdAt) : new Date();
+    const year = Number.isNaN(joinedDate.getTime())
+      ? new Date().getFullYear()
+      : joinedDate.getFullYear();
+    const month = Number.isNaN(joinedDate.getTime())
+      ? "00"
+      : String(joinedDate.getMonth() + 1).padStart(2, "0");
+    const source = String(teacher._id || teacher.id || teacher.email || teacher.name || "");
+    const numericPart =
+      (parseInt(source.replace(/[^a-fA-F0-9]/g, "").slice(-6), 16) || 0) %
+      1000;
+
+    return `IK${month}${year}A${String(numericPart + 1).padStart(3, "0")}`;
+  };
+
   const openProfilePicModal = (src) => {
     if (src) {
       setModalImageSrc(src);
@@ -292,6 +336,184 @@ const TeacherProfile = () => {
 
   const displayCourses =
     teacherCourses.length > 0 ? teacherCourses : profileData?.mainClasses || [];
+
+  const getCourseName = (course) => {
+    const courseObj =
+      typeof course === "object"
+        ? course
+        : allClass?.find((cls) => cls._id === course);
+    return courseObj?.name || courseObj?.courseName || course || "";
+  };
+
+  const handlePrintIdCard = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to print teacher ID card");
+      return;
+    }
+
+    const cardTemplateUrl = getAbsoluteUrl(Image.teacherIdCardTemplate);
+    const profilePicUrl = getAbsoluteUrl(profileData.profilePic || "");
+    const department =
+      profileData.department ||
+      profileData.dept ||
+      getCourseName(displayCourses?.[0]) ||
+      "Information Technology (IT)";
+    const designation =
+      profileData.designation ||
+      profileData.position ||
+      profileData.title ||
+      "Senior IT Faculty";
+    const employeeId =
+      profileData.employeeId ||
+      profileData.employeeID ||
+      profileData.teacherId ||
+      getTeacherEmployeeId(profileData);
+    const joiningDate = formatIdCardDate(
+      profileData.joiningDate || profileData.joinedAt || profileData.createdAt,
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Teacher ID Card - ${escapeHtml(profileData.name)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            html, body { margin: 0; min-height: 100%; background: #111; font-family: Arial, Helvetica, sans-serif; }
+            body { display: flex; align-items: center; justify-content: center; padding: 18px; }
+            .id-card {
+              position: relative;
+              width: min(88mm, calc(100vw - 24px));
+              aspect-ratio: 6496 / 10039;
+              overflow: hidden;
+              background: #000;
+              color: #fff;
+            }
+            .template {
+              position: absolute;
+              inset: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              z-index: 1;
+            }
+            .teacher-photo {
+              position: absolute;
+              z-index: 2;
+              left: 31.25%;
+              top: 17.15%;
+              width: 37.8%;
+              height: 26.15%;
+              border-radius: 50%;
+              object-fit: cover;
+              object-position: center top;
+            }
+            .field {
+              position: absolute;
+              z-index: 3;
+              width: 82%;
+              left: 9%;
+              text-align: center;
+              line-height: 1.05;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              letter-spacing: 0;
+            }
+            .name {
+              top: 50.35%;
+              font-size: clamp(24px, 7.2vw, 48px);
+              font-weight: 500;
+              color: #fff;
+              text-transform: uppercase;
+            }
+            .designation {
+              top: 57.25%;
+              font-size: clamp(18px, 5vw, 34px);
+              font-weight: 700;
+              color: #ffc400;
+              text-transform: uppercase;
+            }
+            .department {
+              top: 64.35%;
+              font-size: clamp(15px, 4.1vw, 28px);
+              font-weight: 500;
+              color: #fff;
+            }
+            .employee-id {
+              top: 68.65%;
+              font-size: clamp(15px, 4.1vw, 28px);
+              font-weight: 700;
+              color: #ffc400;
+            }
+            .joining-date {
+              top: 81.25%;
+              left: 40%;
+              width: 54%;
+              text-align: left;
+              font-size: clamp(13px, 3.4vw, 24px);
+              font-weight: 800;
+              color: #fff;
+            }
+            .placeholder-photo {
+              position: absolute;
+              z-index: 2;
+              left: 31.25%;
+              top: 17.15%;
+              width: 37.8%;
+              height: 26.15%;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: rgba(255,255,255,0.85);
+              font-size: 54px;
+              font-weight: 800;
+              background: transparent;
+            }
+            @media print {
+              @page { size: 88mm 136mm; margin: 0; }
+              html, body { width: 88mm; min-height: 136mm; background: #fff; padding: 0; }
+              body { display: block; }
+              .id-card { width: 88mm; height: 136mm; }
+              .name { font-size: 7.2mm; }
+              .designation { font-size: 5.2mm; }
+              .department, .employee-id { font-size: 4.2mm; }
+              .joining-date { font-size: 3.7mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="id-card">
+            <img class="template" src="${cardTemplateUrl}" alt="Teacher ID card template" />
+            ${
+              profilePicUrl
+                ? `<img class="teacher-photo" src="${profilePicUrl}" alt="${escapeHtml(profileData.name)}" />`
+                : `<div class="placeholder-photo">${escapeHtml(profileData.name?.charAt(0)?.toUpperCase() || "T")}</div>`
+            }
+            <div class="field name">${escapeHtml(profileData.name || "Teacher Name")}</div>
+            <div class="field designation">${escapeHtml(designation)}</div>
+            <div class="field department">Dept. of ${escapeHtml(department)}</div>
+            <div class="field employee-id">Employee ID : ${escapeHtml(employeeId)}</div>
+            <div class="joining-date">Date of Joining : ${escapeHtml(joiningDate)}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 700);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
   if (isLoading || !profileData) {
     return (
@@ -337,6 +559,18 @@ const TeacherProfile = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-8">
           <BackButton />
           <div className="flex items-center gap-2 sm:gap-3">
+            {!isEditing && (
+              <button
+                onClick={handlePrintIdCard}
+                className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+              >
+                <Printer
+                  size={16}
+                  className="group-hover:-translate-y-0.5 transition-transform"
+                />
+                <span className="hidden sm:inline">Print ID Card</span>
+              </button>
+            )}
             {isAdmin && !isSelf && !isEditing && (
               <button
                 onClick={() => setShowDeleteModal(true)}
