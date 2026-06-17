@@ -1382,6 +1382,7 @@ import {
   ShieldAlert,
   ChevronDown,
   ChevronUp,
+  Printer,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../../stores/useAuthStore";
@@ -1390,6 +1391,7 @@ import useClassStore from "../../stores/useClassStore";
 import BackButton from "../../components/UI/Button";
 import { COUNTRIES } from "../../util/Countries";
 import { getStudentId } from "../../util/getStudentId";
+import { Image } from "../../assets/Image";
 
 const StudentProfile = () => {
   const location = useLocation();
@@ -1813,6 +1815,236 @@ const StudentProfile = () => {
     }
   };
 
+  const escapeHtml = (value = "") =>
+    String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const getAbsoluteUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http") || path.startsWith("data:")) return path;
+    return window.location.origin + (path.startsWith("/") ? path : `/${path}`);
+  };
+
+  const formatShortDate = (date) =>
+    [
+      String(date.getDate()).padStart(2, "0"),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getFullYear()).slice(-2),
+    ].join(".");
+
+  const getAcademicSession = (cardType) => {
+    const sourceDate = profileData.admissionDate || profileData.createdAt;
+    const date = sourceDate ? new Date(sourceDate) : new Date();
+    const baseYear = Number.isNaN(date.getTime())
+      ? new Date().getFullYear()
+      : date.getFullYear();
+    const start =
+      cardType === "gcc"
+        ? new Date(baseYear, 0, 1)
+        : new Date(baseYear, 3, 1);
+    const end =
+      cardType === "gcc"
+        ? new Date(baseYear, 11, 31)
+        : new Date(baseYear + 1, 2, 31);
+
+    return `${formatShortDate(start)}. To ${formatShortDate(end)}`;
+  };
+
+  const getMainClassName = () => {
+    const mainClass = profileData.mainClasses?.[0];
+    if (!mainClass) return "DCA";
+    if (typeof mainClass === "string") return mainClass;
+    return mainClass.name || mainClass.courseName || mainClass.title || "DCA";
+  };
+
+  const getBatchName = () => {
+    const batch = profileData.batches?.[0];
+    if (!batch) return "Computer";
+    if (typeof batch === "string") return batch;
+    return batch.name || batch.batchName || "Computer";
+  };
+
+  const handlePrintStudentCard = (cardType) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to print student card");
+      return;
+    }
+
+    const isGcc = cardType === "gcc";
+    const frontTemplate = getAbsoluteUrl(
+      isGcc ? Image.studentGccCardFront : Image.studentIkCardFront,
+    );
+    const backTemplate = getAbsoluteUrl(Image.studentCardBack);
+    const profilePicUrl = getAbsoluteUrl(profileData.profilePic || "");
+    const qrCodeUrl = getAbsoluteUrl(profileData.qrCodeUrl || Image.qrCode);
+    const studentId = getStudentId(profileData) || profileData.studentId || "N/A";
+    const courseName = getMainClassName();
+    const batchName = getBatchName();
+    const grade =
+      profileData.className || profileData.grade || profileData.class || "VIII";
+    const session = getAcademicSession(cardType);
+    const title = isGcc ? "GCC Admit Card" : "IK Student ID Card";
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${escapeHtml(title)} - ${escapeHtml(profileData.name)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            html, body { margin: 0; background: #111; font-family: Arial, Helvetica, sans-serif; }
+            body { padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+            .page {
+              position: relative;
+              width: min(88mm, calc(100vw - 24px));
+              aspect-ratio: 6496 / 10039;
+              overflow: hidden;
+              background: #000;
+              color: #fff;
+              break-after: page;
+              page-break-after: always;
+            }
+            .page:last-child { break-after: auto; page-break-after: auto; }
+            .template {
+              position: absolute;
+              inset: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              z-index: 1;
+            }
+            .student-photo {
+              position: absolute;
+              z-index: 2;
+              left: 31.15%;
+              top: 14.2%;
+              width: 37.7%;
+              height: 26.1%;
+              border-radius: 50%;
+              object-fit: cover;
+              object-position: center top;
+            }
+            .placeholder-photo {
+              position: absolute;
+              z-index: 2;
+              left: 31.15%;
+              top: 14.2%;
+              width: 37.7%;
+              height: 26.1%;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: rgba(255,255,255,0.9);
+              font-size: 52px;
+              font-weight: 800;
+            }
+            .field {
+              position: absolute;
+              z-index: 3;
+              left: 8%;
+              width: 84%;
+              text-align: center;
+              line-height: 1.08;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              letter-spacing: 0;
+            }
+            .name {
+              top: 46.15%;
+              color: #fff;
+              font-size: clamp(24px, 7vw, 48px);
+              font-weight: 500;
+              text-transform: uppercase;
+            }
+            .student-id {
+              top: 52.25%;
+              color: #ffc400;
+              font-size: clamp(16px, 4.2vw, 30px);
+              font-weight: 700;
+            }
+            .course {
+              top: 61.45%;
+              color: #fff;
+              font-size: clamp(16px, 4.6vw, 32px);
+              font-weight: 800;
+            }
+            .group-line {
+              top: 66.05%;
+              color: #fff;
+              font-size: clamp(16px, 4.4vw, 30px);
+              font-weight: 800;
+            }
+            .session {
+              top: 70.55%;
+              color: #fff;
+              font-size: clamp(13px, 3.4vw, 25px);
+              font-weight: 800;
+            }
+            .qr {
+              position: absolute;
+              z-index: 2;
+              left: 28.4%;
+              top: 53.55%;
+              width: 43.2%;
+              height: 28.4%;
+              object-fit: contain;
+              background: #fff;
+              padding: 6%;
+            }
+            @media print {
+              @page { size: 88mm 136mm; margin: 0; }
+              html, body { width: 88mm; background: #fff; padding: 0; }
+              body { display: block; }
+              .page { width: 88mm; height: 136mm; }
+              .name { font-size: 7mm; }
+              .student-id { font-size: 4.6mm; }
+              .course, .group-line { font-size: 4.8mm; }
+              .session { font-size: 3.6mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <section class="page">
+            <img class="template" src="${frontTemplate}" alt="${escapeHtml(title)} front" />
+            ${
+              profilePicUrl
+                ? `<img class="student-photo" src="${profilePicUrl}" alt="${escapeHtml(profileData.name)}" />`
+                : `<div class="placeholder-photo">${escapeHtml(profileData.name?.charAt(0)?.toUpperCase() || "S")}</div>`
+            }
+            <div class="field name">${escapeHtml(profileData.name || "Student Name")}</div>
+            <div class="field student-id">Student ID : ${escapeHtml(studentId)}</div>
+            <div class="field course">${escapeHtml(isGcc ? "Training on Academic Literacy" : `Training on ${courseName}`)}</div>
+            <div class="field group-line">${escapeHtml(isGcc ? `Class : ${grade}` : `Batch : ${batchName}`)}</div>
+            <div class="field session">Academic Session : ${escapeHtml(session)}</div>
+          </section>
+          <section class="page">
+            <img class="template" src="${backTemplate}" alt="Student card back" />
+            <img class="qr" src="${qrCodeUrl}" alt="QR Code" />
+          </section>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 800);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   if (isLoading || !profileData) {
     return (
       <div className="min-h-screen relative px-4 sm:px-6 md:px-8 py-6 sm:py-8 bg-background text-foreground font-sans transition-colors duration-300">
@@ -1872,6 +2104,30 @@ const StudentProfile = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-8">
           <BackButton />
           <div className="flex items-center gap-2 sm:gap-3">
+            {!isEditing && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePrintStudentCard("ik")}
+                  className="group flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+                >
+                  <Printer
+                    size={16}
+                    className="group-hover:-translate-y-0.5 transition-transform"
+                  />
+                  <span className="hidden sm:inline">Print IK</span>
+                </button>
+                <button
+                  onClick={() => handlePrintStudentCard("gcc")}
+                  className="group flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-slate-900/20 active:scale-95 dark:bg-slate-700 dark:hover:bg-slate-600"
+                >
+                  <Printer
+                    size={16}
+                    className="group-hover:-translate-y-0.5 transition-transform"
+                  />
+                  <span className="hidden sm:inline">Print GCC</span>
+                </button>
+              </div>
+            )}
             {isAdmin && !isSelf && !isEditing && (
               <button
                 onClick={() => setShowDeleteModal(true)}
