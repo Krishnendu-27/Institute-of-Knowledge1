@@ -259,9 +259,11 @@ const StudentCard = ({
             <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
               {student.name || "Unnamed Student"}
             </h3>
-            <p className="text-sm text-muted-foreground break-all">
-              {student.email}
-            </p>
+            {!isTeacher && (
+              <p className="text-sm text-muted-foreground break-all">
+                {student.email}
+              </p>
+            )}
           </div>
         </div>
 
@@ -272,38 +274,39 @@ const StudentCard = ({
         </div>
       </div>
 
-      {/* Middle Section: Personal Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-muted/20 p-4 rounded-xl border border-border/30">
-        <div className="flex items-start gap-3">
-          <User className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground mb-0.5">
-              Father's Name
-            </p>
-            <p className="text-sm font-medium text-foreground truncate">
-              {fatherName}
-            </p>
+      {!isTeacher && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-muted/20 p-4 rounded-xl border border-border/30">
+          <div className="flex items-start gap-3">
+            <User className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground mb-0.5">
+                Father's Name
+              </p>
+              <p className="text-sm font-medium text-foreground truncate">
+                {fatherName}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Phone className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground mb-0.5">Mobile</p>
+              <p className="text-sm font-medium text-foreground truncate">
+                {student.phone || "-"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <MapPin className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground mb-0.5">Address</p>
+              <p className="text-sm font-medium text-foreground truncate">
+                {student.address || "-"}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-start gap-3">
-          <Phone className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground mb-0.5">Mobile</p>
-            <p className="text-sm font-medium text-foreground truncate">
-              {student.phone || "-"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <MapPin className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground mb-0.5">Address</p>
-            <p className="text-sm font-medium text-foreground truncate">
-              {student.address || "-"}
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Bottom Section: Progress Tracker */}
       <div className="pt-2 border-t border-border/50">
@@ -552,13 +555,24 @@ const AllStudents = () => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return filteredStudentsForTeacher;
 
-    return filteredStudentsForTeacher.filter(
-      (student) =>
+    return filteredStudentsForTeacher.filter((student) => {
+      if (userRole === "Teacher") {
+        const visibleStudentId = String(getStudentId(student) || "")
+          .toLowerCase()
+          .trim();
+        return (
+          student?.name?.toLowerCase().includes(query) ||
+          visibleStudentId.includes(query)
+        );
+      }
+
+      return (
         student?.name?.toLowerCase().includes(query) ||
         student?.email?.toLowerCase().includes(query) ||
-        student?.phone?.toLowerCase().includes(query),
-    );
-  }, [filteredStudentsForTeacher, searchTerm]);
+        student?.phone?.toLowerCase().includes(query)
+      );
+    });
+  }, [filteredStudentsForTeacher, searchTerm, userRole]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -642,7 +656,11 @@ const AllStudents = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, email, or phone..."
+                placeholder={
+                  userRole === "Teacher"
+                    ? "Search by name or student ID..."
+                    : "Search by name, email, or phone..."
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-11 pr-12 py-3 bg-card border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"

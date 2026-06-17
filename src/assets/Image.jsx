@@ -7,6 +7,7 @@ import qrCode from "./qr.png";
 import ik_slip_header from "./ik_slip_header.png";
 import teacherIdCardTemplate from "./teacher-id-card-template.jpg";
 import studentGccCardFront from "./student-gcc-card-front.jpg";
+import ikCertificateTemplate from "./ik-certificate-template.jpeg";
 
 // Service Highlight Images
 import serviceHighlight from "./photos/our_service/20x30inch.jpg.jpeg";
@@ -44,6 +45,7 @@ export const Image = {
   studentIkCardFront: idFront,
   studentGccCardFront,
   studentCardBack: idBack,
+  ikCertificateTemplate,
   serviceHighlight,
   studentProjects: [
     studentProject1,
