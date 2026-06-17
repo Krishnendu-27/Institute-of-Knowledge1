@@ -433,6 +433,7 @@ const Fees = () => {
                       mainClassId={selectedMainClass}
                       classFees={classFeesAmount}
                       batchName={batchName}
+                      courseName={selectedMainClassObj?.name || "N/A"}
                       onPaymentSuccess={handlePaymentSuccess}
                       showDiscount={showDiscountFields}
                     />
