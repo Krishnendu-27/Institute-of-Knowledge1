@@ -666,9 +666,11 @@ export default function BatchDetails() {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-foreground">{cls.name}</h3>
-                      <span className="text-sm font-bold text-success bg-success/10 px-2 py-1 rounded-lg">
-                        ₹{cls.fees}
-                      </span>
+                      {userRole !== "Teacher" && (
+                        <span className="text-sm font-bold text-success bg-success/10 px-2 py-1 rounded-lg">
+                          ₹{cls.fees}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">
                       Instructor: {cls.teacherName || "TBA"}

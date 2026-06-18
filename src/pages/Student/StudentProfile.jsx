@@ -1443,6 +1443,8 @@ const StudentProfile = () => {
   const [modalImageSrc, setModalImageSrc] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [certificateCourse, setCertificateCourse] = useState(null);
+  const [certificateGrade, setCertificateGrade] = useState("");
 
   // Edit Form State
   const [formData, setFormData] = useState({});
@@ -1836,6 +1838,17 @@ const StudentProfile = () => {
       String(date.getFullYear()).slice(-2),
     ].join(".");
 
+  const formatCertificateDate = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return "";
+
+    return [
+      String(date.getDate()).padStart(2, "0"),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      date.getFullYear(),
+    ].join(".");
+  };
+
   const getAcademicSession = (cardType) => {
     const sourceDate = profileData.admissionDate || profileData.createdAt;
     const date = sourceDate ? new Date(sourceDate) : new Date();
@@ -2043,6 +2056,200 @@ const StudentProfile = () => {
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
+  };
+
+  const openCertificateGradeModal = (classObj) => {
+    setCertificateCourse(classObj);
+    setCertificateGrade("");
+  };
+
+  const closeCertificateGradeModal = () => {
+    setCertificateCourse(null);
+    setCertificateGrade("");
+  };
+
+  const handlePrintCertificate = () => {
+    const classObj = certificateCourse;
+    if (!classObj) return;
+
+    const grade = certificateGrade.trim();
+    if (!grade) {
+      toast.error("Please enter a grade before printing certificate.");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to print certificate");
+      return;
+    }
+
+    const certificateTemplate = getAbsoluteUrl(Image.ikCertificateTemplate);
+    const studentId = getStudentId(profileData) || profileData.studentId || "";
+    const courseName =
+      classObj?.name || classObj?.courseName || classObj?.title || "Course";
+    const guardianName =
+      profileData.fatherName ||
+      profileData.fathersName ||
+      profileData.father_name ||
+      profileData.fathername ||
+      profileData.parentName ||
+      "";
+    const certificateNo = `IK${new Date().getFullYear().toString().slice(-2)}${String(
+      studentId || profileData._id || Date.now(),
+    )
+      .replace(/\W/g, "")
+      .slice(-7)
+      .padStart(7, "0")}`;
+    const fromDate = formatCertificateDate(
+      classObj?.startDate || profileData.admissionDate || profileData.createdAt,
+    );
+    const toDate = formatCertificateDate(classObj?.endDate || new Date());
+    const issueDate = formatCertificateDate(new Date());
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Certificate - ${escapeHtml(profileData.name || "Student")}</title>
+          <style>
+            * { box-sizing: border-box; }
+            html, body { margin: 0; padding: 0; background: #f3f4f6; font-family: Arial, Helvetica, sans-serif; }
+            body { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+            .certificate {
+              position: relative;
+              width: min(297mm, 100vw);
+              aspect-ratio: 3508 / 2480;
+              background: #fff;
+              overflow: hidden;
+              color: #2a176d;
+            }
+            .template {
+              position: absolute;
+              inset: 0;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              z-index: 1;
+            }
+            .field {
+              position: absolute;
+              z-index: 2;
+              text-align: center;
+              font-family: Arial, Helvetica, sans-serif;
+              font-weight: 800;
+              color: #2d2078;
+              line-height: 1.05;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              letter-spacing: 0;
+            }
+            .student-name {
+              left: 33.2%;
+              top: 49.05%;
+              width: 18.6%;
+              font-size: clamp(14px, 2vw, 38px);
+            }
+            .relation {
+              left: 51.7%;
+              top: 49.45%;
+              width: 10.2%;
+              color: #5b3191;
+              font-family: "Times New Roman", serif;
+              font-size: clamp(13px, 1.65vw, 31px);
+              font-style: italic;
+              font-weight: 700;
+            }
+            .guardian-name {
+              left: 61.7%;
+              top: 49.05%;
+              width: 19.2%;
+              font-size: clamp(14px, 2vw, 38px);
+            }
+            .reg-no {
+              left: 53.2%;
+              top: 58.03%;
+              width: 13.5%;
+              font-size: clamp(13px, 1.75vw, 32px);
+            }
+            .cert-no {
+              left: 80.2%;
+              top: 58.03%;
+              width: 13.2%;
+              font-size: clamp(13px, 1.75vw, 32px);
+            }
+            .course-name {
+              left: 55.3%;
+              top: 64.85%;
+              width: 36.5%;
+              text-align: left;
+              font-size: clamp(13px, 1.85vw, 35px);
+            }
+            .from-date {
+              left: 42.8%;
+              top: 72.1%;
+              width: 11.8%;
+              font-size: clamp(13px, 1.7vw, 32px);
+            }
+            .to-date {
+              left: 56.0%;
+              top: 72.1%;
+              width: 12%;
+              font-size: clamp(13px, 1.7vw, 32px);
+            }
+            .grade {
+              left: 77.4%;
+              top: 72.1%;
+              width: 8%;
+              font-size: clamp(13px, 1.75vw, 34px);
+            }
+            .issue-date {
+              left: 42.2%;
+              top: 90.07%;
+              width: 12%;
+              font-size: clamp(13px, 1.7vw, 32px);
+            }
+            @media print {
+              @page { size: A4 landscape; margin: 0; }
+              html, body { width: 297mm; height: 210mm; background: #fff; }
+              .certificate { width: 297mm; height: 210mm; }
+              .student-name, .guardian-name { font-size: 7.2mm; }
+              .relation { font-size: 6.2mm; }
+              .reg-no, .cert-no, .course-name, .from-date, .to-date, .grade, .issue-date { font-size: 5.6mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <section class="certificate">
+            <img class="template" src="${certificateTemplate}" alt="Certificate template" />
+            <div class="field student-name">${escapeHtml(profileData.name || "Student Name")}</div>
+            <div class="field relation">${escapeHtml(guardianName ? "Son of" : "")}</div>
+            <div class="field guardian-name">${escapeHtml(guardianName)}</div>
+            <div class="field reg-no">${escapeHtml(studentId || "-")}</div>
+            <div class="field cert-no">${escapeHtml(certificateNo)}</div>
+            <div class="field course-name">${escapeHtml(courseName.toUpperCase())}</div>
+            <div class="field from-date">${escapeHtml(fromDate || "-")}</div>
+            <div class="field to-date">${escapeHtml(toDate || "-")}</div>
+            <div class="field grade">${escapeHtml(grade.toUpperCase())}</div>
+            <div class="field issue-date">${escapeHtml(issueDate)}</div>
+          </section>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 800);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    closeCertificateGradeModal();
   };
 
   if (isLoading || !profileData) {
@@ -2394,9 +2601,21 @@ const StudentProfile = () => {
                                         )}
                                       </div>
                                     </div>
-                                    <span className="text-sm font-semibold text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 shrink-0 self-start">
-                                      ₹ {classObj.fees || "-"}
-                                    </span>
+                                    <div className="flex flex-wrap items-center gap-2 shrink-0 self-start">
+                                      <span className="text-sm font-semibold text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+                                        ₹ {classObj.fees || "-"}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          openCertificateGradeModal(classObj)
+                                        }
+                                        className="text-sm font-semibold bg-success/10 hover:bg-success/20 text-success px-4 py-1.5 rounded-full border border-success/20 transition-colors flex items-center gap-1.5"
+                                      >
+                                        <Printer size={14} />
+                                        Print Certificate
+                                      </button>
+                                    </div>
                                   </div>
 
                                   {progress ? (
@@ -3057,6 +3276,79 @@ const StudentProfile = () => {
                 alt={activeDocument.name}
                 className="max-w-full max-h-[85vh] object-contain drop-shadow-2xl rounded-sm"
               />
+            </motion.div>
+          </motion.div>
+        )}
+
+        {certificateCourse && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={closeCertificateGradeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-card p-6 rounded-2xl shadow-xl max-w-md w-full border border-border"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Certificate Grade
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {certificateCourse.name ||
+                      certificateCourse.courseName ||
+                      certificateCourse.title ||
+                      "Course"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeCertificateGradeModal}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Close certificate grade dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Enter Grade
+              </label>
+              <input
+                type="text"
+                value={certificateGrade}
+                onChange={(e) => setCertificateGrade(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePrintCertificate();
+                }}
+                autoFocus
+                placeholder="Example: AA"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              />
+
+              <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-border">
+                <button
+                  type="button"
+                  onClick={closeCertificateGradeModal}
+                  className="px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintCertificate}
+                  className="px-5 py-2 rounded-xl bg-success hover:opacity-90 text-success-foreground font-semibold flex items-center gap-2 transition-all"
+                >
+                  <Printer size={16} />
+                  Print
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
