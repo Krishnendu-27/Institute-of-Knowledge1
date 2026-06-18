@@ -295,17 +295,20 @@ const TeacherProfile = () => {
 
   const getTeacherEmployeeId = (teacher) => {
     if (!teacher) return "IK000000A000";
-    const joinedDate = teacher.createdAt ? new Date(teacher.createdAt) : new Date();
+    const joinedDate = teacher.createdAt
+      ? new Date(teacher.createdAt)
+      : new Date();
     const year = Number.isNaN(joinedDate.getTime())
       ? new Date().getFullYear()
       : joinedDate.getFullYear();
     const month = Number.isNaN(joinedDate.getTime())
       ? "00"
       : String(joinedDate.getMonth() + 1).padStart(2, "0");
-    const source = String(teacher._id || teacher.id || teacher.email || teacher.name || "");
+    const source = String(
+      teacher._id || teacher.id || teacher.email || teacher.name || "",
+    );
     const numericPart =
-      (parseInt(source.replace(/[^a-fA-F0-9]/g, "").slice(-6), 16) || 0) %
-      1000;
+      (parseInt(source.replace(/[^a-fA-F0-9]/g, "").slice(-6), 16) || 0) % 1000;
 
     return `IK${month}${year}A${String(numericPart + 1).padStart(3, "0")}`;
   };
@@ -396,18 +399,32 @@ const TeacherProfile = () => {
               width: 100%;
               height: 100%;
               object-fit: cover;
-              z-index: 1;
+              z-index: 1;              position: absolute;
+              z-index: 2;
+              left: 50%;
+              top: 27.8%;
+              transform: translate(-50%, -50%);
+              width: 44%;
+              height: 28.5%;
+              border-radius: 50%;
+              object-fit: cover;
+              object-position: center top;
+              background: #0b5db8;
+              border: 2px solid rgba(255, 255, 255, 0.9)
             }
             .teacher-photo {
               position: absolute;
               z-index: 2;
-              left: 31.25%;
-              top: 17.15%;
-              width: 37.8%;
-              height: 26.15%;
+              left: 49.5%;
+              top: 30%;
+              transform: translate(-50%, -50%);
+              width: 44%;
+              height: 28.5%;
               border-radius: 50%;
               object-fit: cover;
               object-position: center top;
+              background: #0b5db8;
+              border: 2px solid rgba(255, 255, 255, 0.9);
             }
             .field {
               position: absolute;
@@ -418,7 +435,7 @@ const TeacherProfile = () => {
               line-height: 1.05;
               white-space: nowrap;
               overflow: hidden;
-              text-overflow: ellipsis;
+              text-overflow: clip;
               letter-spacing: 0;
             }
             .name {
@@ -459,18 +476,20 @@ const TeacherProfile = () => {
             .placeholder-photo {
               position: absolute;
               z-index: 2;
-              left: 31.25%;
-              top: 17.15%;
-              width: 37.8%;
-              height: 26.15%;
+              left: 50%;
+              top: 27.8%;
+              transform: translate(-50%, -50%);
+              width: 44%;
+              height: 28.5%;
               border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
-              color: rgba(255,255,255,0.85);
+              color: rgba(255,255,255,0.9);
               font-size: 54px;
               font-weight: 800;
-              background: transparent;
+              background: #0b5db8;
+              border: 2px solid rgba(255, 255, 255, 0.9);
             }
             @media print {
               @page { size: 88mm 136mm; margin: 0; }
@@ -492,15 +511,28 @@ const TeacherProfile = () => {
                 ? `<img class="teacher-photo" src="${profilePicUrl}" alt="${escapeHtml(profileData.name)}" />`
                 : `<div class="placeholder-photo">${escapeHtml(profileData.name?.charAt(0)?.toUpperCase() || "T")}</div>`
             }
-            <div class="field name">${escapeHtml(profileData.name || "Teacher Name")}</div>
-            <div class="field designation">${escapeHtml(designation)}</div>
-            <div class="field department">Dept. of ${escapeHtml(department)}</div>
-            <div class="field employee-id">Employee ID : ${escapeHtml(employeeId)}</div>
+            <div class="field name" data-fit-text data-fit-min="14">${escapeHtml(profileData.name || "Teacher Name")}</div>
+            <div class="field designation" data-fit-text data-fit-min="10">${escapeHtml(designation)}</div>
+            <div class="field department" data-fit-text data-fit-min="10">Dept. of ${escapeHtml(department)}</div>
+            <div class="field employee-id" data-fit-text data-fit-min="10">Employee ID : ${escapeHtml(employeeId)}</div>
             <div class="joining-date">Date of Joining : ${escapeHtml(joiningDate)}</div>
           </div>
           <script>
+            function fitTextFields() {
+              document.querySelectorAll("[data-fit-text]").forEach(function(el) {
+                var min = Number(el.dataset.fitMin || 9);
+                var max = parseFloat(window.getComputedStyle(el).fontSize);
+                var size = max;
+                el.style.fontSize = size + "px";
+                while (el.scrollWidth > el.clientWidth && size > min) {
+                  size -= 0.5;
+                  el.style.fontSize = size + "px";
+                }
+              });
+            }
             window.onload = function() {
               setTimeout(function() {
+                fitTextFields();
                 window.print();
                 window.close();
               }, 700);

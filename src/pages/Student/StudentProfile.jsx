@@ -1856,9 +1856,7 @@ const StudentProfile = () => {
       ? new Date().getFullYear()
       : date.getFullYear();
     const start =
-      cardType === "gcc"
-        ? new Date(baseYear, 0, 1)
-        : new Date(baseYear, 3, 1);
+      cardType === "gcc" ? new Date(baseYear, 0, 1) : new Date(baseYear, 3, 1);
     const end =
       cardType === "gcc"
         ? new Date(baseYear, 11, 31)
@@ -1895,7 +1893,8 @@ const StudentProfile = () => {
     const backTemplate = getAbsoluteUrl(Image.studentCardBack);
     const profilePicUrl = getAbsoluteUrl(profileData.profilePic || "");
     const qrCodeUrl = getAbsoluteUrl(profileData.qrCodeUrl || Image.qrCode);
-    const studentId = getStudentId(profileData) || profileData.studentId || "N/A";
+    const studentId =
+      getStudentId(profileData) || profileData.studentId || "N/A";
     const courseName = getMainClassName();
     const batchName = getBatchName();
     const grade =
@@ -1934,21 +1933,25 @@ const StudentProfile = () => {
             .student-photo {
               position: absolute;
               z-index: 2;
-              left: 31.15%;
-              top: 14.2%;
-              width: 37.7%;
-              height: 26.1%;
+              left: 50%;
+              top: 27.8%;
+              transform: translate(-50%, -50%);
+              width: 44%;
+              height: 28.5%;
               border-radius: 50%;
               object-fit: cover;
               object-position: center top;
+              background: #0b5db8;
+              border: 2px solid rgba(255, 255, 255, 0.9);
             }
             .placeholder-photo {
               position: absolute;
               z-index: 2;
-              left: 31.15%;
-              top: 14.2%;
-              width: 37.7%;
-              height: 26.1%;
+              left: 50%;
+              top: 26.475%;
+              transform: translate(-50%, -50%);
+              width: 39%;
+              height: 25.24%;
               border-radius: 50%;
               display: flex;
               align-items: center;
@@ -1956,6 +1959,8 @@ const StudentProfile = () => {
               color: rgba(255,255,255,0.9);
               font-size: 52px;
               font-weight: 800;
+              background: #0b5db8;
+              border: 2px solid rgba(255, 255, 255, 0.9);
             }
             .field {
               position: absolute;
@@ -1966,38 +1971,41 @@ const StudentProfile = () => {
               line-height: 1.08;
               white-space: nowrap;
               overflow: hidden;
-              text-overflow: ellipsis;
+              text-overflow: clip;
               letter-spacing: 0;
+              margin-bottom: 6px;
+              padding-bottom: 4px;
+              margin-top:4px;
             }
             .name {
               top: 46.15%;
               color: #fff;
-              font-size: clamp(24px, 7vw, 48px);
-              font-weight: 500;
+              font-size: clamp(22px, 6.5vw, 44px);
+              font-weight: 400;
               text-transform: uppercase;
             }
             .student-id {
               top: 52.25%;
               color: #ffc400;
-              font-size: clamp(16px, 4.2vw, 30px);
+              font-size: clamp(14px, 3.8vw, 26px);
               font-weight: 700;
             }
             .course {
-              top: 61.45%;
+              top: 61.0%;
               color: #fff;
-              font-size: clamp(16px, 4.6vw, 32px);
+              font-size: clamp(14px, 4.2vw, 28px);
               font-weight: 800;
             }
             .group-line {
-              top: 66.05%;
+              top: 67.0%;
               color: #fff;
-              font-size: clamp(16px, 4.4vw, 30px);
+              font-size: clamp(14px, 4vw, 28px);
               font-weight: 800;
             }
             .session {
-              top: 70.55%;
+              top: 73.0%;
               color: #fff;
-              font-size: clamp(13px, 3.4vw, 25px);
+              font-size: clamp(11px, 3vw, 22px);
               font-weight: 800;
             }
             .qr {
@@ -2016,10 +2024,10 @@ const StudentProfile = () => {
               html, body { width: 88mm; background: #fff; padding: 0; }
               body { display: block; }
               .page { width: 88mm; height: 136mm; }
-              .name { font-size: 7mm; }
-              .student-id { font-size: 4.6mm; }
-              .course, .group-line { font-size: 4.8mm; }
-              .session { font-size: 3.6mm; }
+              .name { font-size: 6.2mm; }
+              .student-id { font-size: 4.2mm; }
+              .course, .group-line { font-size: 4.4mm; }
+              .session { font-size: 3.2mm; }
             }
           </style>
         </head>
@@ -2031,19 +2039,32 @@ const StudentProfile = () => {
                 ? `<img class="student-photo" src="${profilePicUrl}" alt="${escapeHtml(profileData.name)}" />`
                 : `<div class="placeholder-photo">${escapeHtml(profileData.name?.charAt(0)?.toUpperCase() || "S")}</div>`
             }
-            <div class="field name">${escapeHtml(profileData.name || "Student Name")}</div>
-            <div class="field student-id">Student ID : ${escapeHtml(studentId)}</div>
-            <div class="field course">${escapeHtml(isGcc ? "Training on Academic Literacy" : `Training on ${courseName}`)}</div>
-            <div class="field group-line">${escapeHtml(isGcc ? `Class : ${grade}` : `Batch : ${batchName}`)}</div>
-            <div class="field session">Academic Session : ${escapeHtml(session)}</div>
+            <div class="field name" data-fit-text data-fit-min="14">${escapeHtml(profileData.name || "Student Name")}</div>
+            <div class="field student-id" data-fit-text data-fit-min="10">Student ID : ${escapeHtml(studentId)}</div>
+            <div class="field course" data-fit-text data-fit-min="10">${escapeHtml(isGcc ? "Training on Academic Literacy" : `Training on ${courseName}`)}</div>
+            <div class="field group-line" data-fit-text data-fit-min="10">${escapeHtml(isGcc ? `Class : ${grade}` : `Batch : ${batchName}`)}</div>
+            <div class="field session" data-fit-text data-fit-min="9">Academic Session : ${escapeHtml(session)}</div>
           </section>
           <section class="page">
             <img class="template" src="${backTemplate}" alt="Student card back" />
             <img class="qr" src="${qrCodeUrl}" alt="QR Code" />
           </section>
           <script>
+            function fitTextFields() {
+              document.querySelectorAll("[data-fit-text]").forEach(function(el) {
+                var min = Number(el.dataset.fitMin || 9);
+                var max = parseFloat(window.getComputedStyle(el).fontSize);
+                var size = max;
+                el.style.fontSize = size + "px";
+                while (el.scrollWidth > el.clientWidth && size > min) {
+                  size -= 0.5;
+                  el.style.fontSize = size + "px";
+                }
+              });
+            }
             window.onload = function() {
               setTimeout(function() {
+                fitTextFields();
                 window.print();
                 window.close();
               }, 800);
@@ -2142,7 +2163,7 @@ const StudentProfile = () => {
               line-height: 1.05;
               white-space: nowrap;
               overflow: hidden;
-              text-overflow: ellipsis;
+              text-overflow: clip;
               letter-spacing: 0;
             }
             .student-name {
@@ -2223,20 +2244,33 @@ const StudentProfile = () => {
         <body>
           <section class="certificate">
             <img class="template" src="${certificateTemplate}" alt="Certificate template" />
-            <div class="field student-name">${escapeHtml(profileData.name || "Student Name")}</div>
+            <div class="field student-name" data-fit-text data-fit-min="12">${escapeHtml(profileData.name || "Student Name")}</div>
             <div class="field relation">${escapeHtml(guardianName ? "Son of" : "")}</div>
-            <div class="field guardian-name">${escapeHtml(guardianName)}</div>
-            <div class="field reg-no">${escapeHtml(studentId || "-")}</div>
-            <div class="field cert-no">${escapeHtml(certificateNo)}</div>
-            <div class="field course-name">${escapeHtml(courseName.toUpperCase())}</div>
-            <div class="field from-date">${escapeHtml(fromDate || "-")}</div>
-            <div class="field to-date">${escapeHtml(toDate || "-")}</div>
-            <div class="field grade">${escapeHtml(grade.toUpperCase())}</div>
-            <div class="field issue-date">${escapeHtml(issueDate)}</div>
+            <div class="field guardian-name" data-fit-text data-fit-min="12">${escapeHtml(guardianName)}</div>
+            <div class="field reg-no" data-fit-text data-fit-min="10">${escapeHtml(studentId || "-")}</div>
+            <div class="field cert-no" data-fit-text data-fit-min="10">${escapeHtml(certificateNo)}</div>
+            <div class="field course-name" data-fit-text data-fit-min="10">${escapeHtml(courseName.toUpperCase())}</div>
+            <div class="field from-date" data-fit-text data-fit-min="9">${escapeHtml(fromDate || "-")}</div>
+            <div class="field to-date" data-fit-text data-fit-min="9">${escapeHtml(toDate || "-")}</div>
+            <div class="field grade" data-fit-text data-fit-min="9">${escapeHtml(grade.toUpperCase())}</div>
+            <div class="field issue-date" data-fit-text data-fit-min="9">${escapeHtml(issueDate)}</div>
           </section>
           <script>
+            function fitTextFields() {
+              document.querySelectorAll("[data-fit-text]").forEach(function(el) {
+                var min = Number(el.dataset.fitMin || 9);
+                var max = parseFloat(window.getComputedStyle(el).fontSize);
+                var size = max;
+                el.style.fontSize = size + "px";
+                while (el.scrollWidth > el.clientWidth && size > min) {
+                  size -= 0.5;
+                  el.style.fontSize = size + "px";
+                }
+              });
+            }
             window.onload = function() {
               setTimeout(function() {
+                fitTextFields();
                 window.print();
                 window.close();
               }, 800);
