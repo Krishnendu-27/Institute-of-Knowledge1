@@ -578,6 +578,7 @@ const FeesYearlyStatus = () => {
 
   const userRole = useAuthStore((state) => state.userRole);
   const userData = useAuthStore((state) => state.user);
+  const isTeacher = userRole === "Teacher";
 
   const [filteredBatches, setFilteredBatches] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -610,6 +611,40 @@ const FeesYearlyStatus = () => {
     "December",
   ];
 
+  const teacherBatches = useMemo(() => {
+    if (!isTeacher) return batches || [];
+
+    return filterBatchesForTeacher(
+      batches || [],
+      userData?.batches || [],
+      userRole,
+      userData?.email,
+      userData?._id,
+    );
+  }, [batches, isTeacher, userRole, userData]);
+
+  const teacherCourseIds = useMemo(() => {
+    const courseIds = new Set(
+      (userData?.mainClasses || []).map((course) =>
+        String(course?._id || course),
+      ),
+    );
+
+    teacherBatches.forEach((batch) => {
+      batch.mainClasses?.forEach((course) => {
+        const courseId = course?._id || course;
+        if (courseId) courseIds.add(String(courseId));
+      });
+
+      batch.mainClassStudentPairs?.forEach((pair) => {
+        const courseId = pair.mainClass?._id || pair.mainClass;
+        if (courseId) courseIds.add(String(courseId));
+      });
+    });
+
+    return courseIds;
+  }, [teacherBatches, userData]);
+
   useEffect(() => {
     const loadInitialData = async () => {
       await Promise.all([fetchMainClasses(), fetchBatches()]);
@@ -625,7 +660,7 @@ const FeesYearlyStatus = () => {
         ),
       );
 
-      if (userRole === "Teacher") {
+      if (isTeacher) {
         relevantBatches = filterBatchesForTeacher(
           relevantBatches,
           userData?.batches || [],
@@ -649,7 +684,14 @@ const FeesYearlyStatus = () => {
     } else {
       setFilteredBatches([]);
     }
-  }, [selectedMainClass, batches, userRole, userData]);
+  }, [selectedMainClass, batches, userRole, userData, isTeacher]);
+
+  useEffect(() => {
+    if (!selectedBatch || !selectedMainClass) return;
+    if (!filteredBatches.some((batch) => batch._id === selectedBatch)) {
+      setSelectedBatch(null);
+    }
+  }, [selectedBatch, selectedMainClass, filteredBatches, setSelectedBatch]);
 
   useEffect(() => {
     if (selectedBatch) {
@@ -683,12 +725,52 @@ const FeesYearlyStatus = () => {
     if (!mainClasses) return [];
     if (userRole === "Student") {
       const studentClassIds = (userData?.mainClasses || []).map(
-        (c) => c._id || c,
+        (c) => String(c._id || c),
       );
-      return mainClasses.filter((mc) => studentClassIds.includes(mc._id));
+      return mainClasses.filter((mc) =>
+        studentClassIds.includes(String(mc._id)),
+      );
+    }
+    if (isTeacher) {
+      return mainClasses.filter((mc) => {
+        if (teacherCourseIds.has(String(mc._id))) return true;
+        if (userData?.email && mc.teacherEmail === userData.email) return true;
+        if (Array.isArray(mc.teachers)) {
+          const teacherIds = mc.teachers.map((t) => String(t._id || t));
+          if (userData?._id && teacherIds.includes(String(userData._id))) {
+            return true;
+          }
+          if (
+            userData?.email &&
+            mc.teachers.some((t) => t.email === userData.email)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      });
     }
     return mainClasses;
-  }, [mainClasses, userRole, userData]);
+  }, [mainClasses, userRole, userData, isTeacher, teacherCourseIds]);
+
+  const displayedCourseIds = useMemo(
+    () => new Set(displayedMainClasses.map((course) => String(course._id))),
+    [displayedMainClasses],
+  );
+
+  useEffect(() => {
+    if (!selectedMainClass || !mainClasses?.length) return;
+    if (!displayedCourseIds.has(String(selectedMainClass))) {
+      setSelectedMainClass(null);
+      setSelectedBatch(null);
+    }
+  }, [
+    selectedMainClass,
+    mainClasses?.length,
+    displayedCourseIds,
+    setSelectedMainClass,
+    setSelectedBatch,
+  ]);
 
   useEffect(() => {
     const fetchAllFees = async () => {
@@ -1052,7 +1134,9 @@ const FeesYearlyStatus = () => {
                   <option value="">-- Select Course --</option>
                   {displayedMainClasses.map((mainClass) => (
                     <option key={mainClass._id} value={mainClass._id}>
-                      {mainClass.name} (₹{mainClass.fees})
+                      {userRole === "Teacher"
+                        ? mainClass.name
+                        : `${mainClass.name} (₹${mainClass.fees})`}
                     </option>
                   ))}
                 </select>
