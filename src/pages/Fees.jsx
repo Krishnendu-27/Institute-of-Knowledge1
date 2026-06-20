@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
-import { Loader } from "lucide-react";
 import useFeesStore from "../stores/useFeesStore";
 import useUserStore from "../stores/useUserStore";
 import FilterPanel from "../components/UI/FilterPanel";
@@ -10,6 +9,10 @@ import StudentSearch from "../components/UI/StudentSearch";
 import DiscountToggleButton from "../components/UI/DiscountToggleButton";
 import useAuthStore from "../stores/useAuthStore";
 import { api } from "../api/api";
+import {
+  filterBatchesForTeacher,
+  filterStudentsForTeacher,
+} from "../util/teacherAccessControl";
 
 const Fees = () => {
   const {
@@ -21,7 +24,6 @@ const Fees = () => {
     isLoading,
     fetchMainClasses,
     fetchBatches,
-    fetchStudentsForClass,
     fetchStudentsForBatch,
     setSelectedMainClass,
     setSelectedBatch,
@@ -35,6 +37,7 @@ const Fees = () => {
 
   const userRole = useAuthStore((state) => state.userRole);
   const userData = useAuthStore((state) => state.user);
+  const isTeacher = userRole === "Teacher";
 
   // For Global Search
   const { students: allStudents, getStudents } = useUserStore();
@@ -54,17 +57,99 @@ const Fees = () => {
     loadInitialData();
   }, []); // Empty dependency array prevents infinite loops on mount
 
-  // Memoized Main Classes to filter out unassigned courses for students
+  const teacherBatches = useMemo(() => {
+    if (!isTeacher) return batches || [];
+
+    return filterBatchesForTeacher(
+      batches || [],
+      userData?.batches || [],
+      userRole,
+      userData?.email,
+      userData?._id,
+    );
+  }, [batches, isTeacher, userRole, userData]);
+
+  const teacherCourseIds = useMemo(() => {
+    const courseIds = new Set(
+      (userData?.mainClasses || []).map((course) =>
+        String(course?._id || course),
+      ),
+    );
+
+    teacherBatches.forEach((batch) => {
+      batch.mainClasses?.forEach((course) => {
+        const courseId = course?._id || course;
+        if (courseId) courseIds.add(String(courseId));
+      });
+
+      batch.mainClassStudentPairs?.forEach((pair) => {
+        const courseId = pair.mainClass?._id || pair.mainClass;
+        if (courseId) courseIds.add(String(courseId));
+      });
+    });
+
+    return courseIds;
+  }, [teacherBatches, userData]);
+
+  // Memoized Main Classes to filter out unassigned courses for students/teachers
   const displayedMainClasses = useMemo(() => {
     if (!mainClasses) return [];
     if (userRole === "Student") {
       const studentClassIds = (userData?.mainClasses || []).map(
-        (c) => c._id || c,
+        (c) => String(c._id || c),
       );
-      return mainClasses.filter((mc) => studentClassIds.includes(mc._id));
+      return mainClasses.filter((mc) =>
+        studentClassIds.includes(String(mc._id)),
+      );
+    }
+    if (isTeacher) {
+      return mainClasses.filter((mc) => {
+        if (teacherCourseIds.has(String(mc._id))) return true;
+        if (userData?.email && mc.teacherEmail === userData.email) return true;
+        if (Array.isArray(mc.teachers)) {
+          const teacherIds = mc.teachers.map((t) => String(t._id || t));
+          if (userData?._id && teacherIds.includes(String(userData._id))) {
+            return true;
+          }
+          if (
+            userData?.email &&
+            mc.teachers.some((t) => t.email === userData.email)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      });
     }
     return mainClasses;
-  }, [mainClasses, userRole, userData]);
+  }, [mainClasses, userRole, userData, isTeacher, teacherCourseIds]);
+
+  const displayedCourseIds = useMemo(
+    () => new Set(displayedMainClasses.map((course) => String(course._id))),
+    [displayedMainClasses],
+  );
+
+  const searchableStudents = useMemo(() => {
+    const studentList = allStudents || [];
+    if (isTeacher) {
+      return filterStudentsForTeacher(studentList, teacherBatches, userRole);
+    }
+    return studentList;
+  }, [allStudents, isTeacher, teacherBatches, userRole]);
+
+  useEffect(() => {
+    if (!selectedMainClass || !mainClasses?.length) return;
+    if (!displayedCourseIds.has(String(selectedMainClass))) {
+      setSelectedMainClass(null);
+      setSelectedBatch(null);
+    }
+  }, [
+    selectedMainClass,
+    mainClasses?.length,
+    displayedCourseIds,
+    setSelectedMainClass,
+    setSelectedBatch,
+  ]);
 
   // Fetch students when main class is selected
   useEffect(() => {
@@ -83,7 +168,15 @@ const Fees = () => {
           ),
         ) || [];
 
-      if (userRole === "Student") {
+      if (isTeacher) {
+        relevantBatches = filterBatchesForTeacher(
+          relevantBatches,
+          userData?.batches || [],
+          userRole,
+          userData?.email,
+          userData?._id,
+        );
+      } else if (userRole === "Student") {
         relevantBatches = relevantBatches.filter((batch) => {
           const inStudents = batch.students?.some(
             (s) => (s._id || s) === userData?._id,
@@ -99,7 +192,14 @@ const Fees = () => {
     } else {
       setFilteredBatches([]);
     }
-  }, [selectedMainClass, mainClasses, batches, userRole, userData]);
+  }, [selectedMainClass, mainClasses, batches, userRole, userData, isTeacher]);
+
+  useEffect(() => {
+    if (!selectedBatch || !selectedMainClass) return;
+    if (!filteredBatches.some((batch) => batch._id === selectedBatch)) {
+      setSelectedBatch(null);
+    }
+  }, [selectedBatch, selectedMainClass, filteredBatches, setSelectedBatch]);
 
   // Fetch students when batch is selected
   useEffect(() => {
@@ -131,7 +231,7 @@ const Fees = () => {
 
   // BUG FIX: Optimized the N+1 API problem using concurrent Promise execution
   useEffect(() => {
-    if (!allStudents?.length) return;
+    if (!searchableStudents?.length) return;
 
     let isMounted = true;
     const loadPendingCounts = async () => {
@@ -147,11 +247,14 @@ const Fees = () => {
       // Collect all API requests into an array to fire concurrently
       const promises = [];
 
-      for (const student of allStudents) {
+      for (const student of searchableStudents) {
         const studentId = student._id;
-        const classIds = (student.mainClasses || []).map(
-          (cls) => cls._id || cls,
-        );
+        let classIds = (student.mainClasses || []).map((cls) => cls._id || cls);
+        if (isTeacher) {
+          classIds = classIds.filter((classId) =>
+            displayedCourseIds.has(String(classId)),
+          );
+        }
 
         for (const classId of classIds) {
           const request = api
@@ -200,7 +303,7 @@ const Fees = () => {
     return () => {
       isMounted = false;
     };
-  }, [allStudents]);
+  }, [searchableStudents, isTeacher, displayedCourseIds]);
 
   const handleMainClassChange = (mainClassId) => {
     setSelectedMainClass(mainClassId);
@@ -222,7 +325,9 @@ const Fees = () => {
     let foundBatch = null;
     let foundMainClassId = null;
 
-    for (const batch of batches) {
+    const selectableBatches = isTeacher ? teacherBatches : batches || [];
+
+    for (const batch of selectableBatches) {
       const hasStudent =
         batch.students?.some(
           (s) => s === student._id || s._id === student._id,
@@ -252,9 +357,17 @@ const Fees = () => {
       setGlobalSearchResults([]);
       toast.success(`Found and selected ${student.name}'s batch`);
     } else if (student.mainClasses?.length > 0) {
-      handleMainClassChange(
-        student.mainClasses[0]?._id || student.mainClasses[0],
+      const allowedMainClass = student.mainClasses.find((mainClass) =>
+        displayedCourseIds.has(String(mainClass?._id || mainClass)),
       );
+      const fallbackMainClass = isTeacher
+        ? allowedMainClass
+        : student.mainClasses[0];
+      if (!fallbackMainClass) {
+        toast.error("Student is not assigned to your batches or courses.");
+        return;
+      }
+      handleMainClassChange(fallbackMainClass?._id || fallbackMainClass);
       toast.success(
         `Selected main class for ${student.name}. Please select a batch manually.`,
       );
@@ -297,7 +410,7 @@ const Fees = () => {
             Global Student Search
           </h2>
           <StudentSearch
-            students={allStudents || []}
+            students={searchableStudents || []}
             onSearch={(results) => setGlobalSearchResults(results)}
             debounceMs={300}
           />
@@ -338,6 +451,7 @@ const Fees = () => {
           onMainClassChange={handleMainClassChange}
           onBatchChange={handleBatchChange}
           isLoading={isLoading}
+          hideCourseFees={isTeacher}
         />
       </div>
 

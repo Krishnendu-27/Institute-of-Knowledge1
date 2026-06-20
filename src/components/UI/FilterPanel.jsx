@@ -9,6 +9,7 @@ const FilterPanel = ({
   onMainClassChange,
   onBatchChange,
   isLoading,
+  hideCourseFees = false,
 }) => {
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
@@ -29,7 +30,9 @@ const FilterPanel = ({
               <option value="">-- Select Course --</option>
               {mainClasses?.map((mainClass) => (
                 <option key={mainClass._id} value={mainClass._id}>
-                  {mainClass.name} (₹{mainClass.fees})
+                  {hideCourseFees
+                    ? mainClass.name
+                    : `${mainClass.name} (₹${mainClass.fees})`}
                 </option>
               ))}
             </select>
